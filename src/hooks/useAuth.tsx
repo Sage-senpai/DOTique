@@ -1,59 +1,78 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
-import { useAuthStore } from '../store/authStore';
+// src/hooks/useAuth.tsx
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { saveItem, getItem, deleteItem } from "../utils/secureStore"; 
+import { supabase } from "../services/supabase";
+import { useAuthStore } from "../store/authStore";
 
 type AuthContextType = {
-  user: any | null;
-  signInWithZkLogin: () => Promise<void>;
+  session: any | null;
+  profile: any | null;
+  loading: boolean;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(false);
+  const { session, profile, setSession, setProfile, setLoading, resetAuth } = useAuthStore();
+  const [initialized, setInitialized] = useState(false);
 
-  const setUser = useAuthStore((s: any) => s.setUser);
-const user = useAuthStore((s: any) => s.user);
-
+  // ✅ Load session from storage on mount
   useEffect(() => {
-    supabase.auth.getSession().then((r) => {
-      if ((r as any).data?.session?.user) {
-        setUser((r as any).data.session.user);
+    (async () => {
+      const stored = await getItem("supabase_session");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setSession(parsed);
+        } catch {
+          await deleteItem("supabase_session"); // if corrupted
+        }
       }
-    });
+      setInitialized(true);
+    })();
   }, []);
 
-  const signInWithZkLogin = async () => {
-    setLoading(true);
-    try {
-      // Placeholder: call zkLogin SDK to derive polkadot address + exchange auth
-      // For now, fallback to Supabase magic link (dev use)
-      const { error } = await supabase.auth.signInWithOtp({ email: 'dev@dotique.test' });
-      if (error) throw error;
-      alert('Check your email for sign in (dev flow). Replace with zkLogin flow.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ✅ Listen for Supabase auth changes
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        setSession(session);
+        await saveItem("supabase_session", JSON.stringify(session));
+
+        // load profile
+        const { data: userProfile } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_uid", session.user.id)
+          .single();
+        if (userProfile) setProfile(userProfile);
+      } else {
+        resetAuth();
+        await deleteItem("supabase_session");
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
+    resetAuth();
+    await deleteItem("supabase_session");
   };
 
-  const authValue: AuthContextType = { user, signInWithZkLogin, signOut };
-
   return (
-    <AuthContext.Provider value={authValue}>
-      {children}
+    <AuthContext.Provider value={{ session, profile, loading: useAuthStore.getState().loading, signOut }}>
+      {initialized ? children : null}
     </AuthContext.Provider>
   );
 };
 
-// ✅ custom hook to use auth
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 }

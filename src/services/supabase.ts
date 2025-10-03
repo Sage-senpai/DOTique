@@ -1,15 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
+// src/services/supabase.ts
+import { createClient } from "@supabase/supabase-js";
 
-// Read from environment variables (local .env via app.config.js → Constants.expoConfig.extra)
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ?? (Constants.expoConfig?.extra?.SUPABASE_URL as string);
 
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY ?? (Constants.expoConfig?.extra?.SUPABASE_ANON_KEY as string);
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('⚠️ Supabase credentials not set in env');
-}
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://ludauconawmrsgvyeaix.supabase.co";
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZGF1Y29uYXdtcnNndnllYWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMTgxODMsImV4cCI6MjA3NDg5NDE4M30._2COrcrGamnIinjjup1uqoiOpOY4gjwI13d32wroup4";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log("Supabase URL:", SUPABASE_URL);
+console.log("Supabase Key:", SUPABASE_ANON_KEY ? "Loaded ✅" : "Missing ❌");
+

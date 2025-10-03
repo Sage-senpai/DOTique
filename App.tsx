@@ -1,29 +1,21 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { AuthProvider } from './src/hooks/useAuth';
-import Router from './app/router';
+// App.tsx
+import React from "react";
+import { View, Text, SafeAreaView } from "react-native";
+import { AuthProvider } from "./src/hooks/useAuth";
+import Router from "./app/router";
+import { styles } from "./AppStyles";
 
 export default function App() {
   return (
     <AuthProvider>
-      <View style={styles.container}>
-        <Text style={styles.text}>DOTique App</Text>
-        <Router />
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>DOTique App by sage</Text>
+        </View>
+        <View style={styles.content}>
+          <Router />
+        </View>
+      </SafeAreaView>
     </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFB6C1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-});
