@@ -33,10 +33,10 @@ export default {
       eas: {
         projectId: "aa4d5058-ca64-459b-9c68-8ca744a2dc09"
       },
-      SUPABASE_URL: process.env.SUPABASE_URL,
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-      POLKADOT_WS: process.env.POLKADOT_WS,
-      PINATA_JWT: process.env.PINATA_JWT
+      SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      POLKADOT_WS: process.env.EXPO_PUBLIC_POLKADOT_WS,
+      PINATA_JWT: process.env.EXPO_PUBLIC_PINATA_JWT
     }
   }
 };

@@ -1,7 +1,7 @@
-// src/screens/Auth/SignupScreen.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TextInput, Button, ActivityIndicator, Alert } from "react-native";
 import { useForm, Controller } from "react-hook-form";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../store/authStore";
 import { styles } from "./SignupScreen.styles";
@@ -12,62 +12,52 @@ export default function SignupScreen({ navigation }: any) {
   const { control, handleSubmit, formState: { errors } } = useForm<SignupForm>();
   const [loading, setLoading] = React.useState(false);
 
+  const session = useAuthStore((s) => s.session);
   const setProfile = useAuthStore((s) => s.setProfile);
   const setSession = useAuthStore((s) => s.setSession);
+
+  useEffect(() => {
+    if (session) {
+      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+    }
+  }, [session]);
 
   const onSubmit = async (data: SignupForm) => {
     try {
       setLoading(true);
 
-      // Step 1: Create Supabase Auth user
       const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
       });
 
       if (authError) {
-        console.error("Auth signup error:", authError);
         Alert.alert("Signup Error", authError.message);
         return;
       }
 
       if (signUpData?.user) {
-        // Step 2: Upsert into profiles table
-        const { data: upsertedProfile, error: dbError } = await supabase
-          .from("profiles") // ✅ now using profiles
-          .upsert(
-            [{
-              auth_uid: signUpData.user.id,
-              email: signUpData.user.email,
-              username: signUpData.user.email?.split("@")[0],
-              display_name: signUpData.user.email,
-              profile_image_url: null,
-              dotvatar_config: {}, // ✅ default
-            }],
-            { onConflict: "email" } // ✅ avoids duplicate key errors
-          )
+        // Reset onboarding so it shows for this new user
+        await AsyncStorage.removeItem("hasSeenOnboarding");
+
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
           .select("*")
+          .eq("auth_uid", signUpData.user.id)
           .single();
 
-        if (dbError) {
-          console.error("DB Error inserting profile:", dbError);
-          Alert.alert("Database Error", dbError.message);
+        if (profileError) {
+          Alert.alert("Profile Error", profileError.message);
           return;
         }
 
-        // Step 3: Save in Zustand
         setSession(signUpData.session);
-        setProfile(upsertedProfile);
+        setProfile(profile);
 
-        // ✅ Success + redirect
-        Alert.alert("Account Created ✅", "Your account has been created successfully!");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Home" }],
-        });
+        Alert.alert("Account Created ✅", "Welcome to DOTique!");
+        navigation.reset({ index: 0, routes: [{ name: "Onboarding" }] });
       }
     } catch (err: any) {
-      console.error("Unexpected signup error:", err);
       Alert.alert("Unexpected Error", err.message);
     } finally {
       setLoading(false);
@@ -114,11 +104,7 @@ export default function SignupScreen({ navigation }: any) {
       />
       {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
 
-      {loading ? (
-        <ActivityIndicator />
-      ) : (
-        <Button title="Sign Up" onPress={handleSubmit(onSubmit)} />
-      )}
+      {loading ? <ActivityIndicator /> : <Button title="Sign Up" onPress={handleSubmit(onSubmit)} />}
 
       <Text style={styles.link} onPress={() => navigation.navigate("Login")}>
         Already have an account? Log in
