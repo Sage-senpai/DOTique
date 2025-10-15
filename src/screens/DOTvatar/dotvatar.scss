@@ -1,0 +1,38 @@
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+
+.dotvatar-container {
+  background: $color-secondary;
+  color: $color-accent;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Poppins", sans-serif;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 2rem;
+}
+
+.dotvatar-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: $color-accent;
+}
+
+.dotvatar-canvas {
+  width: 100%;
+  height: 80vh;
+
+  canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .loading {
+    text-align: center;
+    color: $color-accent;
+    margin-top: 2rem;
+  }
+}

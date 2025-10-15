@@ -1,0 +1,78 @@
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$font: "Poppins", sans-serif;
+
+.home {
+  min-height: 100vh;
+  background: $color-accent;
+  color: $color-secondary;
+  font-family: $font;
+  padding-bottom: 48px;
+
+  &__header {
+    background: linear-gradient(180deg, $color-primary 0%, lighten($color-primary, 8%) 100%);
+    padding: 28px 24px;
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    color: white;
+  }
+
+  &__welcome {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  &__username {
+    margin: 4px 0 0;
+    opacity: 0.9;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.03);
+    transition: transform .18s ease, box-shadow .18s ease;
+
+    &__icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+    &__title { font-size: 18px; margin: 0 0 6px; color: $color-secondary; font-weight: 700; }
+    &__desc { margin: 0; color: $color-neutral; font-size: 14px; }
+
+    &:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+  }
+
+  .card--primary { background: #fff; }
+  .card--secondary { background: #f1f7f2; }
+  .card--accent { background: #fff8f0; }
+  .card--info { background: #eef7ff; }
+
+  &__signout {
+    display: block;
+    margin: 18px auto;
+    padding: 12px 20px;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+}

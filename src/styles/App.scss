@@ -1,0 +1,112 @@
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
+
+
+/* GLOBAL APP LAYOUT */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.safe-area {
+  padding: 16px;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-secondary);
+  color: var(--color-accent);
+}
+
+/* BOTTOM NAV LAYOUT */
+.bottom-nav-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 14px;
+
+  .tab {
+    text-decoration: none;
+    color: #888;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &.active {
+      color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    &.logout {
+      color: #e74c3c;
+    }
+  }
+}
+
+/* LOGO EFFECTS */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  transition: filter 300ms;
+
+  &:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
+  }
+
+  &.react:hover {
+    filter: drop-shadow(0 0 2em #61dafbaa);
+  }
+}
+
+/* ANIMATIONS */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* PAGE TRANSITIONS */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}

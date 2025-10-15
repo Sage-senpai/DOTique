@@ -1,0 +1,68 @@
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$font: "Poppins", sans-serif;
+
+.nftstudio {
+  min-height: 100vh;
+  background: $color-accent;
+  color: $color-secondary;
+  font-family: $font;
+  padding: 20px;
+
+  &__header {
+    text-align: center;
+    color: $color-primary;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  &__canvas {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.06);
+    min-height: 420px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 14px;
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      border: none;
+    }
+    .primary { background: $color-primary; color: white; }
+    .ghost { background: transparent; border: 1px solid rgba(0,0,0,0.06); }
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+
+    &__inner {
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      min-width: 320px;
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}

@@ -1,0 +1,74 @@
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+
+.testsupabase-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: $color-secondary;
+  color: $color-accent;
+  padding: 2rem;
+  text-align: center;
+}
+
+.testsupabase-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: $color-primary;
+  margin-bottom: 1rem;
+}
+
+.testsupabase-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.testsupabase-user {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: $color-accent;
+  background: rgba($color-primary, 0.1);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+}
+
+.testsupabase-empty {
+  color: $color-neutral;
+  font-style: italic;
+}
+
+.testsupabase-error {
+  color: #ff4d4d;
+  font-weight: 600;
+  background: rgba(255, 77, 77, 0.1);
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.testsupabase-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: $color-secondary;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba($color-accent, 0.3);
+    border-top: 4px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

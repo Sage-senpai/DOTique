@@ -1,0 +1,12 @@
+$primary: #60519b;
+$secondary: #1e202c;
+$accent: #bfc0d1;
+$neutral: #31323e;
+
+$font-family-sans: "Poppins", sans-serif;
+
+body {
+  font-family: $font-family-sans;
+  background-color: $secondary;
+  color: $accent;
+}

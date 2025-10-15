@@ -1,0 +1,102 @@
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+
+.onboarding-container {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+
+.skip-button {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: $color-accent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.onboarding-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 40px;
+  text-align: center;
+  transition: background-color 0.5s ease;
+  padding: 4rem 2rem;
+}
+
+.illustration-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 35vh;
+
+  .illustration {
+    font-size: 6rem;
+  }
+}
+
+.content-container {
+  .title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    opacity: 0.9;
+    max-width: 80%;
+    margin: 0 auto;
+  }
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .pagination {
+    display: flex;
+    margin-bottom: 1.5rem;
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      margin: 0 5px;
+      transition: all 0.3s ease;
+
+      &.active-dot {
+        width: 24px;
+        background: #fff;
+      }
+    }
+  }
+
+  .onboarding-button {
+    background: #fff;
+    color: $color-primary;
+    font-weight: 700;
+    border: none;
+    border-radius: 30px;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover {
+      background: $color-accent;
+      color: $color-secondary;
+    }
+  }
+}
