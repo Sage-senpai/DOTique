@@ -1,3 +1,4 @@
+//src/screens/Auth/signup.scss
 @use "../../styles/variables" as *;
 
 .auth-container {
@@ -5,7 +6,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-color: #fff;
+  background-color: #60519b;
   padding: 2rem;
 
   .auth-illustration {
@@ -41,13 +42,20 @@
     }
 
     .auth-input {
-      width: 100%;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 1rem;
-      background-color: #fafafa;
-      font-size: 0.95rem;
-      color: #212121;
+     font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: black;
+    border-radius: 15pc;
+    background-color: #60519b;
+    opacity: 1;
+    border: 2px solid black;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    margin-left: 8px;
+    transition: border-color 0.3s;
+
 
       &.error {
         border-color: #ff5252;

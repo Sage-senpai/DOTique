@@ -1,9 +1,10 @@
+//src/screens/Auth/ForgotPasswordScreen.tsx
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import AuthLayout from "./AuthLayout";
 import { supabase } from "../../services/supabase";
 import "./forgotpassword.scss";
-
+import "./authlayout.scss";
 type ForgotForm = { email: string };
 
 const ForgotPasswordScreen: React.FC = () => {

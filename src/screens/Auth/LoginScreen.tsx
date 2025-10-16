@@ -3,7 +3,9 @@ import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import AuthLayout from "./AuthLayout";
-import "./login.scss";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import "./authlayout.scss";
 
 type LoginForm = { email: string; password: string };
 
@@ -19,11 +21,13 @@ export default function LoginScreen() {
         email: data.email,
         password: data.password,
       });
-      if (error) return alert(error.message);
-      setSession(loginData.session);
-      alert("Welcome back!");
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      setSession(loginData.session ?? null);
     } catch (err: any) {
-      alert(err.message);
+      alert(err?.message ?? "Login failed");
     } finally {
       setLoading(false);
     }
@@ -31,20 +35,28 @@ export default function LoginScreen() {
 
   return (
     <AuthLayout title="Welcome Back" subtitle="Login to your account">
-      <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+      <motion.form
+        className="auth-form"
+        onSubmit={handleSubmit(onSubmit)}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="auth-input-group">
-          <label>Email</label>
+          <label htmlFor="email">Email</label>
           <Controller
             control={control}
             name="email"
             rules={{ required: "Email required" }}
             render={({ field: { onChange, value } }) => (
               <input
+                id="email"
                 type="email"
                 className={`auth-input ${errors.email ? "input-error" : ""}`}
                 placeholder="Enter your email"
-                value={value || ""}
+                value={value ?? ""}
                 onChange={onChange}
+                autoComplete="email"
               />
             )}
           />
@@ -52,18 +64,20 @@ export default function LoginScreen() {
         </div>
 
         <div className="auth-input-group">
-          <label>Password</label>
+          <label htmlFor="password">Password</label>
           <Controller
             control={control}
             name="password"
             rules={{ required: "Password required" }}
             render={({ field: { onChange, value } }) => (
               <input
+                id="password"
                 type="password"
                 className={`auth-input ${errors.password ? "input-error" : ""}`}
                 placeholder="Enter your password"
-                value={value || ""}
+                value={value ?? ""}
                 onChange={onChange}
+                autoComplete="current-password"
               />
             )}
           />
@@ -74,10 +88,19 @@ export default function LoginScreen() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="auth-footer">
-          Forgot password? <a href="/forgot-password" className="auth-link">Reset</a>
-        </p>
-      </form>
+        <div className="auth-footer">
+          <Link to="/forgot-password" className="auth-link subtle">
+            Forgot password?
+          </Link>
+
+          <div className="auth-switch">
+            <span>Don’t have an account?</span>
+            <Link to="/signup" className="auth-link">
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </motion.form>
     </AuthLayout>
   );
 }

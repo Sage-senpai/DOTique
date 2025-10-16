@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import AuthLayout from "./AuthLayout";
-import "./signup.scss";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import "./authlayout.scss";
 
 type SignupForm = { email: string; password: string; confirmPassword: string };
 
@@ -12,7 +14,6 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
-  const session = useAuthStore((s) => s.session);
   const setProfile = useAuthStore((s) => s.setProfile);
   const setSession = useAuthStore((s) => s.setSession);
 
@@ -43,12 +44,12 @@ export default function SignupScreen() {
           .eq("auth_uid", signUpData.user.id)
           .single();
 
-        setSession(signUpData.session);
-        setProfile(profile);
+        setSession(signUpData.session ?? null);
+        setProfile(profile ?? null);
         alert("Account created successfully!");
       }
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message ?? "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -56,9 +57,15 @@ export default function SignupScreen() {
 
   return (
     <AuthLayout title="Create Account" subtitle="Sign up to continue">
-      <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+      <motion.form
+        className="auth-form"
+        onSubmit={handleSubmit(onSubmit)}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="auth-input-group">
-          <label>Email Address</label>
+          <label htmlFor="email">Email Address</label>
           <Controller
             control={control}
             name="email"
@@ -71,11 +78,13 @@ export default function SignupScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <input
+                id="email"
                 type="email"
                 className={`auth-input ${errors.email ? "input-error" : ""}`}
                 placeholder="Enter email address"
-                value={value || ""}
+                value={value ?? ""}
                 onChange={onChange}
+                autoComplete="email"
               />
             )}
           />
@@ -83,18 +92,20 @@ export default function SignupScreen() {
         </div>
 
         <div className="auth-input-group">
-          <label>Password</label>
+          <label htmlFor="password">Password</label>
           <Controller
             control={control}
             name="password"
             rules={{ required: "Password required", minLength: { value: 6, message: "Min 6 characters" } }}
             render={({ field: { onChange, value } }) => (
               <input
+                id="password"
                 type="password"
                 className={`auth-input ${errors.password ? "input-error" : ""}`}
                 placeholder="Create password"
-                value={value || ""}
+                value={value ?? ""}
                 onChange={onChange}
+                autoComplete="new-password"
               />
             )}
           />
@@ -102,7 +113,7 @@ export default function SignupScreen() {
         </div>
 
         <div className="auth-input-group">
-          <label>Confirm Password</label>
+          <label htmlFor="confirmPassword">Confirm Password</label>
           <Controller
             control={control}
             name="confirmPassword"
@@ -112,30 +123,41 @@ export default function SignupScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <input
+                id="confirmPassword"
                 type="password"
                 className={`auth-input ${errors.confirmPassword ? "input-error" : ""}`}
                 placeholder="Re-enter password"
-                value={value || ""}
+                value={value ?? ""}
                 onChange={onChange}
+                autoComplete="new-password"
               />
             )}
           />
           {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword.message}</p>}
         </div>
 
-        <div className="auth-checkbox">
-          <input type="checkbox" checked={agreedToPolicy} onChange={() => setAgreedToPolicy(!agreedToPolicy)} />
+        <label className="auth-checkbox">
+          <input
+            type="checkbox"
+            checked={agreedToPolicy}
+            onChange={() => setAgreedToPolicy((s) => !s)}
+          />
           <span>I agree with privacy policy</span>
-        </div>
+        </label>
 
         <button type="submit" className="auth-button" disabled={loading || !agreedToPolicy}>
           {loading ? "Creating..." : "Sign Up"}
         </button>
 
-        <p className="auth-footer">
-          Already have an account? <a href="/login" className="auth-link">Login</a>
-        </p>
-      </form>
+        <div className="auth-footer">
+          <div>
+            <span>Already have an account?</span>{" "}
+            <Link to="/login" className="auth-link">
+              Login
+            </Link>
+          </div>
+        </div>
+      </motion.form>
     </AuthLayout>
   );
 }
