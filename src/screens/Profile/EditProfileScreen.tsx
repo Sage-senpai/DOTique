@@ -1,6 +1,8 @@
+// src/screens/Profile/EditProfileScreen.tsx
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
 import { uploadProfileMetadata } from "../../services/ipfsService";
@@ -24,13 +26,14 @@ export default function EditProfileScreen() {
     },
   });
 
-  const [showPicker, setShowPicker] = useState(false);
-  const [primaryWallet, setPrimaryWallet] = useState(profile?.primary_wallet || "");
-  const [connectedWallets, setConnectedWallets] = useState<string[]>(profile?.connected_wallets || []);
+  const [primaryWallet, setPrimaryWallet] = useState(
+    profile?.primary_wallet || ""
+  );
+  const [connectedWallets, setConnectedWallets] = useState<string[]>(
+    profile?.connected_wallets || []
+  );
   const [uploading, setUploading] = useState(false);
   const [imageUri, setImageUri] = useState(profile?.dotvatar_url || "");
-  const [archetypeOpen, setArchetypeOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const archetypeOptions = [
     { label: "Avant-Garde", value: "Avant-Garde" },
@@ -38,6 +41,7 @@ export default function EditProfileScreen() {
     { label: "Minimalist", value: "Minimalist" },
     { label: "Retro Futurist", value: "Retro Futurist" },
   ];
+
   const privacyOptions = [
     { label: "Public", value: "Public" },
     { label: "Private", value: "Private" },
@@ -49,26 +53,19 @@ export default function EditProfileScreen() {
       const wallets = await connectPolkadotWallets();
       const newAddresses = wallets.map((w: { address: string }) => w.address);
       setConnectedWallets(newAddresses);
-      if (!primaryWallet && newAddresses.length > 0) setPrimaryWallet(newAddresses[0]);
+      if (!primaryWallet && newAddresses.length > 0)
+        setPrimaryWallet(newAddresses[0]);
       alert(`${newAddresses.length} wallet(s) linked successfully.`);
     } catch (err: any) {
       alert(err.message || "Connection failed");
     }
   };
 
-  // web-friendly image picker (fallback to file input)
   const handlePickImage = async (file?: File | null) => {
     if (file) {
-      // In a real app you'd upload to IPFS or store locally; here we create object URL
       const url = URL.createObjectURL(file);
       setImageUri(url);
-    } else {
-      // nothing
     }
-  };
-
-  const handleDateChange = (dateStr: string) => {
-    setValue("birthday", dateStr);
   };
 
   const onSubmit = async (values: any) => {
@@ -110,108 +107,239 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <div className="profile-container">
-      <form className="edit-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(onSubmit)(); }}>
-        <h3 className="section-title">Edit Profile</h3>
+    <motion.div
+      className="edit-profile-screen"
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="edit-profile-screen__header">
+        <button
+          className="edit-profile-screen__back"
+          onClick={() => navigate(-1)}
+        >
+          ←
+        </button>
+        <h2 className="edit-profile-screen__title">Edit Profile</h2>
+        <button
+          className="edit-profile-screen__save-btn"
+          onClick={handleSubmit(onSubmit)}
+          disabled={uploading}
+        >
+          ✓
+        </button>
+      </div>
 
-        <div className="card avatar-card">
+      <form className="edit-profile-screen__form">
+        <div className="edit-profile-screen__avatar-section">
           {uploading ? (
-            <div className="spinner" />
+            <div className="edit-profile-screen__spinner" />
           ) : (
             <>
               {imageUri ? (
-                // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                <img src={imageUri} alt="avatar" className="profile-avatar" />
-              ) : (
-                <div className="avatar-placeholder">🪞</div>
-              )}
-
-              <label className="file-label">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handlePickImage(f);
-                  }}
-                  style={{ display: "none" }}
+                <img
+                  src={imageUri}
+                  alt="avatar"
+                  className="edit-profile-screen__avatar"
                 />
-                <button type="button" className="btn edit" onClick={() => { /* click handled by label */ }}>
-                  Upload Avatar
-                </button>
-              </label>
+              ) : (
+                <div className="edit-profile-screen__avatar-placeholder">
+                  🪞
+                </div>
+              )}
+              <div className="edit-profile-screen__avatar-edit-icon">✏️</div>
             </>
           )}
+
+          <label className="edit-profile-screen__upload-label">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handlePickImage(f);
+              }}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              className="edit-profile-screen__upload-btn"
+            >
+              Upload Avatar
+            </button>
+          </label>
         </div>
 
-        <div className="card">
-          <label className="card-label">Display Name</label>
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Name</label>
           <Controller
             control={control}
             name="display_name"
             rules={{ required: "Name is required" }}
             render={({ field }) => (
-              <input className="card-input" {...field} placeholder="Your name" />
+              <input
+                {...field}
+                className="edit-profile-screen__input"
+                placeholder="Your name"
+              />
             )}
           />
         </div>
 
-        <div className="card">
-          <label className="card-label">Username</label>
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Email Address</label>
+          <input
+            type="email"
+            value={profile?.email || ""}
+            disabled
+            className="edit-profile-screen__input edit-profile-screen__input--disabled"
+          />
+        </div>
+
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">User name</label>
           <Controller
             control={control}
             name="username"
-            rules={{ required: "Username required", minLength: { value: 3, message: "Min 3 chars" } }}
-            render={({ field }) => <input className="card-input" {...field} placeholder="Unique username" />}
+            rules={{
+              required: "Username required",
+              minLength: { value: 3, message: "Min 3 chars" },
+            }}
+            render={({ field }) => (
+              <input
+                {...field}
+                className="edit-profile-screen__input"
+                placeholder="@username"
+              />
+            )}
           />
         </div>
 
-        <div className="card">
-          <label className="card-label">Bio</label>
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Password</label>
+          <div className="edit-profile-screen__password-wrapper">
+            <input
+              type="password"
+              placeholder="••••••••"
+              disabled
+              className="edit-profile-screen__input edit-profile-screen__input--disabled"
+            />
+            <button type="button" className="edit-profile-screen__password-toggle">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Phone number</label>
+          <div className="edit-profile-screen__phone-wrapper">
+            <select className="edit-profile-screen__country-code">
+              <option>+91</option>
+            </select>
+            <input
+              type="tel"
+              className="edit-profile-screen__input"
+              placeholder="6895312"
+            />
+          </div>
+        </div>
+
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Bio</label>
           <Controller
             control={control}
             name="bio"
-            render={({ field }) => <textarea className="card-input" {...field} style={{ height: 80 }} placeholder="Describe your fashion style..." />}
+            render={({ field }) => (
+              <textarea
+                {...field}
+                className="edit-profile-screen__input edit-profile-screen__textarea"
+                placeholder="Describe your fashion style..."
+              />
+            )}
           />
         </div>
 
-        <div className="card">
-          <label className="card-label">Location</label>
-          <Controller control={control} name="location" render={({ field }) => <input className="card-input" {...field} placeholder="City or Country" />} />
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Location</label>
+          <Controller
+            control={control}
+            name="location"
+            render={({ field }) => (
+              <input
+                {...field}
+                className="edit-profile-screen__input"
+                placeholder="City or Country"
+              />
+            )}
+          />
         </div>
 
-        <div className="card">
-          <label className="card-label">Birthday</label>
-          <input className="card-input" type="date" value={watch("birthday") || ""} onChange={(e) => handleDateChange(e.target.value)} />
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Birthday</label>
+          <input
+            type="date"
+            value={watch("birthday") || ""}
+            onChange={(e) => setValue("birthday", e.target.value)}
+            className="edit-profile-screen__input"
+          />
         </div>
 
-        <div className="card">
-          <label className="card-label">Fashion Archetype</label>
-          <select className="card-input" value={watch("fashion_archetype")} onChange={(e) => setValue("fashion_archetype", e.target.value)}>
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Fashion Archetype</label>
+          <select
+            value={watch("fashion_archetype")}
+            onChange={(e) => setValue("fashion_archetype", e.target.value)}
+            className="edit-profile-screen__input"
+          >
             <option value="">Select Archetype</option>
             {archetypeOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </div>
 
-        <div className="card">
-          <label className="card-label">Primary Wallet</label>
-          <div className="card-value">{primaryWallet || "Not connected"}</div>
-          <button type="button" className="btn edit" onClick={handleConnectWallet}>Connect Wallet</button>
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Primary Wallet</label>
+          <div className="edit-profile-screen__wallet-display">
+            {primaryWallet || "Not connected"}
+          </div>
+          <button
+            type="button"
+            className="edit-profile-screen__wallet-btn"
+            onClick={handleConnectWallet}
+          >
+            Connect Wallet
+          </button>
         </div>
 
-        <div className="card">
-          <label className="card-label">Profile Privacy</label>
-          <select className="card-input" value={watch("profile_privacy")} onChange={(e) => setValue("profile_privacy", e.target.value)}>
-            {privacyOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        <div className="edit-profile-screen__field">
+          <label className="edit-profile-screen__label">Profile Privacy</label>
+          <select
+            value={watch("profile_privacy")}
+            onChange={(e) => setValue("profile_privacy", e.target.value)}
+            className="edit-profile-screen__input"
+          >
+            {privacyOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
         </div>
 
-        <div style={{ marginTop: 20 }}>
-          <button type="submit" className="btn edit" disabled={uploading}>💾 Save Changes</button>
-        </div>
+        <button
+          type="submit"
+          className="edit-profile-screen__submit"
+          disabled={uploading}
+          onClick={handleSubmit(onSubmit)}
+        >
+          {uploading ? "Saving..." : "💾 Save Changes"}
+        </button>
       </form>
-    </div>
+
+      
+    </motion.div>
   );
 }

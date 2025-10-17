@@ -1,295 +1,1188 @@
-// Profile module shared styles + theme vars
+// src/screens/Profile/profile.scss
+// Global Color Variables
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
 $color-neutral: #31323e;
+$color-danger: #ff6b6b;
 $font: "Poppins", sans-serif;
 
-.profile-container {
+// ============================================================
+// PROFILE SCREEN
+// ============================================================
+.profile-screen {
   min-height: 100vh;
-  padding: 1.5rem;
-  font-family: $font;
-  background: $color-accent;
-  color: $color-secondary;
-}
-
-.profile-tabs {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 1rem;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
 
-  .tab-button {
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    background: transparent;
-    border: 1px solid rgba(0,0,0,0.05);
-    cursor: pointer;
-    font-weight: 600;
-    color: $color-neutral;
-  }
-
-  .tab-button.active {
-    background: $color-primary;
-    color: white;
-  }
-
-  .tab-refresh {
-    margin-left: auto;
-    padding: 0.4rem 0.6rem;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: $color-neutral;
-  }
-}
-
-.profile-content {
-  .profile-header {
+  &__header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 1.25rem;
-
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 0.75rem;
-    }
-
-    .profile-avatar-placeholder {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: $color-primary;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-      color: white;
-      font-size: 2.25rem;
-    }
-
-    .profile-name {
-      font-size: 1.25rem;
-      margin: 0;
-      color: $color-secondary;
-    }
-
-    .profile-email {
-      font-size: 0.9rem;
-      color: $color-neutral;
-      margin: 0.25rem 0 0.75rem 0;
-    }
-
-    .profile-stats {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 0.75rem;
-
-      .stat {
-        background: white;
-        padding: 0.5rem 0.8rem;
-        border-radius: 8px;
-        text-align: center;
-
-        .stat-number {
-          font-weight: 700;
-          color: $color-primary;
-        }
-
-        .stat-label {
-          font-size: 0.85rem;
-          color: $color-neutral;
-        }
-      }
-    }
-
-    .profile-bio {
-      font-size: 0.95rem;
-      color: $color-neutral;
-      max-width: 800px;
-      text-align: center;
-      margin-bottom: 0.75rem;
-    }
-
-    .profile-buttons {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-
-      .btn {
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-      }
-
-      .edit {
-        background: $color-primary;
-        color: white;
-      }
-
-      .share {
-        background: $color-accent;
-        color: $color-secondary;
-      }
-
-      .settings {
-        background: transparent;
-        border: 1px solid rgba(0,0,0,0.05);
-      }
-    }
+    padding: 2rem 1.5rem 1.5rem;
+    background: linear-gradient(
+      180deg,
+      $color-primary 0%,
+      lighten($color-primary, 8%) 100%
+    );
+    color: white;
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
   }
 
-  .profile-section {
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  &__avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 3px solid white;
+  }
+
+  &__avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: white;
+  }
+
+  &__username {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0 0 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
     margin-top: 1rem;
+  }
 
-    .section-title {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      color: $color-secondary;
-    }
+  &__btn-primary {
+    flex: 1;
+    padding: 12px 16px;
+    background: white;
+    color: $color-primary;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 
-    .section-desc {
-      margin-bottom: 1rem;
-      color: $color-neutral;
-    }
-
-    .card {
-      background: white;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 0.75rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-
-      .card-label {
-        font-weight: 700;
-        color: $color-secondary;
-      }
-
-      .card-value {
-        margin-top: 0.5rem;
-        color: $color-neutral;
-      }
-    }
-
-    .palette-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-
-      .color-swatch {
-        width: 34px;
-        height: 34px;
-        border-radius: 6px;
-      }
-    }
-
-    .nft-row {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-
-      .nft-card {
-        background: white;
-        padding: 0.75rem;
-        border-radius: 10px;
-        min-width: 140px;
-        text-align: center;
-
-        .nft-thumb {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .nft-image {
-          width: 100px;
-          height: 100px;
-          border-radius: 8px;
-          object-fit: cover;
-          margin-bottom: 0.5rem;
-        }
-
-        .nft-name {
-          font-weight: 700;
-          color: $color-secondary;
-        }
-
-        .nft-rarity {
-          font-size: 0.85rem;
-          color: $color-neutral;
-        }
-      }
-    }
-
-    .nft-horizontal {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-    }
-
-    .clickable {
-      cursor: pointer;
+    &:active {
+      transform: scale(0.98);
     }
   }
 
-  .spinner {
-    width: 36px;
-    height: 36px;
-    border: 4px solid rgba(0,0,0,0.08);
+  &__btn-secondary {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 150ms ease;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__btn-icon {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 150ms ease;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &__menu {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 0.95rem;
+    color: $color-secondary;
+    transition: background 150ms ease, transform 100ms ease;
+
+    &:active {
+      transform: translateY(-2px);
+      background: #f8f8f8;
+    }
+
+    &--logout {
+      background: rgba($color-danger, 0.1);
+      color: $color-danger;
+
+      &:active {
+        background: rgba($color-danger, 0.15);
+      }
+    }
+  }
+
+  &__menu-icon {
+    font-size: 1.25rem;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  &__menu-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  &__menu-chevron {
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+
+  &__nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+    height: 70px;
+  }
+
+  &__nav-btn {
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 200ms ease;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}
+
+// ============================================================
+// EDIT PROFILE SCREEN
+// ============================================================
+.edit-profile-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: $color-primary;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    flex: 1;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__save-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 200ms ease;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__form {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    background: $color-secondary;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
     border-top: 4px solid $color-primary;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 1rem auto;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* forms used in EditProfileScreen */
-  .edit-form {
+  &__avatar-section {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    position: relative;
   }
 
-  .card-input {
-    width: 100%;
-    padding: 0.6rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+  &__avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid $color-primary;
   }
 
-  .avatar-card {
+  &__avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba($color-primary, 0.1);
     display: flex;
-    gap: 1rem;
     align-items: center;
     justify-content: center;
+    font-size: 2.5rem;
+    border: 3px dashed $color-primary;
   }
 
-  .avatar-placeholder {
-    width: 100px;
-    height: 100px;
-    background: #eee;
+  &__avatar-edit-icon {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    background: $color-primary;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .logout {
-    background: #e91e63;
+  &__upload-label {
+    cursor: pointer;
+  }
+
+  &__upload-btn {
+    padding: 10px 16px;
+    background: $color-primary;
     color: white;
-    padding: 0.6rem 0.8rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 0.9rem;
+    transition: transform 150ms ease;
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $color-accent;
+    text-transform: none;
+  }
+
+  &__input {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: $color-accent;
+    font-family: $font;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+
+    &:focus {
+      border-color: $color-primary;
+      box-shadow: 0 6px 20px rgba(96, 81, 155, 0.12);
+    }
+
+    &--disabled {
+      background: rgba(255, 255, 255, 0.02);
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  &__password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__password-toggle {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: $color-neutral;
+  }
+
+  &__phone-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  &__country-code {
+    width: 80px;
+    padding: 12px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: $color-accent;
+    font-family: $font;
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &:focus {
+      border-color: $color-primary;
+      outline: none;
+    }
+  }
+
+  &__wallet-display {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: $color-accent;
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  &__wallet-btn {
+    padding: 10px 14px;
+    background: $color-primary;
+    color: white;
     border: none;
     border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
+    font-family: $font;
+    font-size: 0.9rem;
+    transition: transform 150ms ease;
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__submit {
+    padding: 14px 16px;
+    background: $color-primary;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 1rem;
+    transition: transform 150ms ease;
     margin-top: 1rem;
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+    height: 70px;
+  }
+
+  &__nav-btn {
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 200ms ease;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}
+
+// ============================================================
+// GOVERNANCE SCREEN
+// ============================================================
+.governance-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: $color-primary;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-neutral;
+    margin: 0 0 1.5rem;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  &__card-header {
+    margin-bottom: 0.75rem;
+  }
+
+  &__dao-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $color-secondary;
+    margin: 0;
+  }
+
+  &__card-body {
+    margin-bottom: 1rem;
+  }
+
+  &__info {
+    font-size: 0.9rem;
+    color: $color-neutral;
+    margin: 0.5rem 0;
+  }
+
+  &__info-value {
+    font-weight: 600;
+    color: $color-primary;
+  }
+
+  &__delegate-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: $color-primary;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 0.9rem;
+    transition: transform 150ms ease;
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  &__empty-text {
+    font-size: 0.95rem;
+    color: $color-accent;
+    margin: 0;
+  }
+
+  &__nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+    height: 70px;
+  }
+
+  &__nav-btn {
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 200ms ease;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}
+
+// ============================================================
+// SETTINGS SCREEN
+// ============================================================
+.settings-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: $color-primary;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 0.95rem;
+    color: $color-secondary;
+    transition: background 150ms ease, transform 100ms ease;
+
+    &:active {
+      transform: translateY(-2px);
+      background: #f8f8f8;
+    }
+  }
+
+  &__menu-icon {
+    font-size: 1.25rem;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  &__menu-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  &__menu-chevron {
+    font-size: 1.5rem;
+    opacity: 0.5;
+  }
+
+  &__danger-zone {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__logout-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: $color-danger;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: $font;
+    font-size: 0.95rem;
+    transition: transform 150ms ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+    height: 70px;
+  }
+
+  &__nav-btn {
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 200ms ease;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}
+
+// ============================================================
+// GLOBAL ANIMATIONS
+// ============================================================
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================================
+// STYLE CV SCREEN
+// ============================================================
+.stylecv-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: $color-primary;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-neutral;
+    margin: 0 0 1.5rem;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  &__credential-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $color-primary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.5rem;
+  }
+
+  &__credential-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $color-secondary;
+    margin: 0 0 0.75rem;
+  }
+
+  &__credential-desc {
+    font-size: 0.9rem;
+    color: $color-neutral;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  &__empty-text {
+    font-size: 0.95rem;
+    color: $color-accent;
+    margin: 0;
+  }
+
+  &__nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+    height: 70px;
+  }
+
+  &__nav-btn {
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 200ms ease;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+}
+
+// ============================================================
+// WARDROBE SCREEN
+// ============================================================
+.wardrobe-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 80px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: $color-primary;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__back {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-neutral;
+    margin: 0 0 1.5rem;
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  &__nft-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 150ms ease;
+
+    &:active {
+      transform: translateY(-4px);
+    }
+  }
+
+  &__nft-image {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-bottom: 0.75rem;
+  }
+
+  &__nft-placeholder {
+    width: 100%;
+    height: 120px;
+    background: rgba($color-primary, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__nft-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $color-secondary;
+    margin: 0 0 0.5rem;
+  }
+
+  &__nft-rarity {
+    font-size: 0.85rem;
+    color: $color-primary;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  &__empty-text {
+    font-size: 0.95rem;
+    color: $color-accent;
+    margin: 0;
+  }
+}
+// For SettingsScreen delete button
+.settings-screen__danger-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $color-accent;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 1rem 0 0.75rem;
+  padding: 0 1.5rem;
+}
+
+.settings-screen__delete-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba($color-danger, 0.1);
+  color: $color-danger;
+  border: 1px solid $color-danger;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: $font;
+  font-size: 0.95rem;
+  margin-top: 0.75rem;
+  transition: background 150ms ease;
+
+  &:active:not(:disabled) {
+    background: rgba($color-danger, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }

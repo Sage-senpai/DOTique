@@ -1,3 +1,4 @@
+// src/components/BottomNav.tsx
 import React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
