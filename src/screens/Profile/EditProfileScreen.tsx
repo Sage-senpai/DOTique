@@ -9,6 +9,7 @@ import { uploadProfileMetadata } from "../../services/ipfsService";
 import { connectPolkadotWallets } from "../../services/polkadotService";
 import "./profile.scss";
 
+
 export default function EditProfileScreen() {
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);

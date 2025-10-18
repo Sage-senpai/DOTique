@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import AsyncStorage from "local-storage-fallback";
 import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
+import LoginScreen from "../Auth/LoginScreen";
 import "./profile.scss";
 
 export default function SettingsScreen() {
@@ -21,7 +22,7 @@ export default function SettingsScreen() {
     } catch (err) {
       console.error("Logout error:", err);
     }
-    navigate("/loginScreen" , { replace: true });
+    navigate("/LoginScreen" , { replace: true });
   };
 
   const handleDeleteAccount = async () => {

@@ -1,0 +1,110 @@
+// src/components/Post/PostCard.scss
+$color-primary: #60519b;
+$color-neutral: #31323e;
+$color-accent: #bfc0d1;
+
+.post-card {
+  background: rgba($color-neutral, 0.6);
+  border: 1px solid rgba($color-accent, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 200ms ease;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba($color-neutral, 0.8);
+    border-color: rgba($color-primary, 0.3);
+  }
+
+  .post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .post-author {
+      display: flex;
+      gap: 12px;
+
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba($color-primary, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+
+      .author-info {
+        display: flex;
+        flex-direction: column;
+
+        .author-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: $color-accent;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          .verified {
+            color: $color-primary;
+            font-size: 12px;
+          }
+        }
+
+        .author-username {
+          font-size: 13px;
+          color: rgba($color-accent, 0.6);
+        }
+      }
+    }
+
+    .post-menu {
+      cursor: pointer;
+      color: rgba($color-accent, 0.5);
+      font-size: 18px;
+    }
+  }
+
+  .post-content {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: $color-accent;
+  }
+
+  .post-media {
+    margin-bottom: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+
+    .post-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+  }
+
+  .post-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: rgba($color-accent, 0.6);
+    padding: 12px 0;
+    border-top: 1px solid rgba($color-accent, 0.1);
+    margin-bottom: 12px;
+
+    span {
+      &:not(:last-child) {
+        &:not(:nth-last-child(2)) {
+          // for the separator dots
+        }
+      }
+    }
+  }
+}

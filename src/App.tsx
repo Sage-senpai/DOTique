@@ -1,112 +1,79 @@
 // src/App.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Router from "./router/router";
-import { ApiPromise, WsProvider } from "@polkadot/api";
-import ConnectionStatus from "../src/components/ConnectionStatus";
+import ConnectionStatus from "./components/ConnectionStatus";
+import { createClient } from "polkadot-api";
+import { getSmProvider } from "polkadot-api/sm-provider";
+import { chainSpec } from "polkadot-api/chains/polkadot";
+import { startFromWorker } from "polkadot-api/smoldot/from-worker";
+import SmWorker from "polkadot-api/smoldot/worker?worker";
+import { dot } from "@polkadot-api/descriptors";
 import "./styles/App.scss";
 
-// ✅ Main + fallback endpoints
-const POLKADOT_NODES = [
-  "wss://polkadot-rpc.dwellir.com",
-  "wss://1rpc.io/dot",
-  "wss://rpc.polkadot.io",
-  "wss://polkadot.api.onfinality.io/public-ws",
-  "wss://polkadot-rpc.publicnode.com",
-];
-
 export default function App() {
-  const [api, setApi] = useState<ApiPromise | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
-  const retryTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // ⚡ Connect to multiple nodes in parallel, resolve the fastest
-  const connectFast = async (endpoints: string[]) => {
-    const attempts = endpoints.map(async (endpoint) => {
-      try {
-        const provider = new WsProvider(endpoint, 2000); // ⏱ 2s timeout
-        const apiInstance = await ApiPromise.create({ provider });
-        await apiInstance.isReady;
-        return { api: apiInstance, endpoint };
-      } catch {
-        return null;
-      }
-    });
-
-    const result = await Promise.any(attempts);
-    if (!result) throw new Error("🚫 All Polkadot endpoints failed.");
-    return result;
-  };
-
-  const connectToNetwork = async () => {
-    try {
-      setIsConnecting(true);
-      setIsConnected(false);
-
-      // 💾 Try last successful endpoint first
-      const last = localStorage.getItem("lastEndpoint");
-      const endpoints = last
-        ? [last, ...POLKADOT_NODES.filter((e) => e !== last)]
-        : POLKADOT_NODES;
-
-      console.log("🌐 Trying endpoints:", endpoints);
-
-      const { api, endpoint } = await connectFast(endpoints);
-
-      setApi(api);
-      setCurrentEndpoint(endpoint);
-      localStorage.setItem("lastEndpoint", endpoint);
-
-      console.log(`✅ Connected to Polkadot via ${endpoint}`);
-      setIsConnected(true);
-      setIsConnecting(false);
-
-      // 🔁 Auto-retry on disconnect
-      api.on("disconnected", () => {
-        console.warn(`⚠️ Lost connection to ${endpoint}`);
-        setIsConnected(false);
-        retryConnection();
-      });
-    } catch (err) {
-      console.error("❌ Connection failed:", err);
-      setIsConnecting(false);
-      setIsConnected(false);
-      retryConnection();
-    }
-  };
-
-  const retryConnection = async () => {
-    if (retryTimeout.current) clearTimeout(retryTimeout.current);
-
-    retryTimeout.current = setTimeout(() => {
-      console.log("🔁 Retrying connection...");
-      connectToNetwork();
-    }, 3000);
-  };
+  const [dotApi, setDotApi] = useState<any>(null);
 
   useEffect(() => {
-    connectToNetwork();
+    let smoldot: any;
+    const worker = new SmWorker();
+
+    const init = async () => {
+      try {
+        setIsConnecting(true);
+        const sm = startFromWorker(worker);
+        smoldot = sm;
+
+        const chain = await sm.addChain({ chainSpec });
+        const client = createClient(getSmProvider(chain));
+        const api = client.getTypedApi(dot);
+
+        setDotApi(api);
+        setIsConnected(true);
+      } catch (err) {
+        console.error("❌ Smoldot init failed:", err);
+        setIsConnected(false);
+      } finally {
+        setIsConnecting(false);
+      }
+    };
+
+    init();
+
+    // 🛰 auto-detect offline/online changes
+    const handleOnline = () => {
+      console.log("🌐 Reconnected — restarting Smoldot");
+      init();
+    };
+    const handleOffline = () => {
+      console.warn("📴 Offline mode");
+      setIsConnected(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      if (retryTimeout.current) clearTimeout(retryTimeout.current);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      if (smoldot) smoldot.terminate?.();
     };
   }, []);
 
-  // 🛰️ Show loading or offline screen until connection stabilizes
-  if (!isConnected || isConnecting) {
+  // 🛰 Show loader or offline screen
+  if (isConnecting || !isConnected) {
     return (
       <ConnectionStatus
-        isConnected={isConnected}
         isConnecting={isConnecting}
-        endpoint={currentEndpoint}
+        isConnected={isConnected}
       />
     );
   }
 
-  // ✅ Main app render
+  // ✅ Main app content
   return (
     <AuthProvider>
       <BrowserRouter>

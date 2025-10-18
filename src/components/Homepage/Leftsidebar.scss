@@ -1,0 +1,89 @@
+// src/components/Homepage/LeftSidebar.scss
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+
+.left-sidebar {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .nav-item {
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: none;
+      border-radius: 12px;
+      color: $color-accent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 150ms ease;
+      text-align: left;
+
+      &:hover {
+        background: rgba($color-primary, 0.1);
+        transform: translateX(4px);
+      }
+
+      &.active {
+        background: rgba($color-primary, 0.2);
+        color: $color-primary;
+      }
+    }
+  }
+
+  .trending-section {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: $color-accent;
+    }
+
+    .trending-item {
+      padding: 12px;
+      margin: 8px 0;
+      background: rgba($color-primary, 0.05);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 150ms ease;
+
+      &:hover {
+        background: rgba($color-primary, 0.15);
+      }
+
+      .trend-tag {
+        font-size: 13px;
+        font-weight: 600;
+        color: $color-primary;
+      }
+
+      .trend-posts {
+        font-size: 12px;
+        color: rgba($color-accent, 0.7);
+        margin-top: 4px;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .left-sidebar {
+    display: none;
+  }
+}

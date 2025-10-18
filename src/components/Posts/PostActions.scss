@@ -1,0 +1,76 @@
+// src/components/Post/PostActions.scss
+$color-primary: #60519b;
+$color-accent: #bfc0d1;
+
+.post-actions {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba($color-accent, 0.1);
+  position: relative;
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: rgba($color-accent, 0.7);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 150ms ease;
+
+    &:hover {
+      color: $color-accent;
+      background: rgba($color-primary, 0.1);
+    }
+
+    &.active {
+      color: $color-primary;
+      background: rgba($color-primary, 0.2);
+    }
+
+    &.donate {
+      background: linear-gradient(135deg, rgba($color-primary, 0.2), rgba($color-primary, 0.1));
+    }
+  }
+
+  .repost-wrapper {
+    position: relative;
+
+    .repost-menu {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(49, 50, 62, 0.95);
+      border: 1px solid rgba($color-accent, 0.2);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 10;
+      min-width: 120px;
+      margin-bottom: 8px;
+
+      .repost-option {
+        width: 100%;
+        padding: 10px 12px;
+        background: none;
+        border: none;
+        color: $color-accent;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+        text-align: left;
+        transition: background 150ms ease;
+
+        &:hover {
+          background: rgba($color-primary, 0.2);
+        }
+      }
+    }
+  }
+}

@@ -19,6 +19,12 @@
       "metadata": ".papi\\metadata\\paseo_asset_hub.scale",
       "genesis": "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2",
       "codeHash": "0x1a6d2eb53e7f67138f84d537086d088cc240a810407e5564b0890eda8d501dc8"
+    },
+    "dot": {
+      "chain": "polkadot",
+      "metadata": ".papi\\metadata\\dot.scale",
+      "genesis": "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
+      "codeHash": "0xa4d527cb0db4146686eeffb216b562fe68440185d5067e6177d1681ff7bb3043"
     }
   }
 }
