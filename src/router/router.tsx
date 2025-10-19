@@ -22,6 +22,7 @@ import TestSupabase from "../screens/TestSupabase/TestSupabase";
 import HomeScreen from "../screens/Home/HomeScreen";
 
 // Profile Screens
+import OtherUserProfile from "../screens/Profile/OtherUserProfile";
 import ProfileScreen from "../screens/Profile/ProfileScreen";
 import ProfileWardrobe from "../screens/Profile/ProfileWardrobe";
 import ProfileStyleCV from "../screens/Profile/ProfileStyleCV";
@@ -80,6 +81,7 @@ export default function Router() {
         <Route path="/mint" element={<MintScreen />} />
         <Route path="/messages" element={<MessagesScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/profile/other" element={<OtherUserProfile />} />
       </Route>
 
       {/* Standalone Pages */}
@@ -95,6 +97,11 @@ export default function Router() {
 
       {/* Fallback to home */}
       <Route path="*" element={<Navigate to="/home" replace />} />
+
+       
     </Routes>
+
+    
+
   );
 }

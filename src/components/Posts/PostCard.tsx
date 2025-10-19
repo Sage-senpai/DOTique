@@ -1,7 +1,9 @@
 // src/components/Post/PostCard.tsx
-import React, { useState } from 'react';
-import PostActions from './PostActions';
-import './PostCard.scss';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../../stores/userStore";
+import PostActions from "./PostActions";
+import "./PostCard.scss";
 
 interface PostCardProps {
   post: {
@@ -35,19 +37,38 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
+  const navigate = useNavigate();
+  const { setSelectedUser } = useUserStore();
+
   const [stats, setStats] = useState(post.stats);
   const [userInteraction, setUserInteraction] = useState(post.userInteraction);
 
+  // 🔹 Navigate to user profile when avatar clicked
+  const handleAvatarClick = () => {
+    setSelectedUser({
+      id: post.author.id,
+      username: post.author.username,
+      display_name: post.author.name,
+      avatar: post.author.avatar,
+      bio: "",
+      followers_count: 0,
+      following_count: 0,
+      posts_count: 0,
+      verified: post.author.verified,
+    });
+    navigate("/profile/other");
+  };
+
   const handleLike = () => {
-    setUserInteraction(prev => ({ ...prev, liked: !prev.liked }));
-    setStats(prev => ({
+    setUserInteraction((prev) => ({ ...prev, liked: !prev.liked }));
+    setStats((prev) => ({
       ...prev,
       likes: prev.likes + (userInteraction.liked ? -1 : 1),
     }));
   };
 
   const handleSave = () => {
-    setUserInteraction(prev => ({ ...prev, saved: !prev.saved }));
+    setUserInteraction((prev) => ({ ...prev, saved: !prev.saved }));
   };
 
   const getTimeAgo = (date: Date): string => {
@@ -63,7 +84,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     <div className="post-card">
       <div className="post-header">
         <div className="post-author">
-          <div className="avatar">{post.author.avatar}</div>
+          <div
+            className="avatar"
+            onClick={handleAvatarClick}
+            role="button"
+            tabIndex={0}
+          >
+            {post.author.avatar}
+          </div>
           <div className="author-info">
             <div className="author-name">
               {post.author.name}
@@ -89,6 +117,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         <span>{post.stats.views.toLocaleString()} views</span>
         <span>•</span>
         <span>{stats.likes.toLocaleString()} likes</span>
+        <span className="time-ago">• {getTimeAgo(post.createdAt)}</span>
       </div>
 
       <PostActions

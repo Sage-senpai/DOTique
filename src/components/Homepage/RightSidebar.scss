@@ -1,4 +1,5 @@
 // src/components/Homepage/RightSidebar.scss
+// =====================================================
 $color-primary: #60519b;
 $color-accent: #bfc0d1;
 
@@ -29,6 +30,7 @@ $color-accent: #bfc0d1;
       background: rgba($color-primary, 0.05);
       border-radius: 8px;
       transition: all 150ms ease;
+      cursor: pointer;
 
       &:hover {
         background: rgba($color-primary, 0.15);
@@ -44,6 +46,14 @@ $color-accent: #bfc0d1;
         justify-content: center;
         font-size: 18px;
         flex-shrink: 0;
+        cursor: pointer;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
       }
 
       .rec-info {
@@ -54,6 +64,11 @@ $color-accent: #bfc0d1;
           font-size: 12px;
           font-weight: 600;
           color: $color-accent;
+          cursor: pointer;
+
+          &:hover {
+            color: $color-primary;
+          }
         }
 
         .rec-username {

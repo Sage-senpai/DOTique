@@ -28,7 +28,7 @@ const slides: Slide[] = [
   {
     id: "3",
     title: "Mint & Trade NFTs",
-    desc: "Design fashion NFTs, mint them on Polkadot, and trade in our marketplace.",
+    desc: "Design fashion NFTs, mint them on Polkadot, and trade in our marketplace. remember to route to DOTvatar screen after onboarding and not home screen when ready",
     avatar: "💎",
     bgColor: "#31323E",
   },
@@ -67,7 +67,7 @@ export default function OnboardingScreen() {
 
   const handleSkip = () => {
     localStorage.setItem("hasSeenOnboarding", "true");
-    navigate("/dotvatar");
+    navigate("/home");
   };
 
   return (

@@ -14,7 +14,7 @@ export default function BottomTabNavigator() {
       try {
         await supabase.auth.signOut();
         resetAuth();
-        navigate("/login");
+        navigate("/LoginScreen");
       } catch (error) {
         console.error("Sign out error:", error);
       }

@@ -1,7 +1,10 @@
 // ==================== src/stores/searchStore.ts ====================
+
+import { create } from "zustand"; // ✅ ADD THIS LINE
+
 export interface SearchResult {
   id: string;
-  type: 'user' | 'nft' | 'post' | 'collection' | 'event';
+  type: "user" | "nft" | "post" | "collection" | "event";
   title: string;
   description?: string;
   image?: string;
@@ -25,7 +28,7 @@ interface SearchState {
 }
 
 export const useSearchStore = create<SearchState>((set) => ({
-  query: '',
+  query: "",
   results: [],
   loading: false,
   error: null,
@@ -40,18 +43,17 @@ export const useSearchStore = create<SearchState>((set) => ({
 
   setError: (error) => set({ error }),
 
-  addRecentSearch: (query) => set((state) => ({
-    recentSearches: [
-      query,
-      ...state.recentSearches.filter(q => q !== query),
-    ].slice(0, 10),
-  })),
+  addRecentSearch: (query) =>
+    set((state) => ({
+      recentSearches: [query, ...state.recentSearches.filter((q) => q !== query)].slice(0, 10),
+    })),
 
   clearRecentSearches: () => set({ recentSearches: [] }),
 
-  toggleSavedSearch: (query) => set((state) => ({
-    savedSearches: state.savedSearches.includes(query)
-      ? state.savedSearches.filter(q => q !== query)
-      : [...state.savedSearches, query],
-  })),
+  toggleSavedSearch: (query) =>
+    set((state) => ({
+      savedSearches: state.savedSearches.includes(query)
+        ? state.savedSearches.filter((q) => q !== query)
+        : [...state.savedSearches, query],
+    })),
 }));

@@ -1,4 +1,9 @@
-// src/screens/Home/homescreen.scss
+// src/screens/Home/homescreen.scss 
+
+
+// -----------------------
+// Global Variables
+// -----------------------
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -6,13 +11,18 @@ $color-neutral: #31323e;
 $color-danger: #ff6b6b;
 $font: "Poppins", sans-serif;
 
+// -----------------------
+// Global Reset
+// -----------------------
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
 }
@@ -23,6 +33,9 @@ body {
   color: $color-accent;
 }
 
+// ============================================================
+// HOME PAGE
+// ============================================================
 .home-page {
   min-height: 100vh;
   display: flex;
@@ -30,7 +43,9 @@ body {
   position: relative;
 }
 
-// ==================== HEADER ====================
+// ============================================================
+// HEADER
+// ============================================================
 .home-header {
   display: flex;
   justify-content: space-between;
@@ -69,8 +84,10 @@ body {
       border-radius: 24px;
       color: $color-accent;
       transition: all 200ms ease;
+      cursor: pointer;
 
-      &:focus-within {
+      &:focus-within,
+      &:hover {
         background: rgba($color-primary, 0.1);
         border-color: $color-primary;
       }
@@ -114,7 +131,9 @@ body {
   }
 }
 
-// ==================== MAIN CONTAINER ====================
+// ============================================================
+// MAIN CONTAINER
+// ============================================================
 .home-container {
   display: grid;
   grid-template-columns: 280px 1fr 300px;
@@ -126,7 +145,51 @@ body {
   width: 100%;
 }
 
-// ==================== FLOATING ACTION BUTTON ====================
+// ============================================================
+// FEED WRAPPER
+// ============================================================
+.feed-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  .feed-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba($color-accent, 0.1);
+    margin-bottom: 0;
+    background: rgba($color-secondary, 0.6);
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+  }
+
+  .feed-tab {
+    flex: 1;
+    padding: 16px;
+    background: none;
+    border: none;
+    color: rgba($color-accent, 0.6);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 200ms ease;
+    border-bottom: 2px solid transparent;
+
+    &:hover {
+      color: $color-accent;
+    }
+
+    &.active {
+      color: $color-primary;
+      border-bottom-color: $color-primary;
+    }
+  }
+}
+
+// ============================================================
+// FLOATING ACTION BUTTON
+// ============================================================
 .fab {
   position: fixed;
   bottom: 100px;
@@ -155,7 +218,9 @@ body {
   }
 }
 
-// ==================== BOTTOM NAVIGATION ====================
+// ============================================================
+// BOTTOM NAVIGATION
+// ============================================================
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -190,11 +255,18 @@ body {
   }
 }
 
-// ==================== RESPONSIVE ====================
+// ============================================================
+// MEDIA QUERIES
+// ============================================================
 @media (max-width: 1024px) {
   .home-container {
     grid-template-columns: 1fr;
     padding: 16px;
+  }
+
+  .fab {
+    bottom: 90px;
+    right: 16px;
   }
 }
 
@@ -211,10 +283,5 @@ body {
 
   .home-container {
     grid-template-columns: 1fr;
-  }
-
-  .fab {
-    bottom: 90px;
-    right: 16px;
   }
 }
