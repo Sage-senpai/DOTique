@@ -7,7 +7,7 @@ import {
 } from "@/lib/types.dot-ui";
 import type { IdentityData } from "@polkadot-api/descriptors";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { useConnectionStatus } from "../lib/polkadot-provider.papi";
+import { useConnectionStatus } from "../src/lib/polkadot-provider.papi";
 import { useClient } from "@reactive-dot/react";
 
 // Extract the resolved return type of Identity.IdentityOf.getValue from any API-like shape

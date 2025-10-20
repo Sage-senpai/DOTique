@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { hasIdentityPallet } from "@/hooks/use-identity-of.papi";
+import { hasIdentityPallet } from "../hooks/use-identity-of.papi";
 import {
   extractText,
   hasPositiveIdentityJudgement,
@@ -11,7 +11,7 @@ import {
   type IdentitySearchResult,
 } from "@/lib/types.dot-ui";
 import { config } from "@/lib/reactive-dot.config";
-import { useConnectionStatus } from "../lib/polkadot-provider.papi";
+import { useConnectionStatus } from "../src/lib/polkadot-provider.papi";
 import { useClient } from "@reactive-dot/react";
 
 export function useIdentitySearch(

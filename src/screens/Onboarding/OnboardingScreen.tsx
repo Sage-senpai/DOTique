@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import  { useState, useRef, useEffect } from "react";
 import "./onboarding.scss";
 import { useNavigate } from "react-router-dom";
 
@@ -49,7 +49,7 @@ export default function OnboardingScreen() {
       } else {
         clearInterval(intervalRef.current!);
         localStorage.setItem("hasSeenOnboarding", "true");
-        navigate("/dotvatar");
+        navigate("/home");
       }
     }, 3000);
 
@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
       setCurrentIndex((prev) => prev + 1);
     } else {
       localStorage.setItem("hasSeenOnboarding", "true");
-      navigate("/dotvatar");
+      navigate("/home");
     }
   };
 

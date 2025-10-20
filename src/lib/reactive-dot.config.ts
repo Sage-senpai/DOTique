@@ -2,9 +2,6 @@ import {
   paseo,
   paseo_asset_hub,
   paseo_people,
-  polkadot_asset_hub,
-  polkadot_people,
-  polkadot,
 } from "@polkadot-api/descriptors";
 import { defineConfig } from "@reactive-dot/core";
 import type { ChainId } from "@reactive-dot/core";
@@ -13,6 +10,12 @@ import {
   getWsProvider,
   type WsJsonRpcProvider,
 } from "polkadot-api/ws-provider";
+
+// Temporary placeholders for missing Polkadot descriptors
+// until @polkadot-api/descriptors adds them
+const polkadot = { genesisHash: "", metadataRpc: "" };
+const polkadot_people = { genesisHash: "", metadataRpc: "" };
+const polkadot_asset_hub = { genesisHash: "", metadataRpc: "" };
 
 const paseoPeopleProvider: WsJsonRpcProvider | null = getWsProvider(
   "wss://sys.ibp.network/people-paseo"

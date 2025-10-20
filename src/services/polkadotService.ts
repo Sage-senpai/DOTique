@@ -28,6 +28,9 @@ async function loadPolkadotLibs() {
   }
 }
 
+// -----------------------------------------
+// 💠 Types
+// -----------------------------------------
 export type PolkadotAccount = {
   address: string;
   name?: string;
@@ -42,6 +45,28 @@ export type PolkadotAccount = {
   };
 };
 
+export type MintNFTArgs = {
+  collectionId?: number;
+  itemId?: number;
+  metadataUri: string;
+  ownerAddress: string;
+  royalty?: number;
+  edition?: number;
+};
+
+export type MintNFTResponse = {
+  success: boolean;
+  txHash: string;
+  metadataUri: string;
+  owner: string;
+  endpoint: string | null;
+  tokenId: string;       // ✅ Added
+  blockHash?: string;    // ✅ Optional
+};
+
+// -----------------------------------------
+// 🪙 Polkadot Service Class
+// -----------------------------------------
 class PolkadotService {
   api: any = null;
   provider: any = null;
@@ -97,7 +122,7 @@ class PolkadotService {
     return await web3Accounts();
   }
 
-  async signMessage(address: string, message: string) {
+  async signMessage(address: string, message: string): Promise<string> {
     await loadPolkadotLibs();
     const injector = await web3FromAddress(address);
     const signRaw = injector.signer.signRaw;
@@ -109,6 +134,9 @@ class PolkadotService {
     return signature;
   }
 
+  // -----------------------------------------
+  // 🖼️ Mint NFT (Simulated)
+  // -----------------------------------------
   async mintNFT({
     collectionId,
     itemId,
@@ -116,34 +144,36 @@ class PolkadotService {
     ownerAddress,
     royalty = 0,
     edition = 1,
-  }: {
-    collectionId?: number;
-    itemId?: number;
-    metadataUri: string;
-    ownerAddress: string;
-    royalty?: number;
-    edition?: number;
-  }) {
+  }: MintNFTArgs): Promise<MintNFTResponse> {
     if (!this.api) throw new Error("⚠️ Polkadot API not connected.");
 
-    console.log("🎨 Minting NFT:", { collectionId, itemId, metadataUri });
+    console.log("🎨 Minting NFT:", { collectionId, itemId, metadataUri, ownerAddress, royalty, edition });
 
-    // Simulated — replace with real extrinsic later
+    // Simulated — replace with actual extrinsic logic later
+    const txHash = `0x${Math.random().toString(16).slice(2)}`;
+    const tokenId = `${Date.now()}`; // simple unique ID for now
+
     return {
       success: true,
-      txHash: `0x${Math.random().toString(16).slice(2)}`,
+      txHash,
       metadataUri,
       owner: ownerAddress,
       endpoint: this.connectedEndpoint,
+      tokenId,        // ✅ Now always included
+      blockHash: txHash, // alias
     };
   }
 }
 
+// -----------------------------------------
+// 🔐 Helper to connect wallets globally
+// -----------------------------------------
 export async function connectPolkadotWallets() {
   await loadPolkadotLibs();
   await web3Enable("DOTique Web App");
   return await web3Accounts();
 }
 
+// Singleton export
 export const polkadotService = new PolkadotService();
 console.log("✅ Polkadot Service ready (Vite + React)");

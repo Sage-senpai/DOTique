@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../stores/authStore";
 import { useUserStore } from "../../stores/userStore";
 import { socialService } from "../../services/socialService"; 
 import "./OtherUserProfile.scss";
+import {supabase} from "../../services/supabase"
 
 export default function OtherUserProfile() {
   const navigate = useNavigate();

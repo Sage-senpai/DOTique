@@ -1,17 +1,6 @@
 // src/hooks/useMintNFT.ts
 import { useState } from "react";
-import { polkadotService }from "../services/polkadotService";
-
-/**
- * Hook for minting NFTs via PolkadotService
- * - Returns isMinting boolean and a mint function.
- * - The mint function expects metadata already uploaded to IPFS (or a metadataUrl).
- *
- * NOTE:
- * - This hook intentionally does not perform metadata uploads to avoid
- *   duplicating upload logic. Keep upload responsibilities outside (ipfsService).
- * - It returns minted identifiers from PolkadotService (or simulated response on web).
- */
+import { polkadotService } from "../services/polkadotService";
 
 type MintArgs = {
   metadata: {
@@ -24,19 +13,25 @@ type MintArgs = {
   edition?: number;
 };
 
+type MintResponse = {
+  success: boolean;
+  txHash: string;
+  metadataUri: string;
+  owner: string;
+  endpoint: string | null;
+  tokenId?: string | number; // optional for future compatibility
+  blockHash?: string | null;
+};
+
 export const useMintNFT = () => {
   const [isMinting, setIsMinting] = useState(false);
 
-  async function mint({ metadata, royalty = 5, edition = 1 }: MintArgs) {
+  async function mint({ metadata, royalty = 5, edition = 1 }: MintArgs): Promise<MintResponse> {
     setIsMinting(true);
     try {
-      // Ensure we have a metadata URI to use for on-chain metadata
       const metadataUri = metadata.metadataUri ?? metadata.image;
-      if (!metadataUri) {
-        throw new Error("No metadata URI provided for minting.");
-      }
+      if (!metadataUri) throw new Error("No metadata URI provided for minting.");
 
-      // Use the PolkadotService instance (handles web simulation vs native)
       const resp = await polkadotService.mintNFT({
         metadataUri,
         ownerAddress: metadata.ownerAddress ?? "",
@@ -44,15 +39,14 @@ export const useMintNFT = () => {
         edition,
       });
 
-      // resp should include tokenId/txHash/blockHash — return a normalized shape
+      // Return normalized response — works even if tokenId doesn’t exist
       return {
-        tokenId: resp.tokenId,
-        txHash: resp.txHash,
-        blockHash: resp.blockHash ?? resp.txHash,
-        raw: resp,
+        ...resp,
+        blockHash: resp.txHash, // fallback alias for clarity
+        tokenId: (resp as any).tokenId ?? undefined,
       };
     } catch (err) {
-      // rethrow for caller to handle UI notifications
+      console.error("Minting failed:", err);
       throw err;
     } finally {
       setIsMinting(false);

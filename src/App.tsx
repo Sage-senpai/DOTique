@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Router from "./router/router";
@@ -15,7 +15,7 @@ import "./styles/App.scss";
 export default function App() {
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [dotApi, setDotApi] = useState<any>(null);
+  const [_dotApi, setDotApi] = useState<any>(null);
 
   useEffect(() => {
     let smoldot: any;

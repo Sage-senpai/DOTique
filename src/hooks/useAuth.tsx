@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // subscribe to Supabase auth state changes
   useEffect(() => {
     // supabase.auth.onAuthStateChange returns { data: { subscription } } in v2
-    const listener = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const listener = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       try {
         setLoading(true);
         if (newSession) {
@@ -114,11 +114,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           // v2 shape
           // @ts-ignore
           listener.data.subscription.unsubscribe();
-        } else if (listener?.unsubscribe) {
-          // older shape
-          // @ts-ignore
-          listener.unsubscribe();
-        }
+        } else if (listener?.data?.subscription) {
+  listener.data.subscription.unsubscribe();
+}
+
       } catch {
         // swallow cleanup errors
       }

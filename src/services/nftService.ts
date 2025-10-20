@@ -1,4 +1,6 @@
 // ==================== src/services/nftService.ts ====================
+import { supabase } from "../services/supabase";
+
 import { uploadToIPFS } from './ipfsService';
 import { polkadotService } from './polkadotService';
 

@@ -1,4 +1,7 @@
 // ==================== src/services/notificationService.ts ====================
+import { supabase } from "@/services/supabase";
+
+
 export const notificationService = {
   async getNotifications(userId: string, limit = 50) {
     try {

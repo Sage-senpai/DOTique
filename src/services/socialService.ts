@@ -98,6 +98,7 @@ export const socialService = {
     console.log("✅ Post created successfully:", data[0]);
     return data[0];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("❌ createPost error:", error.message || error);
     throw error;

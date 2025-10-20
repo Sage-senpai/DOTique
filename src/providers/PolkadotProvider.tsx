@@ -1,5 +1,6 @@
 // src/providers/PolkadotProvider.tsx
-import React, { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { polkadotService } from "../services/polkadotService"; 
 
 type Props = { children: ReactNode };
