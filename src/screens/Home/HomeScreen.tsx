@@ -145,15 +145,27 @@ const HomeScreen: React.FC = () => {
   }, [activeTab, profile?.id]);
 
   const handleCreatePost = async (content: string, imageUrl?: string) => {
-    if (!profile?.id) return;
-    try {
-      const newPost = await socialService.createPost(profile.id, content, imageUrl);
-      if (newPost) setPosts([newPost, ...posts]);
-    } catch (error) {
-      console.error("Failed to create post:", error);
-    }
-  };
+  if (!profile?.id) {
+    alert("❌ Error: You must be logged in to create a post");
+    console.error("No profile.id available");
+    return;
+  }
 
+  try {
+    console.log("📝 Creating post for user:", profile.id);
+    
+    const newPost = await socialService.createPost(profile.id, content, imageUrl);
+    
+    if (newPost) {
+      setPosts([newPost, ...posts]);
+      console.log("✅ Post added to feed");
+      alert("✅ Post created successfully!");
+    }
+  } catch (error: any) {
+    console.error("❌ Post creation failed:", error);
+    alert(`❌ Failed to create post: ${error.message}`);
+  }
+};
   return (
     <div className="home-page">
       {/* Header */}

@@ -1,0 +1,103 @@
+// Followers / Following Screen
+.followers-screen {
+  padding: 1.2rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  &__back {
+    margin-right: 0.6rem;
+    font-size: 1.4rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  &__tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: #aaa;
+    transition: color 0.2s, border-bottom 0.2s;
+
+    &.active {
+      color: #00c48c;
+      border-bottom: 2px solid #00c48c;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  &__loading,
+  &__empty {
+    text-align: center;
+    color: #888;
+    margin-top: 2rem;
+  }
+}
+
+.follower-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  &__name {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  &__username {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+
+  &__badge {
+    font-size: 0.8rem;
+    color: #00c48c;
+  }
+}

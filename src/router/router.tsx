@@ -1,5 +1,4 @@
 // src/router/router.tsx
-
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -20,6 +19,9 @@ import TestSupabase from "../screens/TestSupabase/TestSupabase";
 
 // Home & Tabs
 import HomeScreen from "../screens/Home/HomeScreen";
+import MarketplaceScreen from "../screens/Marketplace/MarketplaceScreen";
+import NFTStudioScreen from "../screens/NFTstudio/NFTStudioScreen";
+import MessagesScreen from "../screens/Messages/MessageScreen";
 
 // Profile Screens
 import OtherUserProfile from "../screens/Profile/OtherUserProfile";
@@ -30,17 +32,17 @@ import ProfileGovernance from "../screens/Profile/ProfileGovernance";
 import EditProfileScreen from "../screens/Profile/EditProfileScreen";
 import SettingsScreen from "../screens/Profile/SettingsScreen";
 
+// Followers Screen
+import FollowerScreen from "../screens/Profile/FollowerScreen";
+
 // Auth Store
 import { useAuthStore } from "../stores/authStore";
 
-// Temporary Placeholder Tab Screens (replace with actual screens later)
-const MarketplaceScreen = () => <div className="screen">🛍️ Marketplace</div>;
-const MintScreen = () => <div className="screen">➕ Mint</div>;
-const MessagesScreen = () => <div className="screen">💬 Messages</div>;
-
 export default function Router() {
   const session = useAuthStore((s) => s.session);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
+    null
+  );
 
   useEffect(() => {
     const seen = localStorage.getItem("hasSeenOnboarding");
@@ -70,38 +72,36 @@ export default function Router() {
     );
   }
 
-  // ✅ Logged in → show full app
+  // ✅ Logged in → show full app with BottomNav
   return (
     <Routes>
-      {/* Main tabs with BottomTabNavigator */}
-      <Route path="/" element={<BottomTabNavigator />}>
-        <Route index element={<Navigate to="/home" replace />} />
+      {/* Main layout with BottomNav - all routes nested here */}
+      <Route element={<BottomTabNavigator />}>
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/marketplace" element={<MarketplaceScreen />} />
-        <Route path="/mint" element={<MintScreen />} />
+        <Route path="/nft-studio" element={<NFTStudioScreen />} />
         <Route path="/messages" element={<MessagesScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/profile/other" element={<OtherUserProfile />} />
       </Route>
 
-      {/* Standalone Pages */}
+      {/* Standalone Pages (no BottomNav) */}
       <Route path="/dotvatar" element={<DOTvatarScreen />} />
       <Route path="/test-supabase" element={<TestSupabase />} />
 
-      {/* Profile Sub-pages */}
+      {/* Profile Sub-pages (no BottomNav) */}
       <Route path="/profile/wardrobe" element={<ProfileWardrobe />} />
       <Route path="/profile/stylecv" element={<ProfileStyleCV />} />
       <Route path="/profile/governance" element={<ProfileGovernance />} />
       <Route path="/profile/edit" element={<EditProfileScreen />} />
       <Route path="/settings" element={<SettingsScreen />} />
 
+      {/* Followers Screen */}
+      <Route path="/followers" element={<FollowerScreen />} />
+
       {/* Fallback to home */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
-
-       
     </Routes>
-
-    
-
   );
 }

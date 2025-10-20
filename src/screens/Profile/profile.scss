@@ -17,6 +17,8 @@ $font: "Poppins", sans-serif;
   background: $color-secondary;
   font-family: $font;
   padding-bottom: 80px;
+  
+  
 
   &__header {
     display: flex;
@@ -1186,3 +1188,9 @@ $font: "Poppins", sans-serif;
     cursor: not-allowed;
   }
 }
+
+.profile-follow-link {
+      font-family: $font;
+      font-size: 20px;
+
+  }

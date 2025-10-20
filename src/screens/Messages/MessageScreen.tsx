@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { supabase } from "../../services/supabase";
 import "./MessagesScreen.scss";
 
 /**

@@ -32,8 +32,8 @@ export default function BottomTabNavigator() {
         <NavLink to="/marketplace" className="tab">
           🛍️ <span>Marketplace</span>
         </NavLink>
-        <NavLink to="/mint" className="tab">
-          ➕ <span>Mint</span>
+        <NavLink to="/nft-studio" className="tab">
+          ➕ <span>NFT Studio</span>
         </NavLink>
         <NavLink to="/messages" className="tab">
           💬 <span>Messages</span>

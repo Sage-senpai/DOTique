@@ -59,26 +59,50 @@ export interface UserProfile {
 export const socialService = {
   // 📝 Create a post
   async createPost(userId: string, content: string, imageUrl?: string) {
-    try {
-      const { data, error } = await supabase
-        .from("posts")
-        .insert([
-          {
-            user_id: userId,
-            content,
-            image_url: imageUrl,
-            created_at: new Date().toISOString(),
-          },
-        ])
-        .select();
-
-      if (error) throw error;
-      return data?.[0];
-    } catch (error) {
-      console.error("❌ Failed to create post:", error);
-      throw error;
+  try {
+    // Validation
+    if (!userId) {
+      console.error("❌ User ID is missing");
+      throw new Error("User ID is required to create a post");
     }
-  },
+
+    if (!content || !content.trim()) {
+      console.error("❌ Content is empty");
+      throw new Error("Post content cannot be empty");
+    }
+
+    const postData = {
+      user_id: userId,
+      content: content.trim(),
+      image_url: imageUrl || null,
+      created_at: new Date().toISOString(),
+    };
+
+    console.log("📝 Inserting post to Supabase:", postData);
+
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([postData])
+      .select();
+
+    if (error) {
+      console.error("❌ Supabase error:", error);
+      throw new Error(`Supabase error: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      console.error("❌ No data returned from insert");
+      throw new Error("Post was not created (no data returned)");
+    }
+
+    console.log("✅ Post created successfully:", data[0]);
+    return data[0];
+
+  } catch (error: any) {
+    console.error("❌ createPost error:", error.message || error);
+    throw error;
+  }
+},
 
   // 📚 Get timeline posts (feed/following/followers)
   async getTimelinePosts(

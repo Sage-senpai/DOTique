@@ -5,56 +5,87 @@ import { useUserStore } from "../../stores/userStore";
 import PostActions from "./PostActions";
 import "./PostCard.scss";
 
-interface PostCardProps {
-  post: {
-    id: string;
-    author: {
-      id: string;
-      name: string;
-      username: string;
-      avatar: string;
-      verified: boolean;
-    };
-    content: string;
-    media?: Array<{
-      type: string;
-      url: string;
-    }>;
-    createdAt: Date;
-    stats: {
-      views: number;
-      likes: number;
-      comments: number;
-      reposts: number;
-      shares: number;
-    };
-    userInteraction: {
-      liked: boolean;
-      saved: boolean;
-      reposted: boolean;
-    };
-  };
+interface Author {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  verified: boolean;
 }
 
+interface Media {
+  type: string;
+  url: string;
+}
+
+interface Stats {
+  views?: number;
+  likes?: number;
+  comments?: number;
+  reposts?: number;
+  shares?: number;
+}
+
+interface UserInteraction {
+  liked?: boolean;
+  saved?: boolean;
+  reposted?: boolean;
+}
+
+interface Post {
+  id: string;
+  author: Author;
+  content: string;
+  media?: Media[];
+  createdAt: Date;
+  stats?: Stats;
+  userInteraction?: UserInteraction;
+}
+
+interface PostCardProps {
+  post?: Post | null;
+}
+
+// ✅ Fallback dummy post
+const dummyPost: Post = {
+  id: "dummy-1",
+  author: {
+    id: "user-1",
+    name: "Jane Developer",
+    username: "@janedev",
+    avatar: "👩🏽‍💻",
+    verified: true,
+  },
+  content:
+    "Building the future of decentralized social media 🌐✨ #Web3 #React #Supabase",
+  media: [{ type: "image", url: "https://placekitten.com/400/200" }],
+  createdAt: new Date(Date.now() - 1000 * 60 * 15), // 15m ago
+  stats: { views: 342, likes: 28, comments: 6, reposts: 2, shares: 3 },
+  userInteraction: { liked: false, saved: false, reposted: false },
+};
+
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
+  const safePost = post ?? dummyPost; // ✅ Never null
   const navigate = useNavigate();
   const { setSelectedUser } = useUserStore();
 
-  const [stats, setStats] = useState(post.stats);
-  const [userInteraction, setUserInteraction] = useState(post.userInteraction);
+  const [stats, setStats] = useState<Stats>(safePost.stats ?? {});
+  const [userInteraction, setUserInteraction] = useState<UserInteraction>(
+    safePost.userInteraction ?? {}
+  );
 
-  // 🔹 Navigate to user profile when avatar clicked
   const handleAvatarClick = () => {
+    if (!safePost?.author) return;
     setSelectedUser({
-      id: post.author.id,
-      username: post.author.username,
-      display_name: post.author.name,
-      avatar: post.author.avatar,
+      id: safePost.author.id,
+      username: safePost.author.username,
+      display_name: safePost.author.name,
+      avatar: safePost.author.avatar,
       bio: "",
       followers_count: 0,
       following_count: 0,
       posts_count: 0,
-      verified: post.author.verified,
+      verified: safePost.author.verified,
     });
     navigate("/profile/other");
   };
@@ -63,7 +94,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     setUserInteraction((prev) => ({ ...prev, liked: !prev.liked }));
     setStats((prev) => ({
       ...prev,
-      likes: prev.likes + (userInteraction.liked ? -1 : 1),
+      likes: (prev.likes ?? 0) + (userInteraction.liked ? -1 : 1),
     }));
   };
 
@@ -72,7 +103,9 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   };
 
   const getTimeAgo = (date: Date): string => {
-    const minutes = Math.floor((Date.now() - date.getTime()) / (1000 * 60));
+    if (!date) return "";
+    const minutes = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60));
+    if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h`;
@@ -90,34 +123,36 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             role="button"
             tabIndex={0}
           >
-            {post.author.avatar}
+            {safePost.author?.avatar || "👤"}
           </div>
           <div className="author-info">
             <div className="author-name">
-              {post.author.name}
-              {post.author.verified && <span className="verified">✓</span>}
+              {safePost.author?.name || "Anonymous"}
+              {safePost.author?.verified && <span className="verified">✓</span>}
             </div>
-            <div className="author-username">{post.author.username}</div>
+            <div className="author-username">
+              {safePost.author?.username || "@unknown"}
+            </div>
           </div>
         </div>
         <div className="post-menu">⋮</div>
       </div>
 
-      <div className="post-content">{post.content}</div>
+      <div className="post-content">{safePost.content || "No content"}</div>
 
-      {post.media && (
+      {safePost.media?.length ? (
         <div className="post-media">
-          {post.media.map((m, i) => (
+          {safePost.media.map((m, i) => (
             <img key={i} src={m.url} alt="post" className="post-image" />
           ))}
         </div>
-      )}
+      ) : null}
 
       <div className="post-stats">
-        <span>{post.stats.views.toLocaleString()} views</span>
+        <span>{stats?.views?.toLocaleString() ?? 0} views</span>
         <span>•</span>
-        <span>{stats.likes.toLocaleString()} likes</span>
-        <span className="time-ago">• {getTimeAgo(post.createdAt)}</span>
+        <span>{stats?.likes?.toLocaleString() ?? 0} likes</span>
+        <span className="time-ago">• {getTimeAgo(safePost.createdAt)}</span>
       </div>
 
       <PostActions

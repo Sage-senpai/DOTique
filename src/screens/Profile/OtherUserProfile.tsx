@@ -1,11 +1,9 @@
-// 6. NEW: src/screens/Profile/OtherUserProfile.tsx
-// =====================================================
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../stores/authStore";
 import { useUserStore } from "../../stores/userStore";
-import { socialService } from "../../services/socialService";
+import { socialService } from "../../services/socialService"; 
 import "./OtherUserProfile.scss";
 
 export default function OtherUserProfile() {
@@ -25,18 +23,20 @@ export default function OtherUserProfile() {
     const fetchData = async () => {
       try {
         const userPosts = await socialService.getUserPosts(selectedUser.id);
-        setPosts(userPosts);
+        setPosts(userPosts || []);
 
-        // Check if current user follows this user
         if (currentUser?.id) {
           const { data } = await supabase
             .from("follows")
             .select("id")
             .eq("follower_id", currentUser.id)
             .eq("following_id", selectedUser.id)
-            .single();
+            .maybeSingle();
+
           setIsFollowing(!!data);
         }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
       } finally {
         setLoading(false);
       }
@@ -47,7 +47,6 @@ export default function OtherUserProfile() {
 
   const handleToggleFollow = async () => {
     if (!currentUser?.id || !selectedUser?.id) return;
-
     try {
       const result = await socialService.toggleFollow(
         currentUser.id,
@@ -60,89 +59,115 @@ export default function OtherUserProfile() {
   };
 
   if (loading) {
-    return (
-      <div className="profile-screen__spinner" />
-    );
+    return <div className="other-profile-screen__spinner" />;
   }
 
   if (!selectedUser) return null;
 
   return (
     <motion.div
-      className="profile-screen"
-      initial={{ opacity: 0, y: 18 }}
+      className="other-profile-screen"
+      initial={{ opacity: 0, y: 25 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <div className="profile-screen__header">
-        <div className="profile-screen__avatar-placeholder">
-          {selectedUser.avatar ? (
-            <img src={selectedUser.avatar} alt={selectedUser.username} />
-          ) : (
-            "👤"
-          )}
-        </div>
+      <div className="other-profile-screen__header">
+        <button
+          className="other-profile-screen__back-btn"
+          onClick={() => {
+            clearSelectedUser();
+            navigate(-1);
+          }}
+        >
+          ←
+        </button>
 
-        <h2 className="profile-screen__name">{selectedUser.display_name}</h2>
-        <p className="profile-screen__username">@{selectedUser.username}</p>
+        {selectedUser.avatar ? (
+          <img
+            src={selectedUser.avatar}
+            alt={selectedUser.username}
+            className="other-profile-screen__avatar"
+          />
+        ) : (
+          <div className="other-profile-screen__avatar-placeholder">👤</div>
+        )}
 
-        <div className="profile-screen__stats">
+        <h2 className="other-profile-screen__name">
+          {selectedUser.display_name}
+        </h2>
+        <p className="other-profile-screen__username">
+          @{selectedUser.username}
+        </p>
+
+        {selectedUser.bio && (
+          <div className="other-profile-screen__bio">
+            <p>{selectedUser.bio}</p>
+          </div>
+        )}
+
+        <div className="other-profile-screen__stats">
           <div className="stat">
             <span className="stat__label">Posts</span>
-            <span className="stat__value">{selectedUser.posts_count}</span>
+            <span className="stat__value">{selectedUser.posts_count || 0}</span>
           </div>
           <div className="stat">
             <span className="stat__label">Followers</span>
-            <span className="stat__value">{selectedUser.followers_count}</span>
+            <span className="stat__value">
+              {selectedUser.followers_count || 0}
+            </span>
           </div>
           <div className="stat">
             <span className="stat__label">Following</span>
-            <span className="stat__value">{selectedUser.following_count}</span>
+            <span className="stat__value">
+              {selectedUser.following_count || 0}
+            </span>
           </div>
         </div>
 
-        <div className="profile-screen__buttons">
+        <div className="other-profile-screen__buttons">
           <button
-            className={`profile-screen__btn-primary ${
+            className={`other-profile-screen__btn-primary ${
               isFollowing ? "following" : ""
             }`}
             onClick={handleToggleFollow}
           >
             {isFollowing ? "✓ Following" : "+ Follow"}
           </button>
+
           <button
-            className="profile-screen__btn-secondary"
-            onClick={() => clearSelectedUser()}
+            className="other-profile-screen__btn-secondary"
+            onClick={() => {
+              clearSelectedUser();
+              navigate(-1);
+            }}
           >
             ← Back
           </button>
         </div>
       </div>
 
-      {selectedUser.bio && (
-        <div className="profile-screen__bio">
-          <p>{selectedUser.bio}</p>
-        </div>
-      )}
-
-      <div className="profile-screen__tabs">
-        <button className="profile-screen__tab active">📸 Posts</button>
-        <button className="profile-screen__tab">👗 Wardrobe</button>
-        <button className="profile-screen__tab">🏷️ Tagged</button>
+      <div className="other-profile-screen__tabs">
+        <button className="other-profile-screen__tab active">📸 Posts</button>
+        <button className="other-profile-screen__tab">👗 Wardrobe</button>
+        <button className="other-profile-screen__tab">🏷️ Tagged</button>
       </div>
 
-      <div className="profile-screen__posts">
+      <div className="other-profile-screen__posts">
         {posts.length > 0 ? (
           posts.map((post) => (
-            <div key={post.id} className="profile-screen__post-card">
+            <motion.div
+              key={post.id}
+              className="other-profile-screen__post-card"
+              whileHover={{ scale: 1.02, y: -4 }}
+              transition={{ duration: 0.25 }}
+            >
               <p>{post.content}</p>
-              {post.image_url && (
-                <img src={post.image_url} alt="post" />
-              )}
-            </div>
+              {post.image_url && <img src={post.image_url} alt="post" />}
+            </motion.div>
           ))
         ) : (
-          <p className="profile-screen__no-posts">No posts yet</p>
+          <p className="other-profile-screen__no-posts">No posts yet</p>
         )}
       </div>
     </motion.div>
