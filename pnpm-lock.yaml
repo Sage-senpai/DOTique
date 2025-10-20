@@ -47,6 +47,12 @@ importers:
       '@react-three/fiber':
         specifier: ^9.4.0
         version: 9.4.0(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(three@0.180.0)
+      '@reactive-dot/core':
+        specifier: ^0.57.0
+        version: 0.57.0(polkadot-api@1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2))(typescript@5.9.3)
+      '@reactive-dot/react':
+        specifier: ^0.57.0
+        version: 0.57.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(polkadot-api@1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2))(react@19.2.0)(typescript@5.9.3)
       '@shopify/react-native-skia':
         specifier: ^2.3.0
         version: 2.3.0(react@19.2.0)
@@ -1585,6 +1591,19 @@ packages:
       react-native:
         optional: true
 
+  '@reactive-dot/core@0.57.0':
+    resolution: {integrity: sha512-fHRrg7I2dyZG1A+BAkkZJg/AQgd5SdYKrgVo1khnMUSvGrLAzgb620Y2tUpQfWJ7u141fDucdzxGqTMbkgX2nQ==}
+    peerDependencies:
+      polkadot-api: '>=1.19.x'
+
+  '@reactive-dot/react@0.57.0':
+    resolution: {integrity: sha512-KekSbygpqQqRWr1AfXKofP09l96+e1wf5yFLX2T1KizhY/PZVme0L0HlMbIHZYIV9SwyWX5aJd33wKTRQj2XHg==}
+    peerDependencies:
+      react: 19.x
+
+  '@reactive-dot/utils@0.10.3':
+    resolution: {integrity: sha512-mQxAwSXlkO43MJeHDWwm5/1uCkZvMDpQ3LeXf0U7jdN2qj9djX4bfvxeh97biGMhpcoOAHooNnNMOMkheJ5Fjw==}
+
   '@rolldown/pluginutils@1.0.0-beta.38':
     resolution: {integrity: sha512-N/ICGKleNhA5nc9XXQG/kkKHJ7S55u0x0XUJbbkmdCnFuoRkM1Il12q9q0eX19+M7KKUEPw/daUPIRnxhcxAIw==}
 
@@ -1763,10 +1782,16 @@ packages:
     resolution: {integrity: sha512-ofLs1PAO9AtDdPbdyTYj217Pe+lBfTLltdHDs3ds8no0BseoLeAGxpz1mHfi7zB4IxI3YyAiLjH6U8cw4pj4Nw==}
     deprecated: versions below 1.x are no longer maintained
 
+  '@substrate/discovery@0.2.2':
+    resolution: {integrity: sha512-vD5B1LqIaiDBWpJ7h1b89jzhU0AKjOySFAt2zbTDz+gpRdcOn0I8PoxhOrent4LXFX9O/ch8bGG/JYDtr2B2QA==}
+
   '@substrate/light-client-extension-helpers@1.0.0':
     resolution: {integrity: sha512-TdKlni1mBBZptOaeVrKnusMg/UBpWUORNDv5fdCaJklP4RJiFOzBCrzC+CyVI5kQzsXBisZ+2pXm+rIjS38kHg==}
     peerDependencies:
       smoldot: 2.x
+
+  '@substrate/smoldot-discovery@2.0.2':
+    resolution: {integrity: sha512-6KG6S1QkEfDJIgqYszSWH7n6QBGdcU9LG6sWdEUR86wqrr26Pr1z52cOUhHBRtU2+vydglIM6IVnMuzFEIUbBw==}
 
   '@substrate/ss58-registry@1.51.0':
     resolution: {integrity: sha512-TWDurLiPxndFgKjVavCniytBIw+t4ViOi7TYp9h/D0NMmkEc9klFTo+827eyEJ0lELpqO207Ey7uGxUa+BS1jQ==}
@@ -2081,6 +2106,17 @@ packages:
 
   abitype@1.1.0:
     resolution: {integrity: sha512-6Vh4HcRxNMLA0puzPjM5GBgT4aAcFGKZzSgAXvuZ27shJP6NEpielTuqbBmZILR5/xd0PizkBGy5hReKz9jl5A==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3.22.0 || ^4.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
+
+  abitype@1.1.1:
+    resolution: {integrity: sha512-Loe5/6tAgsBukY95eGaPSDmQHIjRZYQq8PB1MpsNccDIK8WiV+Uw6WzaIXipvaxTEL2yEB0OpEaQv3gs8pkS9Q==}
     peerDependencies:
       typescript: '>=5.0.4'
       zod: ^3.22.0 || ^4.0.0
@@ -3291,6 +3327,35 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
+  jotai-eager@0.2.3:
+    resolution: {integrity: sha512-6kC1RnXRQ8QdESW+r6I3Ep5wKUYAfW7ERNyeNby0EgjgZB+Z3VgoNk4eUEEAgcGHFwz9IpA4RQQxwlnk+tLgJQ==}
+    peerDependencies:
+      jotai: '>=2.0.0'
+
+  jotai-effect@2.1.3:
+    resolution: {integrity: sha512-gFIqKvW5hljRLaZihqI48SFFYZQifaT3ZDsqBdqyMRRvm++PAWpcmrRWvqG2MrG346Chs4QUWeZzAucgViggDQ==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      jotai: '>=2.14.0'
+
+  jotai@2.15.0:
+    resolution: {integrity: sha512-nbp/6jN2Ftxgw0VwoVnOg0m5qYM1rVcfvij+MZx99Z5IK13eGve9FJoCwGv+17JvVthTjhSmNtT5e1coJnr6aw==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@babel/core': '>=7.0.0'
+      '@babel/template': '>=7.0.0'
+      '@types/react': '>=17.0.0'
+      react: '>=17.0.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@babel/template':
+        optional: true
+      '@types/react':
+        optional: true
+      react:
+        optional: true
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -3697,6 +3762,14 @@ packages:
   own-keys@1.0.1:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
     engines: {node: '>= 0.4'}
+
+  ox@0.9.12:
+    resolution: {integrity: sha512-esyA5WXfFhlxpgzoVIEreRaasqqv95sjFpk3L4Me4RWk8bgBDe+J4wO3RZ5ikYmJ2Bbjyv+jKgxyaOzX6JpHPA==}
+    peerDependencies:
+      typescript: '>=5.4.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   ox@0.9.6:
     resolution: {integrity: sha512-8SuCbHPvv2eZLYXrNmC0EC12rdzXQLdhnOMlHDW2wiCPLxBrOOJwX5L5E61by+UjTPOryqQiRSnjIKCI+GykKg==}
@@ -6353,6 +6426,35 @@ snapshots:
       - '@types/react'
       - immer
 
+  '@reactive-dot/core@0.57.0(polkadot-api@1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2))(typescript@5.9.3)':
+    dependencies:
+      '@noble/hashes': 2.0.1
+      '@reactive-dot/utils': 0.10.3
+      '@substrate/smoldot-discovery': 2.0.2
+      abitype: 1.1.1(typescript@5.9.3)
+      ox: 0.9.12(typescript@5.9.3)
+      polkadot-api: 1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)
+    transitivePeerDependencies:
+      - typescript
+      - zod
+
+  '@reactive-dot/react@0.57.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(polkadot-api@1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2))(react@19.2.0)(typescript@5.9.3)':
+    dependencies:
+      '@reactive-dot/core': 0.57.0(polkadot-api@1.20.0(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2))(typescript@5.9.3)
+      jotai: 2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0)
+      jotai-eager: 0.2.3(jotai@2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0))
+      jotai-effect: 2.1.3(jotai@2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0))
+      react: 19.2.0
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/template'
+      - '@types/react'
+      - polkadot-api
+      - typescript
+      - zod
+
+  '@reactive-dot/utils@0.10.3': {}
+
   '@rolldown/pluginutils@1.0.0-beta.38': {}
 
   '@rollup/plugin-inject@5.0.5(rollup@4.52.4)':
@@ -6483,6 +6585,8 @@ snapshots:
       - utf-8-validate
     optional: true
 
+  '@substrate/discovery@0.2.2': {}
+
   '@substrate/light-client-extension-helpers@1.0.0(smoldot@2.0.26)':
     dependencies:
       '@polkadot-api/json-rpc-provider': 0.0.1
@@ -6494,6 +6598,10 @@ snapshots:
       rxjs: 7.8.2
       smoldot: 2.0.26
     optional: true
+
+  '@substrate/smoldot-discovery@2.0.2':
+    dependencies:
+      '@substrate/discovery': 0.2.2
 
   '@substrate/ss58-registry@1.51.0': {}
 
@@ -6862,6 +6970,10 @@ snapshots:
   '@webgpu/types@0.1.66': {}
 
   abitype@1.1.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
+
+  abitype@1.1.1(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
 
@@ -8356,6 +8468,21 @@ snapshots:
 
   jiti@2.6.1: {}
 
+  jotai-eager@0.2.3(jotai@2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0)):
+    dependencies:
+      jotai: 2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0)
+
+  jotai-effect@2.1.3(jotai@2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0)):
+    dependencies:
+      jotai: 2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0)
+
+  jotai@2.15.0(@babel/core@7.28.4)(@babel/template@7.27.2)(@types/react@19.2.2)(react@19.2.0):
+    optionalDependencies:
+      '@babel/core': 7.28.4
+      '@babel/template': 7.27.2
+      '@types/react': 19.2.2
+      react: 19.2.0
+
   joycon@3.1.1: {}
 
   js-cookie@3.0.5: {}
@@ -8759,6 +8886,21 @@ snapshots:
       get-intrinsic: 1.3.0
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
+
+  ox@0.9.12(typescript@5.9.3):
+    dependencies:
+      '@adraffy/ens-normalize': 1.11.1
+      '@noble/ciphers': 1.3.0
+      '@noble/curves': 1.9.1
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.1.1(typescript@5.9.3)
+      eventemitter3: 5.0.1
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - zod
 
   ox@0.9.6(typescript@5.9.3):
     dependencies:

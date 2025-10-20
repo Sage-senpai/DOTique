@@ -1,4 +1,4 @@
-// src/stores/useStudioStore.ts
+// ==================== src/stores/useStudioStore.ts ====================
 import { create } from "zustand";
 
 /**
@@ -35,20 +35,20 @@ export type Project = {
 /**
  * Zustand global store type
  */
-type StudioStore = {
+interface StudioStore {
   project: Project | null;
-  canvasRef?: any;
+  canvasRef?: unknown;
 
   setProject: (project: Partial<Project> | null) => void;
   updateLayerPaths: (layerId: string, paths: string[]) => void;
   resetProject: () => void;
-  setCanvasRef: (ref: any) => void;
-};
+  setCanvasRef: (ref: unknown) => void;
+}
 
 /**
  * Zustand store definition
  */
-const useStudioStore = create<StudioStore>((set, get) => ({
+const useStudioStore = create<StudioStore>((set) => ({
   project: {
     id: "default",
     name: "Untitled Canvas",
@@ -61,8 +61,8 @@ const useStudioStore = create<StudioStore>((set, get) => ({
   canvasRef: undefined,
 
   // Merge new values into existing project safely
-  setProject: (project) =>
-    set((state) => {
+  setProject: (project: Partial<Project> | null) =>
+    set((state: StudioStore) => {
       if (!project) return { project: null };
       return {
         project: {
@@ -74,20 +74,24 @@ const useStudioStore = create<StudioStore>((set, get) => ({
     }),
 
   // Update only a specific layer’s path array
-  updateLayerPaths: (layerId, paths) =>
-    set((state) => {
+  updateLayerPaths: (layerId: string, paths: string[]) =>
+    set((state: StudioStore) => {
       if (!state.project) return state;
       const updatedLayers = state.project.layers.map((layer) =>
         layer.id === layerId ? { ...layer, paths } : layer
       );
       return {
-        project: { ...state.project, layers: updatedLayers, updatedAt: Date.now() },
+        project: {
+          ...state.project,
+          layers: updatedLayers,
+          updatedAt: Date.now(),
+        },
       };
     }),
 
   // Reset everything to default
   resetProject: () =>
-    set({
+    set(() => ({
       project: {
         id: "default",
         name: "Untitled Canvas",
@@ -98,10 +102,10 @@ const useStudioStore = create<StudioStore>((set, get) => ({
         updatedAt: Date.now(),
       },
       canvasRef: undefined,
-    }),
+    })),
 
   // Reference to Skia Canvas (for export, etc.)
-  setCanvasRef: (ref) => set({ canvasRef: ref }),
+  setCanvasRef: (ref: unknown) => set(() => ({ canvasRef: ref })),
 }));
 
 export default useStudioStore;
