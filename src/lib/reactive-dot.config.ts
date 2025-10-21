@@ -1,3 +1,4 @@
+// ====================== src/lib/reactive-dot.config.ts ======================
 import {
   paseo,
   paseo_asset_hub,
@@ -11,12 +12,13 @@ import {
   type WsJsonRpcProvider,
 } from "polkadot-api/ws-provider";
 
-// Temporary placeholders for missing Polkadot descriptors
-// until @polkadot-api/descriptors adds them
-const polkadot = { genesisHash: "", metadataRpc: "" };
-const polkadot_people = { genesisHash: "", metadataRpc: "" };
-const polkadot_asset_hub = { genesisHash: "", metadataRpc: "" };
+// 🩵 Temporary placeholders for missing Polkadot descriptors
+// Until official Polkadot descriptors are added to @polkadot-api/descriptors
+const polkadot = { genesisHash: "", metadataRpc: "" } as unknown as any;
+const polkadot_people = { genesisHash: "", metadataRpc: "" } as unknown as any;
+const polkadot_asset_hub = { genesisHash: "", metadataRpc: "" } as unknown as any;
 
+// 🌐 WebSocket Providers
 const paseoPeopleProvider: WsJsonRpcProvider | null = getWsProvider(
   "wss://sys.ibp.network/people-paseo"
 );
@@ -36,67 +38,90 @@ const polkadotProvider: WsJsonRpcProvider | null = getWsProvider(
   "wss://rpc.polkadot.io"
 );
 
+// 🧩 UI-friendly chain metadata (type helper)
+type UIChainConfig = {
+  name: string;
+  explorerUrl: string;
+  symbol: string;
+  decimals: number;
+  logo: string;
+};
+
+// ⚙️ ReactiveDot Configuration
 export const config = defineConfig({
   ssr: true,
   chains: {
     paseo: {
-      name: "Paseo",
+      ...( {
+        name: "Paseo",
+        explorerUrl: "https://paseo.subscan.io",
+        symbol: "PAS",
+        decimals: 10,
+        logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chain-assets/paseotest-native-pas.png",
+      } as UIChainConfig ),
       descriptor: paseo,
       provider: paseoProvider,
-      explorerUrl: "https://paseo.subscan.io",
-      symbol: "PAS",
-      decimals: 10,
-      logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chain-assets/paseotest-native-pas.png",
     },
     paseoPeople: {
-      name: "Paseo People",
+      ...( {
+        name: "Paseo People",
+        explorerUrl: "https://people-paseo.subscan.io",
+        symbol: "PAS",
+        decimals: 10,
+        logo: "https://people-paseo.subscan.io/_next/image?url=%2Fchains%2Fpeople-paseo%2Flogo-mini.png&w=256&q=75",
+      } as UIChainConfig ),
       descriptor: paseo_people,
       provider: paseoPeopleProvider,
-      explorerUrl: "https://people-paseo.subscan.io",
-      symbol: "PAS",
-      decimals: 10,
-      logo: "https://people-paseo.subscan.io/_next/image?url=%2Fchains%2Fpeople-paseo%2Flogo-mini.png&w=256&q=75",
     },
     paseoAssetHub: {
-      name: "Paseo Asset Hub",
+      ...( {
+        name: "Paseo Asset Hub",
+        explorerUrl: "https://assethub-paseo.subscan.io",
+        symbol: "PAS",
+        decimals: 10,
+        logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/paseo_assethub.png",
+      } as UIChainConfig ),
       descriptor: paseo_asset_hub,
       provider: paseoAssetHubProvider,
-      explorerUrl: "https://assethub-paseo.subscan.io",
-      symbol: "PAS",
-      decimals: 10,
-      logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/paseo_assethub.png",
     },
     polkadot: {
-      name: "Polkadot",
+      ...( {
+        name: "Polkadot",
+        explorerUrl: "https://polkadot.subscan.io",
+        symbol: "DOT",
+        decimals: 10,
+        logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot.png",
+      } as UIChainConfig ),
       descriptor: polkadot,
       provider: polkadotProvider,
-      explorerUrl: "https://polkadot.subscan.io",
-      symbol: "DOT",
-      decimals: 10,
-      logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot.png",
     },
     polkadotPeople: {
-      name: "Polkadot People",
+      ...( {
+        name: "Polkadot People",
+        explorerUrl: "https://people-polkadot.subscan.io",
+        symbol: "DOT",
+        decimals: 10,
+        logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot_people.png",
+      } as UIChainConfig ),
       descriptor: polkadot_people,
       provider: polkadotPeopleProvider,
-      explorerUrl: "https://people-polkadot.subscan.io",
-      symbol: "DOT",
-      decimals: 10,
-      logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot_people.png",
     },
     polkadotAssetHub: {
-      name: "Polkadot Asset Hub",
+      ...( {
+        name: "Polkadot Asset Hub",
+        explorerUrl: "https://assethub-polkadot.subscan.io",
+        symbol: "DOT",
+        decimals: 10,
+        logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot_assethub.png",
+      } as UIChainConfig ),
       descriptor: polkadot_asset_hub,
       provider: polkadotAssetHubProvider,
-      explorerUrl: "https://assethub-polkadot.subscan.io",
-      symbol: "DOT",
-      decimals: 10,
-      logo: "https://raw.githubusercontent.com/Koniverse/SubWallet-ChainList/refs/heads/master/packages/chain-list-assets/public/assets/chains/polkadot_assethub.png",
     },
   },
   wallets: [new InjectedWalletProvider()],
 });
 
+// 🧠 Type helpers for identity & pallet assets
 export type ChainIdWithIdentity = Extract<
   keyof typeof config.chains,
   "polkadotPeople" | "paseoPeople"

@@ -11,26 +11,29 @@ export function useNFT() {
   }, [setNFTDraft]);
 
   const mintNFT = useCallback(async (nftData: NFTMintData) => {
-    setMinting(true);
-    setMintError(null);
-    try {
-      // TODO: Call mintService.mintNFT(nftData)
-      // Returns { tokenId, txHash, blockHash }
-      const result = {
-        tokenId: Date.now().toString(),
-        txHash: '0x' + Math.random().toString(16).slice(2),
-        blockHash: '0x' + Math.random().toString(16).slice(2),
-      };
-      setNFTDraft(null);
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mint NFT';
-      setMintError(errorMessage);
-      throw error;
-    } finally {
-      setMinting(false);
-    }
-  }, [setMinting, setMintError, setNFTDraft]);
+  setMinting(true);
+  setMintError(null);
+  try {
+    // TEMP: log to suppress unused-var warning until mintService is ready
+    console.log("Minting NFT:", nftData);
+
+    // TODO: replace this with actual service call
+    const result = {
+      tokenId: Date.now().toString(),
+      txHash: '0x' + Math.random().toString(16).slice(2),
+      blockHash: '0x' + Math.random().toString(16).slice(2),
+    };
+    setNFTDraft(null);
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to mint NFT';
+    setMintError(errorMessage);
+    throw error;
+  } finally {
+    setMinting(false);
+  }
+}, [setMinting, setMintError, setNFTDraft]);
+
 
   return {
     nftDraft,

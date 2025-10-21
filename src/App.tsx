@@ -1,7 +1,8 @@
 // src/App.tsx
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { DotApiContext } from "./hooks/useDotApi";
 import Router from "./router/router";
 import ConnectionStatus from "./components/ConnectionStatus";
 import { createClient } from "polkadot-api";
@@ -15,7 +16,7 @@ import "./styles/App.scss";
 export default function App() {
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [_dotApi, setDotApi] = useState<any>(null);
+  const [dotApi, setDotApi] = useState<any>(null);
 
   useEffect(() => {
     let smoldot: any;
@@ -24,15 +25,27 @@ export default function App() {
     const init = async () => {
       try {
         setIsConnecting(true);
+        console.log("🔄 Initializing Smoldot Polkadot client...");
+
         const sm = startFromWorker(worker);
         smoldot = sm;
 
         const chain = await sm.addChain({ chainSpec });
         const client = createClient(getSmProvider(chain));
         const api = client.getTypedApi(dot);
-
         setDotApi(api);
         setIsConnected(true);
+
+        console.log("✅ Polkadot API ready:", api);
+
+        // ✅ Use Smoldot's JSON-RPC directly
+        try {
+          const chainName = await chain.sendJsonRpc("system_chain");
+          const runtimeVersion = await chain.sendJsonRpc("system_version");
+          console.log(`🪐 Connected to chain: ${chainName} (runtime v${runtimeVersion})`);
+        } catch (verifyErr) {
+          console.warn("⚠️ On-chain verification failed:", verifyErr);
+        }
       } catch (err) {
         console.error("❌ Smoldot init failed:", err);
         setIsConnected(false);
@@ -43,7 +56,6 @@ export default function App() {
 
     init();
 
-    // 🛰 auto-detect offline/online changes
     const handleOnline = () => {
       console.log("🌐 Reconnected — restarting Smoldot");
       init();
@@ -59,11 +71,10 @@ export default function App() {
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      if (smoldot) smoldot.terminate?.();
+      if (smoldot?.terminate) smoldot.terminate();
     };
   }, []);
 
-  // 🛰 Show loader or offline screen
   if (isConnecting || !isConnected) {
     return (
       <ConnectionStatus
@@ -73,14 +84,15 @@ export default function App() {
     );
   }
 
-  // ✅ Main app content
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="safe-area">
-          <Router />
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <DotApiContext.Provider value={dotApi}>
+      <AuthProvider>
+        <BrowserRouter>
+          <div className="safe-area">
+            <Router />
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </DotApiContext.Provider>
   );
 }

@@ -26,6 +26,9 @@ importers:
       '@polkadot/react-identicon':
         specifier: ^3.16.1
         version: 3.16.1(@polkadot/keyring@13.5.7(@polkadot/util-crypto@13.5.7(@polkadot/util@13.5.7))(@polkadot/util@13.5.7))(@polkadot/networks@13.5.7)(@polkadot/util-crypto@13.5.7(@polkadot/util@13.5.7))(@polkadot/util@13.5.7)(react-dom@19.2.0(react@19.2.0))(react-is@16.13.1)(react@19.2.0)
+      '@polkadot/types':
+        specifier: ^16.4.9
+        version: 16.4.9
       '@polkadot/util':
         specifier: ^13.5.7
         version: 13.5.7

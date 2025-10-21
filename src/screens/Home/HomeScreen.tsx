@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/screens/Home/HomeScreen.tsx
 import React, { useState, useEffect } from "react";
 import { Plus, Search as SearchIcon } from "lucide-react";
@@ -113,7 +114,7 @@ const DUMMY_NOTIFICATIONS = [
 const HomeScreen: React.FC = () => {
   const { profile } = useAuthStore();
   const [posts, setPosts] = useState<any[]>(DUMMY_POSTS);
-  const [notifications, setNotifications] = useState<any[]>(DUMMY_NOTIFICATIONS);
+  const [notifications, _setNotifications] = useState<any[]>(DUMMY_NOTIFICATIONS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"feed" | "following" | "followers">("feed");

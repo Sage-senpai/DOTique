@@ -1,4 +1,4 @@
-// src/hooks/useMintNFT.ts
+// src/hooks/useMint.ts
 import { useState } from "react";
 import { polkadotService } from "../services/polkadotService";
 
@@ -13,13 +13,14 @@ type MintArgs = {
   edition?: number;
 };
 
-type MintResponse = {
+export type MintResponse = {
   success: boolean;
   txHash: string;
   metadataUri: string;
   owner: string;
   endpoint: string | null;
-  tokenId?: string | number; // optional for future compatibility
+  tokenId?: string | number; 
+  nftId?: string | number; 
   blockHash?: string | null;
 };
 
@@ -44,6 +45,7 @@ export const useMintNFT = () => {
         ...resp,
         blockHash: resp.txHash, // fallback alias for clarity
         tokenId: (resp as any).tokenId ?? undefined,
+        nftId: (resp as any).nftId ?? (resp as any).tokenId ?? undefined,
       };
     } catch (err) {
       console.error("Minting failed:", err);

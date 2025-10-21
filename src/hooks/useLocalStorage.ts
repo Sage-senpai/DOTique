@@ -22,5 +22,16 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
   };
 
+  // ✅ Sync state across tabs
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === key && event.newValue) {
+        setStoredValue(JSON.parse(event.newValue));
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [key]);
+
   return [storedValue, setValue] as const;
 }

@@ -1,40 +1,47 @@
-import  { useCallback, useState } from "react";
+// ==================== src/screens/Studio/NFTStudioScreen.tsx ====================
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CanvasStudio from "./CanvasStudio";
 import useStudioStore from "../../stores/useStudioStore";
 import { uploadToIPFS } from "../../services/ipfsService";
-import { useMintNFT } from "../../hooks/useMint";
+import { useMintNFT, type MintResponse } from "../../hooks/useMint";
 import "./NFTStudioScreen.scss";
 
+
+
 export default function NFTStudioScreen() {
-  const { project, setProject, resetProject } = useStudioStore();
+  // ✅ pull canvasRef separately (no longer nested in project)
+  const { project, canvasRef, setProject, resetProject } = useStudioStore();
   const [isExporting, setIsExporting] = useState(false);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const mint = useMintNFT();
   const navigate = useNavigate();
 
+  // ✅ export from canvas + upload to IPFS
   const onExportAndMint = useCallback(async () => {
     try {
-      if (!project || !project.canvasRef) throw new Error("No project or canvas");
+      if (!project || !canvasRef) throw new Error("No project or canvas");
       setIsExporting(true);
 
-      // call canvas export API on ref (the CanvasStudio exposes exportAssets)
-      const exported = await project.canvasRef.exportAssets?.({ size: 1000 });
+      const exported = await canvasRef.exportAssets?.({ size: 1000 });
+      if (!exported) throw new Error("Export failed");
 
-      // Uploads (keep your existing uploadToIPFS semantics)
+      // Upload PNG
       const pngUpload = await uploadToIPFS({
         content: exported.pngBase64,
         fileName: `${project.name || "dotique_design"}.png`,
         contentType: "image/png",
       });
 
+      // Upload SVG
       const svgUpload = await uploadToIPFS({
         content: exported.svgString,
         fileName: `${project.name || "dotique_design"}.svg`,
         contentType: "image/svg+xml",
       });
 
+      // ✅ safely update project assets
       setProject({
         ...project,
         assets: {
@@ -50,12 +57,16 @@ export default function NFTStudioScreen() {
     } finally {
       setIsExporting(false);
     }
-  }, [project, setProject]);
+  }, [project, canvasRef, setProject]);
 
+  // ✅ handle minting process
   const onMintConfirm = useCallback(
     async (metadata: any) => {
+      if (!project) return;
+
       try {
         setIsExporting(true);
+
         const fullMetadata = {
           ...metadata,
           image: project.assets?.png,
@@ -65,16 +76,18 @@ export default function NFTStudioScreen() {
           attributes: metadata.attributes ?? [],
         };
 
-        const res = await mint.mint({
+        const res: MintResponse = await mint.mint({
           metadata: fullMetadata,
           royalty: metadata.royaltyPercent,
           edition: metadata.editionSize ?? 1,
         });
 
-        alert(`Minted ✅ Token: ${res.tokenId}`);
+        alert(`✅ Minted Token: ${res.tokenId}`);
         resetProject();
         setShowMetadataModal(false);
-        navigate(`/nft/${res.nftId}`);
+
+        // ✅ navigate using nftId if exists, otherwise tokenId
+        navigate(`/nft/${res.nftId ?? res.tokenId}`);
       } catch (err: any) {
         console.error(err);
         alert(err?.message || "Mint failed");
@@ -99,14 +112,15 @@ export default function NFTStudioScreen() {
       </div>
 
       <div className="nftstudio__actions">
-        <button className="btn ghost" onClick={() => alert("Saved (stub)")}>Save Draft</button>
-
+        <button className="btn ghost" onClick={() => alert("Saved (stub)")}>
+          Save Draft
+        </button>
         <button className="btn primary" onClick={onExportAndMint} disabled={isExporting}>
           {isExporting ? "Exporting..." : "Export & Mint"}
         </button>
       </div>
 
-      {showMetadataModal && (
+      {showMetadataModal && project && (
         <div className="modal">
           <div className="modal__inner">
             <h3>Mint metadata (quick)</h3>
@@ -123,7 +137,9 @@ export default function NFTStudioScreen() {
             >
               Confirm Mint (Test values)
             </button>
-            <button className="btn ghost" onClick={() => setShowMetadataModal(false)}>Cancel</button>
+            <button className="btn ghost" onClick={() => setShowMetadataModal(false)}>
+              Cancel
+            </button>
           </div>
         </div>
       )}

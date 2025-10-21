@@ -1,12 +1,14 @@
-//src/types/search.ts
-export type SearchResult = {
+// src/types/search.ts
+export interface SearchResult {
   id: string;
-  type: "user" | "post";
+  type: "user" | "nft" | "post" | "collection" | "event";
+  title: string;
+  description?: string;
+  image?: string;
   username?: string;
   display_name?: string;
   dotvatar_url?: string;
   bio?: string;
   verified?: boolean;
-  title?: string;
-  content?: string;
-};
+  metadata?: Record<string, any>;
+}

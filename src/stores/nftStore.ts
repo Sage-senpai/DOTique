@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 //src/stores/nftStore.ts
 import { create } from "zustand";
 
@@ -54,7 +55,7 @@ interface NFTStore {
 }
 
 // ----------------- Zustand Store -----------------
-export const useNFTStore = create<NFTStore>((set, get) => ({
+export const useNFTStore = create<NFTStore>((set, _get) => ({
   // NFT list state
   nfts: [],
   loading: false,

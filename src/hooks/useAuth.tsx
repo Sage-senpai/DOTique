@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     useAuthStore();
   const [initialized, setInitialized] = useState(false);
 
-  // load session from secure store on mount (web-friendly via saveItem/getItem abstraction)
+  // load session from secure store on mount
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -42,9 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             await deleteItem("supabase_session");
           }
         }
-      } catch (err) {
-        // Non-fatal — log for diagnostics
-        // console.warn("useAuth: failed to restore session", err);
       } finally {
         if (mounted) setInitialized(true);
       }
@@ -59,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // subscribe to Supabase auth state changes
   useEffect(() => {
-    // supabase.auth.onAuthStateChange returns { data: { subscription } } in v2
     const listener = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       try {
         setLoading(true);
@@ -71,55 +67,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           try {
             await saveItem("supabase_session", JSON.stringify(newSession));
           } catch {
-            // ignore storage errors (non-blocking)
+            // ignore storage errors
           }
 
-          // fetch profile from users table (if exists)
-          try {
-            const { data: userProfile, error: profileError } = await supabase
-              .from("users")
-              .select("*")
-              .eq("auth_uid", newSession.user.id)
-              .single();
+          // fetch profile
+          const { data: userProfile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("auth_uid", newSession.user.id)
+            .single();
 
-            if (!profileError && userProfile) {
-              setProfile(userProfile);
-            }
-          } catch (err) {
-            // ignore profile read errors (app can recover)
-            // console.error("useAuth profile fetch failed", err);
+          if (userProfile) {
+            setProfile(userProfile);
           }
         } else {
           // signed out
           resetAuth();
-          try {
-            await deleteItem("supabase_session");
-          } catch {
-            // ignore storage cleanup errors
-          }
+          await deleteItem("supabase_session");
         }
       } finally {
         setLoading(false);
       }
     });
 
-    // cleanup on unmount
+    // cleanup on unmount (Supabase v2 defensive cleanup)
     return () => {
       try {
-        // supabase v2: listener.data.subscription.unsubscribe()
-        // but depending on client version it may expose differently
-        // defensive cleanup:
-        // @ts-ignore
-        if (listener?.data?.subscription?.unsubscribe) {
-          // v2 shape
-          // @ts-ignore
-          listener.data.subscription.unsubscribe();
-        } else if (listener?.data?.subscription) {
-  listener.data.subscription.unsubscribe();
-}
-
+        const subscription = listener?.data?.subscription;
+        if (subscription?.unsubscribe) {
+          subscription.unsubscribe();
+        }
       } catch {
-        // swallow cleanup errors
+        // ignore
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,13 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await supabase.auth.signOut();
     } finally {
-      // Ensure local state is reset even if signOut throws
       resetAuth();
-      try {
-        await deleteItem("supabase_session");
-      } catch {
-        // ignore
-      }
+      await deleteItem("supabase_session");
     }
   };
 
@@ -153,12 +127,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export function useAuth() {
+// ✅ Export hook separately (keeps Fast Refresh happy)
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useAuth must be used inside AuthProvider");
   }
   return ctx;
 }
-
-export default useAuth;

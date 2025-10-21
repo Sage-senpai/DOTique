@@ -20,12 +20,9 @@ export function useIdentitySearch(
 ) {
   const { status } = useConnectionStatus({ chainId: identityChain });
   const client = useClient({ chainId: identityChain });
-  //TODO use the status directly
   const isLoading = status === ClientConnectionStatus.Connecting;
   const isConnected = status === ClientConnectionStatus.Connected;
-  const peopleApi = client?.getTypedApi(
-    config.chains[identityChain].descriptor
-  );
+  const peopleApi = client?.getTypedApi(config.chains[identityChain].descriptor);
 
   return useQuery({
     queryKey: ["identity-search", displayName, identityChain],
@@ -41,8 +38,14 @@ export function useIdentitySearch(
       }
 
       try {
-        // Get all identity entries
-        const entries = await peopleApi.query.Identity.IdentityOf.getEntries();
+        // ✅ Explicitly type the entries to fix `never` errors
+        const entries = (await peopleApi.query.Identity.IdentityOf.getEntries()) as {
+          keyArgs: [string];
+          value: {
+            info?: Record<string, any>;
+            judgements?: any[];
+          };
+        }[];
 
         const MAX_RESULTS = 10;
         const matches: IdentitySearchResult[] = [];
@@ -57,14 +60,12 @@ export function useIdentitySearch(
             display.toLowerCase().includes(displayName.toLowerCase())
           ) {
             const hasPositiveJudgement = hasPositiveIdentityJudgement(
-              value.judgements
+              value.judgements || []
             );
 
-            // Only include verified identities in search results
-            // Remove this if block if we want to show all identities
             if (hasPositiveJudgement) {
               matches.push({
-                address: keyArgs[0] as string,
+                address: keyArgs[0],
                 identity: {
                   display,
                   email: extractText(value.info?.email?.value),
@@ -77,9 +78,7 @@ export function useIdentitySearch(
                 },
               });
 
-              if (matches.length >= MAX_RESULTS) {
-                break;
-              }
+              if (matches.length >= MAX_RESULTS) break;
             }
           }
         }
@@ -97,7 +96,7 @@ export function useIdentitySearch(
       !!displayName &&
       displayName.length >= 3 &&
       isConnected,
-    staleTime: 5 * 60 * 1000, // 5 minutes - identities don't change often
-    gcTime: 10 * 60 * 1000, // 10 minutes - keep cached longer for search
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }

@@ -62,15 +62,17 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
         </div>
       )}
 
-      {/* ========== POSTS ========== */}
+     {/* ========== POSTS ========== */}
       {!loading && posts.length > 0 && (
         <>
           {posts.map((post) => (
             <PostCard
               key={post.id}
               post={{
-                ...post,
-                author: post.author || {
+  ...post,
+  createdAt: post.createdAt || (post.created_at ? new Date(post.created_at) : new Date()),
+  author: post.author || {
+
                   id: post.user_id || "unknown",
                   name: "User",
                   username: "user",
@@ -87,7 +89,7 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
                 userInteraction: post.userInteraction || {
                   liked: false,
                   saved: false,
-                  reposted: false,
+                   reposted: false,
                 },
                 media:
                   post.media ||

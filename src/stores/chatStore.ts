@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/stores/chatStore.ts
 import { create } from "zustand";
 
@@ -33,7 +34,7 @@ type ChatStore = {
   resetChat: () => void;
 };
 
-export const useChatStore = create<ChatStore>((set, get) => ({
+export const useChatStore = create<ChatStore>((set, _get) => ({
   threads: [],
   activeThreadId: null,
   loading: false,

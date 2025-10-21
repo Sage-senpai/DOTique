@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import AsyncStorage from "local-storage-fallback";
 import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
-import  LoginScreen  from "../Auth/LoginScreen";
 import "./profile.scss";
 
 export default function SettingsScreen() {

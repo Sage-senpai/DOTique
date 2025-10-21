@@ -1,9 +1,9 @@
-
-// src/hooks/useUserSearch.ts (Unified Optimized Version)
-
+// src/hooks/useUserSearch.ts
+// =========================================
 import { useEffect, useCallback } from "react";
 import { useSearchStore } from "../stores/searchStore";
 import { socialService } from "../services/socialService";
+import type { SearchResult } from "../types/search"; // 👈 Make sure this path is correct
 
 export function useUserSearch(query: string) {
   const {
@@ -16,7 +16,6 @@ export function useUserSearch(query: string) {
     addRecentSearch,
   } = useSearchStore();
 
-  // Core async search function
   const search = useCallback(async (term: string) => {
     if (!term.trim()) {
       setResults([]);
@@ -26,7 +25,17 @@ export function useUserSearch(query: string) {
     setLoading(true);
     try {
       const users = await socialService.searchUsers(term);
-      setResults(users);
+
+      // ✅ Transform API users → SearchResult[]
+      const mappedResults: SearchResult[] = users.map((user: any) => ({
+        id: user.id,
+        type: "user",
+        title: user.display_name || user.username,
+        subtitle: user.bio || "",
+        avatar: user.dotvatar_url || "",
+      }));
+
+      setResults(mappedResults);
       addRecentSearch(term);
       setError(null);
     } catch (err) {
@@ -37,7 +46,6 @@ export function useUserSearch(query: string) {
     }
   }, [setResults, setLoading, setError, addRecentSearch]);
 
-  // Debounce input changes (300ms)
   useEffect(() => {
     if (!query) {
       setResults([]);

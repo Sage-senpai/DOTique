@@ -1,22 +1,23 @@
-// src/components/Post/PostActions.tsx
+// src/components/Post/PostActions.tsx 
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Share, Bookmark, Send } from 'lucide-react';
 import './PostActions.scss';
 
 interface PostActionsProps {
   stats: {
-    likes: number;
-    comments: number;
-    reposts: number;
-    shares: number;
+    likes?: number;
+    comments?: number;
+    reposts?: number;
+    shares?: number;
   };
   userInteraction: {
-    liked: boolean;
-    saved: boolean;
-    reposted: boolean;
+    liked?: boolean;
+    saved?: boolean;
+    reposted?: boolean;
   };
   onLike: () => void;
   onSave: () => void;
+  onShare?: () => void; // ✅ Optional share handler
 }
 
 const PostActions: React.FC<PostActionsProps> = ({
@@ -24,9 +25,10 @@ const PostActions: React.FC<PostActionsProps> = ({
   userInteraction,
   onLike,
   onSave,
+  onShare, // ✅ include here too
 }) => {
-  const [liked, setLiked] = useState(userInteraction.liked);
-  const [saved, setSaved] = useState(userInteraction.saved);
+  const [liked, setLiked] = useState<boolean>(userInteraction.liked ?? false);
+  const [saved, setSaved] = useState<boolean>(userInteraction.saved ?? false);
   const [showRepostMenu, setShowRepostMenu] = useState(false);
 
   const handleLikeClick = () => {
@@ -47,12 +49,12 @@ const PostActions: React.FC<PostActionsProps> = ({
         title="Like"
       >
         <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
-        <span>{stats.likes}</span>
+        <span>{stats.likes ?? 0}</span>
       </button>
 
       <button className="action-btn" title="Comment">
         <MessageCircle size={18} />
-        <span>{stats.comments}</span>
+        <span>{stats.comments ?? 0}</span>
       </button>
 
       <div className="repost-wrapper">
@@ -62,7 +64,7 @@ const PostActions: React.FC<PostActionsProps> = ({
           title="Repost"
         >
           <Repeat2 size={18} />
-          <span>{stats.reposts}</span>
+          <span>{stats.reposts ?? 0}</span>
         </button>
         {showRepostMenu && (
           <div className="repost-menu">
@@ -72,9 +74,13 @@ const PostActions: React.FC<PostActionsProps> = ({
         )}
       </div>
 
-      <button className="action-btn" title="Share">
+      <button
+        className="action-btn"
+        title="Share"
+        onClick={onShare}
+      >
         <Share size={18} />
-        <span>{stats.shares}</span>
+        <span>{stats.shares ?? 0}</span>
       </button>
 
       <button

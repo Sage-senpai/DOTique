@@ -22,7 +22,7 @@ export const postService = {
     }
   },
 
-  async getTimeline(userId: string, limit = 50) {
+  async getTimeline(_userId: string, limit = 50) {
     try {
       const { data, error } = await supabase
         .from('posts')

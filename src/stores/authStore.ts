@@ -1,7 +1,8 @@
-// src/store/authStore.ts
+// src/stores/authStore.ts
 import { create } from "zustand";
 import type { Session } from "@supabase/supabase-js";
 
+// Strongly typed Profile for UI + Web3 metadata
 export type Profile = {
   id: string;
   auth_uid: string;
@@ -11,16 +12,20 @@ export type Profile = {
   polkadot_address?: string;
   created_at?: string;
 
+  // 🌈 Stats for profile screen
+  followers_count?: number;
+  following_count?: number;
+  posts_count?: number;
+  tagged_count?: number;
+
   // 🌈 New Metadata
-  fashion_archetype?: string;   // "Avant-Garde", "Streetwear Pioneer"
-  style_tier?: string;          // "Style Icon", "Emerging Trendsetter"
-  signature_palette?: string[]; // ['#7D3C98', '#2ECC71', '#E91E63']
-  verified_brands?: string[];   // ["Gucci", "Balmain", "YSL"]
+  fashion_archetype?: string;
+  style_tier?: string;
+  signature_palette?: string[];
+  verified_brands?: string[];
   location?: string;
   birthday?: string;
   bio?: string;
-  followers?: number;
-  following?: number;
 
   // 🧩 Extended Web3 + Fashion metadata
   name?: string;

@@ -1,4 +1,6 @@
+// =====================================================
 // src/components/Post/PostCard.tsx
+// =====================================================
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../../stores/userStore";
@@ -44,6 +46,8 @@ interface Post {
 
 interface PostCardProps {
   post?: Post | null;
+  onLike?: () => void;   // ✅ Added
+  onShare?: () => void;  // ✅ Added
 }
 
 // ✅ Fallback dummy post
@@ -64,7 +68,7 @@ const dummyPost: Post = {
   userInteraction: { liked: false, saved: false, reposted: false },
 };
 
-const PostCard: React.FC<PostCardProps> = ({ post }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare }) => {
   const safePost = post ?? dummyPost; // ✅ Never null
   const navigate = useNavigate();
   const { setSelectedUser } = useUserStore();
@@ -96,15 +100,22 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       ...prev,
       likes: (prev.likes ?? 0) + (userInteraction.liked ? -1 : 1),
     }));
+    onLike?.(); // ✅ Trigger external callback (FeedCenter)
   };
 
   const handleSave = () => {
     setUserInteraction((prev) => ({ ...prev, saved: !prev.saved }));
   };
 
+  const handleShare = () => {
+    onShare?.(); // ✅ Trigger external callback (FeedCenter)
+  };
+
   const getTimeAgo = (date: Date): string => {
     if (!date) return "";
-    const minutes = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60));
+    const minutes = Math.floor(
+      (Date.now() - new Date(date).getTime()) / (1000 * 60)
+    );
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -156,10 +167,20 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       </div>
 
       <PostActions
-        stats={stats}
-        userInteraction={userInteraction}
+        stats={{
+          likes: stats.likes ?? 0,
+          comments: stats.comments ?? 0,
+          reposts: stats.reposts ?? 0,
+          shares: stats.shares ?? 0,
+        }}
+        userInteraction={{
+          liked: userInteraction.liked ?? false,
+          saved: userInteraction.saved ?? false,
+          reposted: userInteraction.reposted ?? false,
+        }}
         onLike={handleLike}
         onSave={handleSave}
+        onShare={handleShare} 
       />
     </div>
   );

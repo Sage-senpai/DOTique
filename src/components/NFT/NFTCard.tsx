@@ -31,7 +31,7 @@ const NFTCard: React.FC<NFTCardProps> = ({
   };
 
   return (
-    <div className="nft-card" onClick={onClick}>
+    <div className="nft-card" onClick={onClick} data-id={id}>
       <div className="nft-card__image">
         <img src={image} alt={name} />
         <div

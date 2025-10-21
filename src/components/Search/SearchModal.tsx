@@ -1,5 +1,3 @@
-// 2. NEW: src/components/Search/SearchModal.tsx
-// =====================================================
 import React, { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { useUserSearch } from "../../hooks/useSearch";
@@ -14,15 +12,15 @@ interface SearchModalProps {
 
 const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState("");
-  const { results, loading } = useUserSearch();
+  const { results, loading, search } = useUserSearch(query);
   const { setSelectedUser } = useUserStore();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (query.trim().length > 0) {
-      results; // This will trigger the search via the hook
+      search(query);
     }
-  }, [query, results]);
+  }, [query, search]);
 
   const handleSelectUser = (user: any) => {
     setSelectedUser({
@@ -44,10 +42,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="search-modal-overlay" onClick={onClose}>
-      <div
-        className="search-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="search-modal" onClick={(e) => e.stopPropagation()}>
         <div className="search-modal__header">
           <input
             type="text"

@@ -14,7 +14,7 @@ import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import OnboardingScreen from "../screens/Onboarding/OnboardingScreen";
 
 // DOTvatar & Test
-import DOTvatarScreen from "../screens/DOTvatar/DOTvatarScreen";
+// import DOTvatarScreen from "../screens/DOTvatar/DOTvatarScreen";
 import TestSupabase from "../screens/TestSupabase/TestSupabase";
 
 // Home & Tabs
@@ -86,7 +86,7 @@ export default function Router() {
       </Route>
 
       {/* Standalone Pages (no BottomNav) */}
-      <Route path="/dotvatar" element={<DOTvatarScreen />} />
+      {/*<Route path="/dotvatar" element={<DOTvatarScreen />} />*/}
       <Route path="/test-supabase" element={<TestSupabase />} />
 
       {/* Profile Sub-pages (no BottomNav) */}

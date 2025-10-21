@@ -1,6 +1,6 @@
 // src/screens/Profile/ProfileScreen.tsx
 // =====================================
-import  { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../stores/authStore";
@@ -8,6 +8,22 @@ import { supabase } from "../../services/supabase";
 import { socialService } from "../../services/socialService";
 import PostCard from "../../components/Posts/PostCard";
 import "./Profile.scss";
+
+// ✅ Define Profile type with all fields used
+type ProfileUI = {
+  auth_uid: string;
+  email: string;
+  id: string;
+  display_name: string;
+  username: string;
+  bio: string;
+  dotvatar_url: string;
+  followers_count: number;
+  following_count: number;
+  posts_count: number;
+  tagged_count: number;
+  ipfs_metadata?: string;
+};
 
 export default function ProfileScreen() {
   const profile = useAuthStore((s) => s.profile);
@@ -18,41 +34,49 @@ export default function ProfileScreen() {
   const location = useLocation();
 
   // 🧩 Dummy placeholders for dev preview
-  const dummyProfile = {
-    id: "dummy123",
-    display_name: "Jane Doe",
-    username: "janedoe",
-    bio: "Building decentralized futures ✨",
-    dotvatar_url: "https://placehold.co/100x100?text=JD",
-    followers_count: 128,
-    following_count: 76,
-    posts_count: 3,
-    tagged_count: 2,
-  };
+  const dummyProfile = useMemo<ProfileUI>(
+    () => ({
+      auth_uid: "dummy-auth-uid",
+      email: "dummy@example.com",
+      id: "dummy123",
+      display_name: "Jane Doe",
+      username: "janedoe",
+      bio: "Building decentralized futures ✨",
+      dotvatar_url: "https://placehold.co/100x100?text=JD",
+      followers_count: 128,
+      following_count: 76,
+      posts_count: 3,
+      tagged_count: 2,
+    }),
+    []
+  );
 
-  const dummyPosts = [
-    {
-      id: "p1",
-      author: dummyProfile,
-      content: "Exploring Web3 and creativity through code 🚀",
-      media: null,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "p2",
-      author: dummyProfile,
-      content: "Every block tells a story — let's write ours on-chain 🧠",
-      media: null,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "p3",
-      author: dummyProfile,
-      content: "Decentralization isn’t just tech — it’s a mindset 🌍",
-      media: null,
-      created_at: new Date().toISOString(),
-    },
-  ];
+  const dummyPosts = useMemo(
+    () => [
+      {
+        id: "p1",
+        author: dummyProfile,
+        content: "Exploring Web3 and creativity through code 🚀",
+        media: null,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "p2",
+        author: dummyProfile,
+        content: "Every block tells a story — let's write ours on-chain 🧠",
+        media: null,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "p3",
+        author: dummyProfile,
+        content: "Decentralization isn’t just tech — it’s a mindset 🌍",
+        media: null,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    [dummyProfile]
+  );
 
   // 🧠 Fetch profile from Supabase + IPFS
   const fetchProfile = useCallback(async () => {
@@ -65,23 +89,25 @@ export default function ProfileScreen() {
 
       setLoading(true);
 
-      // Fetch user row
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("auth_uid", profile.auth_uid)
-        .single();
+      // ✅ Add second type argument to fix TS2558
+     const { data, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("auth_uid", profile.auth_uid)
+  .single<ProfileUI>();
+
 
       if (error) throw error;
 
-      let combinedProfile = data;
+      const userData = data as ProfileUI;
+      let combinedProfile = userData ?? dummyProfile;
 
-      // Merge IPFS metadata if available
-      if (data?.ipfs_metadata) {
+      // ✅ Merge IPFS metadata if available
+      if (userData?.ipfs_metadata) {
         try {
-          const res = await fetch(data.ipfs_metadata);
+          const res = await fetch(userData.ipfs_metadata);
           const meta = await res.json();
-          combinedProfile = { ...data, ...meta };
+          combinedProfile = { ...combinedProfile, ...meta };
         } catch (err) {
           console.warn("Failed to load IPFS metadata:", err);
         }
@@ -89,10 +115,7 @@ export default function ProfileScreen() {
 
       setProfile(combinedProfile);
 
-      // Fetch posts for this user
-      const { data: userPosts } = await socialService.getUserPosts(
-        data?.id || profile.id
-      );
+      const userPosts = await socialService.getUserPosts(userData?.id || profile.id);
       setPosts(userPosts || dummyPosts);
     } catch (err) {
       console.error("❌ Error refreshing profile:", err);
@@ -101,7 +124,7 @@ export default function ProfileScreen() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.auth_uid, setProfile]);
+  }, [profile?.auth_uid, profile?.id, setProfile, dummyProfile, dummyPosts]);
 
   // 🔁 Re-fetch on navigation or after editing
   useEffect(() => {
@@ -111,7 +134,9 @@ export default function ProfileScreen() {
   // 📤 Share profile
   const handleShareProfile = async () => {
     try {
-      const message = `Check out ${profile?.display_name || "my"} DOTique fashion profile 👗✨\n\nJoin the Web3 fashion revolution on DOTique!`;
+      const message = `Check out ${
+        profile?.display_name || "my"
+      } DOTique fashion profile 👗✨\n\nJoin the Web3 fashion revolution on DOTique!`;
       if ((navigator as any).share) {
         await (navigator as any).share({ text: message });
       } else {
@@ -122,6 +147,7 @@ export default function ProfileScreen() {
     }
   };
 
+  // ✅ Menu items (now rendered *inside* JSX)
   const menuItems = [
     { icon: "👗", label: "Wardrobe", action: () => navigate("/profile/wardrobe") },
     { icon: "🎓", label: "Style CV", action: () => navigate("/profile/stylecv") },
@@ -186,8 +212,7 @@ export default function ProfileScreen() {
           </span>
           <span className="dot-separator">·</span>
           <span className="profile-posts-count">
-            {(profile.posts_count ?? posts.length) + (profile.tagged_count ?? 0)}{" "}
-            Posts
+            {(profile.posts_count ?? posts.length) + (profile.tagged_count ?? 0)} Posts
           </span>
         </div>
 
@@ -211,51 +236,25 @@ export default function ProfileScreen() {
             ⚙️
           </button>
         </div>
+
+        {/* ✅ RENDER MENU ITEMS PROPERLY */}
+        <div className="profile-screen__menu">
+          {menuItems.map((item, index) => (
+            <button key={index} onClick={item.action} className="profile-menu__button">
+              <span className="profile-menu__icon">{item.icon}</span>
+              <span className="profile-menu__label">{item.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* === POSTS FEED === */}
       <div className="profile-posts">
         {posts.length > 0 ? (
-          posts.map((post) => {
-            try {
-              if (!post || !post.id) return null; // invalid post
-              return <PostCard key={post.id} post={post} />;
-            } catch (err) {
-              console.error("Error rendering PostCard:", err, post);
-              return (
-                <div key={post?.id || Math.random()} className="post-error-fallback">
-                  ⚠️ Failed to load post
-                </div>
-              );
-            }
-          })
+          posts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
           <p className="no-posts-text">No posts yet</p>
         )}
-      </div>
-
-      {/* === MENU === */}
-      <nav className="profile-screen__menu">
-        {menuItems.map((item, idx) => (
-          <button
-            key={idx}
-            className="profile-screen__menu-item"
-            onClick={item.action}
-          >
-            <span className="profile-screen__menu-icon">{item.icon}</span>
-            <span className="profile-screen__menu-label">{item.label}</span>
-            <span className="profile-screen__menu-chevron">›</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* === NAV BOTTOM === */}
-      <div className="profile-screen__nav-bottom">
-        <button className="profile-screen__nav-btn">🏠</button>
-        <button className="profile-screen__nav-btn">💬</button>
-        <button className="profile-screen__nav-btn profile-screen__nav-btn--active">
-          👤
-        </button>
       </div>
     </motion.div>
   );

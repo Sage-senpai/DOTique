@@ -33,31 +33,46 @@ export type Project = {
 };
 
 /**
+ * Skia Canvas reference type
+ */
+export interface CanvasRef {
+  exportAssets?: (options: { size: number }) => Promise<{
+    pngBase64: string;
+    svgString: string;
+  }>;
+}
+
+/**
  * Zustand global store type
  */
 interface StudioStore {
   project: Project | null;
-  canvasRef?: unknown;
+  canvasRef?: CanvasRef;
 
   setProject: (project: Partial<Project> | null) => void;
   updateLayerPaths: (layerId: string, paths: string[]) => void;
   resetProject: () => void;
-  setCanvasRef: (ref: unknown) => void;
+  setCanvasRef: (ref: CanvasRef) => void;
 }
+
+/**
+ * Default project template
+ */
+const defaultProject: Project = {
+  id: "default",
+  name: "Untitled Canvas",
+  description: "",
+  assets: {},
+  layers: [{ id: "layer1", name: "Base Layer", paths: [] }],
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+};
 
 /**
  * Zustand store definition
  */
 const useStudioStore = create<StudioStore>((set) => ({
-  project: {
-    id: "default",
-    name: "Untitled Canvas",
-    description: "",
-    assets: {},
-    layers: [{ id: "layer1", name: "Base Layer", paths: [] }],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
+  project: defaultProject,
   canvasRef: undefined,
 
   // Merge new values into existing project safely
@@ -92,20 +107,12 @@ const useStudioStore = create<StudioStore>((set) => ({
   // Reset everything to default
   resetProject: () =>
     set(() => ({
-      project: {
-        id: "default",
-        name: "Untitled Canvas",
-        description: "",
-        assets: {},
-        layers: [{ id: "layer1", name: "Base Layer", paths: [] }],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      },
+      project: defaultProject,
       canvasRef: undefined,
     })),
 
   // Reference to Skia Canvas (for export, etc.)
-  setCanvasRef: (ref: unknown) => set(() => ({ canvasRef: ref })),
+  setCanvasRef: (ref: CanvasRef) => set(() => ({ canvasRef: ref })),
 }));
 
 export default useStudioStore;

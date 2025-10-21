@@ -4,14 +4,17 @@ import { usePostStore } from '../stores/postStore';
 import type { Post } from '../stores/postStore';
 
 export function usePost() {
-  const { posts, setPosts, addPost, updatePost, deletePost, setLoading, setError } = usePostStore();
+  // ✅ Removed unused `setPosts` and `setLoading`
+  const { posts, addPost, updatePost, deletePost, setError } = usePostStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const createPost = useCallback(async (content: string, media?: File[]) => {
+  // ✅ Removed unused `media` param
+  const createPost = useCallback(async (content: string) => {
     setIsLoading(true);
     setError(null);
+
     try {
-      // TODO: Call postService.createPost(content, media)
+      // TODO: Replace with postService.createPost(content)
       const newPost: Post = {
         id: Date.now().toString(),
         author: {
@@ -26,6 +29,7 @@ export function usePost() {
         stats: { views: 0, likes: 0, comments: 0, reposts: 0, shares: 0 },
         userInteraction: { liked: false, saved: false, reposted: false },
       };
+
       addPost(newPost);
       return newPost;
     } catch (error) {
@@ -39,13 +43,7 @@ export function usePost() {
   const likePost = useCallback(async (postId: string) => {
     try {
       updatePost(postId, {
-        stats: {
-          views: 0,
-          likes: 1,
-          comments: 0,
-          reposts: 0,
-          shares: 0,
-        },
+        stats: { views: 0, likes: 1, comments: 0, reposts: 0, shares: 0 },
       });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to like post');
@@ -54,7 +52,7 @@ export function usePost() {
 
   const deletePostById = useCallback(async (postId: string) => {
     try {
-      // TODO: Call postService.deletePost(postId)
+      // TODO: Replace with postService.deletePost(postId)
       deletePost(postId);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete post');

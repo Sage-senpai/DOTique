@@ -10,12 +10,23 @@ import { connectPolkadotWallets } from "../../services/polkadotService";
 import "./profile.scss";
 
 
+type PrivacySetting = "Public" | "Private" | "Friends Only";
+type EditProfileForm = {
+  display_name: string;
+  username: string;
+  bio: string;
+  location: string;
+  birthday: string;
+  fashion_archetype: string;
+  profile_privacy: PrivacySetting;
+};
+
 export default function EditProfileScreen() {
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);
   const navigate = useNavigate();
 
-  const { control, handleSubmit, setValue, watch } = useForm({
+  const { control, handleSubmit, setValue, watch } = useForm<EditProfileForm>({
     defaultValues: {
       display_name: profile?.display_name || "",
       username: profile?.username || "",
@@ -23,7 +34,7 @@ export default function EditProfileScreen() {
       location: profile?.location || "",
       birthday: profile?.birthday || "",
       fashion_archetype: profile?.fashion_archetype || "",
-      profile_privacy: profile?.profile_privacy || "Public",
+      profile_privacy: profile?.profile_privacy as PrivacySetting || "Public",
     },
   });
 
@@ -318,16 +329,17 @@ export default function EditProfileScreen() {
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Profile Privacy</label>
           <select
-            value={watch("profile_privacy")}
-            onChange={(e) => setValue("profile_privacy", e.target.value)}
-            className="edit-profile-screen__input"
-          >
-            {privacyOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+  value={watch("profile_privacy")}
+  onChange={(e) => setValue("profile_privacy", e.target.value as PrivacySetting)}
+  className="edit-profile-screen__input"
+>
+  {privacyOptions.map((o) => (
+    <option key={o.value} value={o.value}>
+      {o.label}
+    </option>
+  ))}
+</select>
+
         </div>
 
         <button

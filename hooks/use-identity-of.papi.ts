@@ -5,41 +5,18 @@ import {
   ClientConnectionStatus,
   type PolkadotIdentity,
 } from "@/lib/types.dot-ui";
-import type { IdentityData } from "@polkadot-api/descriptors";
+
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useConnectionStatus } from "../src/lib/polkadot-provider.papi";
 import { useClient } from "@reactive-dot/react";
+import type { IdentityInfo } from "@polkadot/types/interfaces/identity";
 
-// Extract the resolved return type of Identity.IdentityOf.getValue from any API-like shape
-type ExtractIdentityOfValue<A> = A extends {
-  query: {
-    Identity: {
-      IdentityOf: {
-        getValue: (address: string) => Promise<infer V>;
-      };
-    };
-  };
-}
-  ? V
-  : never;
-
-type ExtractIdentityOfEntries<A> = A extends {
-  query: {
-    Identity: {
-      IdentityOf: { getEntries: () => Promise<infer E> };
-    };
-  };
-}
-  ? E
-  : never;
-
-// Generic guard that preserves the extracted value type for getValue
 export function hasIdentityPallet<A>(api: A): api is A & {
   query: {
     Identity: {
       IdentityOf: {
-        getValue: (address: string) => Promise<ExtractIdentityOfValue<A>>;
-        getEntries: () => Promise<ExtractIdentityOfEntries<A>>;
+        getValue: (address: string) => Promise<{ info: IdentityInfo; judgements: any[] }>;
+        getEntries: () => Promise<any>;
       };
     };
   };
@@ -73,7 +50,7 @@ export function useIdentityOf({
   const isConnected = status === ClientConnectionStatus.Connected;
   const isEnabled = isConnected && !!client && !!address;
 
-  const queryResult = useQuery({
+  return useQuery({
     queryKey: ["papi-identity-of", chainId, address],
     queryFn: async (): Promise<PolkadotIdentity | null> => {
       const typedApiUnknown = client!.getTypedApi(
@@ -83,19 +60,20 @@ export function useIdentityOf({
       const peopleApi = typedApiUnknown;
 
       try {
-        type IdentityOfValue = ExtractIdentityOfValue<typeof peopleApi>;
-        const raw: IdentityOfValue =
-          await peopleApi.query.Identity.IdentityOf.getValue(address);
+        const raw = (await peopleApi.query.Identity.IdentityOf.getValue(
+          address
+        )) as unknown as { info: IdentityInfo; judgements: any[] };
+
         if (!raw) return null;
 
         const info = raw.info;
         const judgements = raw.judgements;
 
-        const parseIdentityData = (
-          d?: IdentityData
-        ): string | number | undefined => {
-          if (typeof d?.value === "number") return d.value;
-          return d?.value?.asText();
+        const parseIdentityData = (d: any): string | number | undefined => {
+          if (!d) return undefined;
+          if (typeof d.value === "number") return d.value;
+          if (typeof d.value?.asText === "function") return d.value.asText();
+          return undefined;
         };
 
         return {
@@ -103,19 +81,13 @@ export function useIdentityOf({
           legal: parseIdentityData(info?.legal),
           email: parseIdentityData(info?.email),
           twitter: parseIdentityData(info?.twitter),
-          github: parseIdentityData(info?.github),
-          discord: parseIdentityData(info?.discord),
-          matrix: parseIdentityData(info?.matrix),
           image: parseIdentityData(info?.image),
-          verified:
-            // is some judgement is Reasonable or KnownGood, then the identity is verified
-            (Array.isArray(judgements)
-              ? judgements.some(([, judgement]) => {
-                  const type = (judgement as { type?: string } | undefined)
-                    ?.type;
-                  return type === "Reasonable" || type === "KnownGood";
-                })
-              : false) ?? false,
+          verified: Array.isArray(judgements)
+            ? judgements.some(([, judgement]) => {
+                const type = (judgement as { type?: string } | undefined)?.type;
+                return type === "Reasonable" || type === "KnownGood";
+              })
+            : false,
         };
       } catch (e) {
         console.error("useIdentityOf (papi) failed", e);
@@ -125,7 +97,5 @@ export function useIdentityOf({
     enabled: isEnabled,
     staleTime: 5 * 60 * 1000,
     retry: 1,
-  });
-
-  return queryResult as UseQueryResult<PolkadotIdentity | null, Error>;
+  }) as UseQueryResult<PolkadotIdentity | null, Error>;
 }

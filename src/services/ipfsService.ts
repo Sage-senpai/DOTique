@@ -1,6 +1,6 @@
 /**
  * 🌐 Unified IPFS Service (Vite + React + TS)
- *
+ * 
  * ✅ Works in browser environments (no React Native dependencies)
  * ✅ Uploads metadata/images via Pinata, Infura, or backend route
  * ✅ Pins redundancy copy on Crust (JWT or wallet signature)
@@ -8,7 +8,10 @@
 
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import type { SignerResult, SignerPayloadRaw } from "@polkadot/types/types";
+
+// Minimal local type definitions
+type SignerResult = { signature: string; id?: string };
+type SignerPayloadRaw = { address: string; data: string; type: string };
 
 // ------------------
 // ⚙️ Configuration
@@ -65,11 +68,11 @@ export async function uploadToInfura(uri: string): Promise<string> {
 // ------------------
 // 🚀 Upload via Backend (Web Fallback)
 // ------------------
-type UploadArgs = {
+export interface UploadArgs {
   content: string;
   fileName?: string;
   contentType?: string;
-};
+}
 
 export async function uploadToIPFS({
   content,
@@ -146,8 +149,8 @@ export async function pinToCrust(ipfsHash: string, walletAddress?: string) {
     const data = await res.json();
     console.log("✅ Pinned to Crust:", data);
     return data;
-  } catch (err) {
-    console.error("❌ Crust pinning error:", err);
+  } catch (error) {
+    console.error("❌ Crust pinning error:", error);
     return null;
   }
 }
@@ -165,7 +168,7 @@ export async function uploadProfileMetadata(
   if (imageUri) {
     try {
       imageUrl = await uploadToInfura(imageUri);
-    } catch (err) {
+    } catch {
       console.warn("Infura upload failed, falling back to backend...");
 
       const response = await fetch(imageUri);

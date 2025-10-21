@@ -1,15 +1,6 @@
-// ==================== src/stores/searchStore.ts ====================
-
-import { create } from "zustand"; // ✅ ADD THIS LINE
-
-export interface SearchResult {
-  id: string;
-  type: "user" | "nft" | "post" | "collection" | "event";
-  title: string;
-  description?: string;
-  image?: string;
-  metadata?: Record<string, any>;
-}
+// src/stores/searchStore.ts
+import { create } from "zustand";
+import type { SearchResult } from "../types/search"; // ✅ unified import
 
 interface SearchState {
   query: string;
@@ -36,11 +27,8 @@ export const useSearchStore = create<SearchState>((set) => ({
   savedSearches: [],
 
   setQuery: (query) => set({ query }),
-
   setResults: (results) => set({ results }),
-
   setLoading: (loading) => set({ loading }),
-
   setError: (error) => set({ error }),
 
   addRecentSearch: (query) =>
