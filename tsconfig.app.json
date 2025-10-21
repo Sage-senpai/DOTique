@@ -1,5 +1,9 @@
+// tsconfig.app.json
 {
   "compilerOptions": {
+    "composite": true,                        // required for project references
+    "declaration": true,
+    "declarationMap": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -11,12 +15,14 @@
     "module": "ESNext",
     "types": ["vite/client"],
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "noEmit": true,                            // Vite handles JS output
     "jsx": "react-jsx",
+
+    /* Linting & strictness */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

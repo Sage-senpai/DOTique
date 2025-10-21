@@ -1,0 +1,2 @@
+export default function Router(): import("react/jsx-runtime").JSX.Element | null;
+//# sourceMappingURL=router.d.ts.map

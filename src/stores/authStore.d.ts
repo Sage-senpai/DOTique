@@ -1,0 +1,44 @@
+import type { Session } from "@supabase/supabase-js";
+export type Profile = {
+    id: string;
+    auth_uid: string;
+    email: string;
+    username?: string;
+    display_name?: string;
+    polkadot_address?: string;
+    created_at?: string;
+    followers_count?: number;
+    following_count?: number;
+    posts_count?: number;
+    tagged_count?: number;
+    fashion_archetype?: string;
+    style_tier?: string;
+    signature_palette?: string[];
+    verified_brands?: string[];
+    location?: string;
+    birthday?: string;
+    bio?: string;
+    name?: string;
+    dotvatar_url?: string;
+    favorite_brands?: string[];
+    primary_wallet?: string;
+    connected_wallets?: string[];
+    instagram_url?: string;
+    twitter_url?: string;
+    website_url?: string;
+    profile_privacy?: "Public" | "Private" | "Friends Only";
+    allow_data_sharing?: boolean;
+    wardrobe_nfts?: any;
+    currently_wearing?: any;
+};
+export type AuthState = {
+    session: Session | null;
+    profile: Profile | null;
+    loading: boolean;
+    setSession: (s: Session | null) => void;
+    setProfile: (p: Profile | null) => void;
+    setLoading: (val: boolean) => void;
+    resetAuth: () => void;
+};
+export declare const useAuthStore: import("zustand").UseBoundStore<import("zustand").StoreApi<AuthState>>;
+//# sourceMappingURL=authStore.d.ts.map
