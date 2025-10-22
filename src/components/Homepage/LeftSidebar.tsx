@@ -7,7 +7,7 @@ const TRENDING_TAGS = [
   { tag: "#FashionNFT", posts: "45.2K" },
   { tag: "#PolkadotArtists", posts: "32.1K" },
   { tag: "#NFTMinting", posts: "28.9K" },
-  { tag: "#DigitalFashion", posts: "19.5K" },
+  { tag: "#DigitalFashion", posts: "19.50K" },
 ];
 
 const LeftSidebar: React.FC = () => {
