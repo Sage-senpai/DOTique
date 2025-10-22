@@ -11,7 +11,7 @@ import { chainSpec } from "polkadot-api/chains/polkadot";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
 // @ts-ignore - descriptor exports not properly typed
-import { dot } from "@polkadot-api/descriptors";
+import { dot } from "../descriptors";
 
 import "./styles/App.scss";
 

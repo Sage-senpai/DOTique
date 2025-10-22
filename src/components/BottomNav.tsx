@@ -2,7 +2,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useAuthStore } from "../stores/authStore";
-import "../styles/app.scss";
+import "../styles/App.scss";
 
 export default function BottomTabNavigator() {
   const resetAuth = useAuthStore((s) => s.resetAuth);
