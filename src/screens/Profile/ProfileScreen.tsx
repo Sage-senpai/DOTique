@@ -7,7 +7,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
 import { socialService } from "../../services/socialService";
 import PostCard from "../../components/Posts/PostCard";
-import "./Profile.scss";
+import "./profile.scss";
 
 // ✅ Define Profile type with all fields used
 type ProfileUI = {
