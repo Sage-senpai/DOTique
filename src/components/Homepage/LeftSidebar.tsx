@@ -1,7 +1,7 @@
 // src/components/Homepage/LeftSidebar.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "./LeftSidebar.scss";
+import "./Leftsidebar.scss";
 
 const TRENDING_TAGS = [
   { tag: "#FashionNFT", posts: "45.2K" },
