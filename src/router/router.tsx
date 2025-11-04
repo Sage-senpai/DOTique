@@ -1,5 +1,7 @@
-// src/router/router.tsx
-import  { useEffect, useState } from "react";
+// =====================================================
+// src/router/router.tsx (COMBINED VERSION)
+// =====================================================
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // Navigation
@@ -34,6 +36,18 @@ import SettingsScreen from "../screens/Profile/SettingsScreen";
 
 // Followers Screen
 import FollowerScreen from "../screens/Profile/FollowerScreen";
+
+// Marketplace-specific pages
+import NFTDetail from "../screens/Marketplace/NFTDetails";
+import BuyNFT from "../screens/Marketplace/BuyNFT";
+import {DonateNFT} from "../screens/Marketplace/DonateNFT";
+import {RepostNFT} from "../screens/Marketplace/RepostNFT";
+
+// Upload / Import routes
+import {UploadDevice} from "../screens/Marketplace/uploads/UploadDevice";
+import {UploadStudio} from "../screens/Marketplace/uploads/UploadStudio";
+import {UploadWallet} from "../screens/Marketplace/uploads/UploadWallet";
+import {UploadExternal} from "../screens/Marketplace/uploads/UploadExternal";
 
 // Auth Store
 import { useAuthStore } from "../stores/authStore";
@@ -85,6 +99,17 @@ export default function Router() {
         <Route path="/profile/other" element={<OtherUserProfile />} />
       </Route>
 
+      {/* Marketplace - NFT Actions & Uploads */}
+      <Route path="/marketplace/nft/:id" element={<NFTDetail />} />
+      <Route path="/marketplace/buy/:id" element={<BuyNFT />} />
+      <Route path="/marketplace/donate/:id" element={<DonateNFT />} />
+      <Route path="/repost/:id" element={<RepostNFT />} />
+
+      <Route path="/marketplace/upload/device" element={<UploadDevice />} />
+      <Route path="/marketplace/upload/studio" element={<UploadStudio />} />
+      <Route path="/marketplace/upload/wallet" element={<UploadWallet />} />
+      <Route path="/marketplace/upload/external" element={<UploadExternal />} />
+
       {/* Standalone Pages (no BottomNav) */}
       {/*<Route path="/dotvatar" element={<DOTvatarScreen />} />*/}
       <Route path="/test-supabase" element={<TestSupabase />} />
@@ -96,10 +121,10 @@ export default function Router() {
       <Route path="/profile/edit" element={<EditProfileScreen />} />
       <Route path="/settings" element={<SettingsScreen />} />
 
-      {/* Followers Screen */}
+      {/* Followers */}
       <Route path="/followers" element={<FollowerScreen />} />
 
-      {/* Fallback to home */}
+      {/* Default */}
       <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

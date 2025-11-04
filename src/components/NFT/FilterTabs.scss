@@ -1,0 +1,295 @@
+// =====================================================
+// FILTER TABS (Enhanced + Search Integrated)
+// =====================================================
+
+$primary: #60519b;
+$secondary: #1e202c;
+$accent: #bfc0d1;
+$neutral: #31323e;
+$radius: 12px;
+$transition: 0.3s ease;
+$font-family-sans: "Poppins", sans-serif;
+
+.filter-tabs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+
+  // ===== Scrollable container =====
+  &__scroll {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: rgba($secondary, 0.85);
+    border-radius: $radius;
+    padding: 6px 10px;
+    box-shadow: 0 2px 8px rgba($neutral, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  // ===== Inner container (scrollable row) =====
+  &__container {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    flex: 1;
+    padding: 4px 0;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($accent, 0.2);
+      border-radius: 2px;
+
+      &:hover {
+        background: rgba($accent, 0.3);
+      }
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($accent, 0.2) transparent;
+  }
+
+  // ===== Individual tab =====
+  &__tab {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    background: rgba($accent, 0.08);
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: 24px;
+    color: $accent;
+    font-family: $font-family-sans;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all $transition;
+
+    &:hover {
+      background: rgba($primary, 0.25);
+      border-color: $primary;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    &--active {
+      background: $primary;
+      border-color: $primary;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba($primary, 0.4);
+      transform: translateY(-1px);
+
+      &:hover {
+        background: lighten($primary, 5%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($primary, 0.5);
+      }
+    }
+  }
+
+  // ===== Arrow buttons =====
+  &__arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba($neutral, 0.9);
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: 50%;
+    color: $accent;
+    cursor: pointer;
+    transition: all $transition;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: $primary;
+      border-color: $primary;
+      color: white;
+      box-shadow: 0 4px 12px rgba($primary, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &--left,
+    &--right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 100%;
+      border: none;
+      background: none;
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    &--left {
+      left: 0;
+      background: linear-gradient(to right, rgba($secondary, 0.95) 70%, transparent);
+      justify-content: flex-start;
+      padding-left: 4px;
+    }
+
+    &--right {
+      right: 0;
+      background: linear-gradient(to left, rgba($secondary, 0.95) 70%, transparent);
+      justify-content: flex-end;
+      padding-right: 4px;
+    }
+
+    svg {
+      pointer-events: auto;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // ===== Search bar =====
+  &__search {
+    width: 100%;
+    margin-top: 10px;
+    position: relative;
+
+    input {
+      width: 100%;
+      padding: 10px 40px 10px 16px;
+      border-radius: $radius;
+      border: 1px solid rgba($accent, 0.25);
+      background: rgba($neutral, 0.85);
+      color: $accent;
+      font-family: $font-family-sans;
+      font-size: 15px;
+      transition: all $transition;
+      outline: none;
+
+      &::placeholder {
+        color: rgba($accent, 0.6);
+      }
+
+      &:focus {
+        border-color: $primary;
+        color: white;
+        background: rgba($secondary, 0.9);
+        box-shadow: 0 0 12px rgba($primary, 0.3);
+      }
+    }
+
+    .filter-tabs__search-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba($accent, 0.6);
+      pointer-events: none;
+      transition: color $transition;
+    }
+
+    &:focus-within .filter-tabs__search-icon {
+      color: $primary;
+    }
+  }
+
+  // ===== Dropdown (mobile replacement) =====
+  &__dropdown {
+    display: none;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  &__select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: $radius;
+    border: 1px solid rgba($accent, 0.2);
+    background: rgba($neutral, 0.9);
+    color: $accent;
+    font-size: 15px;
+    font-family: $font-family-sans;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    transition: all $transition;
+
+    &:hover,
+    &:focus {
+      border-color: $primary;
+      color: white;
+      background: rgba($primary, 0.1);
+      box-shadow: 0 0 0 3px rgba($primary, 0.2);
+    }
+
+    option {
+      background-color: $primary; // matches your screen’s main color
+      color: white;
+      font-family: $font-family-sans;
+      font-size: 14px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+    }
+
+    // for iOS and some browsers to force the native dropdown color
+    &::-ms-expand {
+      background: transparent;
+      color: inherit;
+    }
+
+    // subtle enhancement for dark UI consistency
+    &:focus option:checked {
+      background-color: darken($primary, 8%);
+    }
+  }
+
+  // ===== RESPONSIVE =====
+  @media (max-width: 768px) {
+    &__scroll {
+      display: none;
+    }
+
+    &__dropdown {
+      display: block;
+    }
+
+    &__tab {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    &__arrow {
+      width: 32px;
+      height: 32px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &__search {
+      margin-top: 8px;
+
+      input {
+        font-size: 14px;
+        padding: 9px 38px 9px 14px;
+        background: rgba($neutral, 0.9);
+      }
+    }
+  }
+}

@@ -1,15 +1,9 @@
-// 5. NEW: src/components/NFT/MintNFTModal.tsx
+// src/components/NFT/MintNFTModal.tsx
 // =====================================================
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { useNFT } from "../../contexts/NFTContext"; 
 import "./MintNFTModal.scss";
-
-interface MintNFTModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onMint: (data: MintFormData) => Promise<void>;
-  isLoading?: boolean;
-}
 
 export interface MintFormData {
   name: string;
@@ -20,12 +14,18 @@ export interface MintFormData {
   image: File | null;
 }
 
-const MintNFTModal: React.FC<MintNFTModalProps> = ({
-  isOpen,
-  onClose,
-  onMint,
-  isLoading = false,
-}) => {
+interface MintNFTModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// =====================================================
+// ✅ Updated functional modal with NFTContext integration
+// =====================================================
+const MintNFTModal: React.FC<MintNFTModalProps> = ({ isOpen, onClose }) => {
+  const { addNFT } = useNFT(); // 👈 connect to your NFT context
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState<MintFormData>({
     name: "",
     description: "",
@@ -37,22 +37,50 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({
 
   const [preview, setPreview] = useState<string>("");
 
+  // =====================================================
+  // Handle image upload preview
+  // =====================================================
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFormData({ ...formData, image: file });
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
+      reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
+  // =====================================================
+  // Handle mint submission
+  // =====================================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name || !formData.image) return;
+
     try {
-      await onMint(formData);
+      setIsLoading(true);
+
+      // ✅ Simulate mint delay
+      await new Promise((res) => setTimeout(res, 1000));
+
+      // ✅ Add dummy minted NFT to your marketplace instantly
+      const newNFT = {
+        id: Date.now().toString(),
+        name: formData.name,
+        description: formData.description || "A newly minted NFT",
+        price: parseFloat(formData.price) || 0,
+        rarity: formData.rarity,
+        royalty: parseInt(formData.royalty),
+        artist: "You",
+        image: preview,
+        likes: 0,
+        comments: [],
+        isLive: false, // mark as dummy
+      };
+
+      addNFT(newNFT); // 👈 Push into NFTContext list
+
+      // Reset modal
       setFormData({
         name: "",
         description: "",
@@ -65,6 +93,8 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Mint error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -205,3 +235,4 @@ const MintNFTModal: React.FC<MintNFTModalProps> = ({
 };
 
 export default MintNFTModal;
+

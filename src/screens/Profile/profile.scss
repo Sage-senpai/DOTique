@@ -17,8 +17,6 @@ $font: "Poppins", sans-serif;
   background: $color-secondary;
   font-family: $font;
   padding-bottom: 80px;
-  
-  
 
   &__header {
     display: flex;
@@ -227,6 +225,55 @@ $font: "Poppins", sans-serif;
     }
   }
 }
+
+// ============================================================
+// PROFILE TABS (MERGED VERSION)
+// ============================================================
+.profile-tabs {
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 1px solid var(--border-color);
+  margin-top: 1rem;
+
+  .tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    text-transform: capitalize;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.active {
+      color: var(--text-primary);
+      border-bottom: 3px solid var(--accent);
+    }
+  }
+}
+
+.profile-tab-content {
+  padding-top: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+// NFT GRID for profile/wardrobe sections
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+// Preserve older structure compatibility
+.profile-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
 
 // ============================================================
 // EDIT PROFILE SCREEN

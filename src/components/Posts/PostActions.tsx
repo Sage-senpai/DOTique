@@ -1,9 +1,16 @@
-// src/components/Post/PostActions.tsx 
+// src/components/Post/PostActions.tsx
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Share, Bookmark, Send } from 'lucide-react';
 import './PostActions.scss';
 
 interface PostActionsProps {
+  postId?: string; // ✅ Added for comment modal
+  postContent?: string; // ✅ Added for comment modal
+  postAuthor?: { // ✅ Added for comment modal
+    name: string;
+    username: string;
+    avatar: string;
+  };
   stats: {
     likes?: number;
     comments?: number;
@@ -15,44 +22,86 @@ interface PostActionsProps {
     saved?: boolean;
     reposted?: boolean;
   };
-  onLike: () => void;
-  onSave: () => void;
-  onShare?: () => void; // ✅ Optional share handler
+  onLike: (e?: React.MouseEvent) => void;
+  onSave: (e?: React.MouseEvent) => void;
+  onShare?: (e?: React.MouseEvent) => void;
+  onComment?: (e?: React.MouseEvent) => void; // ✅ Added
 }
 
 const PostActions: React.FC<PostActionsProps> = ({
+  postId,
+  postContent,
+  postAuthor,
   stats,
   userInteraction,
   onLike,
   onSave,
-  onShare, // ✅ include here too
+  onShare,
+  onComment,
 }) => {
   const [liked, setLiked] = useState<boolean>(userInteraction.liked ?? false);
   const [saved, setSaved] = useState<boolean>(userInteraction.saved ?? false);
   const [showRepostMenu, setShowRepostMenu] = useState(false);
 
-  const handleLikeClick = () => {
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setLiked(!liked);
-    onLike();
+    onLike(e);
   };
 
-  const handleSaveClick = () => {
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setSaved(!saved);
-    onSave();
+    onSave(e);
+  };
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onShare?.(e);
+  };
+
+  const handleRepostClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setShowRepostMenu(!showRepostMenu);
+  };
+
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onComment?.(e);
+    console.log('Comment clicked');
+    // TODO: Open comment modal or navigate to post detail
+  };
+
+  const handleDonateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log('Donate clicked');
+    // TODO: Open donation modal
   };
 
   return (
-    <div className="post-actions">
+    <div className="post-actions" onClick={(e) => e.stopPropagation()}>
       <button
         className={`action-btn ${liked ? 'active' : ''}`}
         onClick={handleLikeClick}
         title="Like"
+        type="button"
       >
         <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
         <span>{stats.likes ?? 0}</span>
       </button>
 
-      <button className="action-btn" title="Comment">
+      <button
+        className="action-btn"
+        onClick={handleCommentClick}
+        title="Comment"
+        type="button"
+      >
         <MessageCircle size={18} />
         <span>{stats.comments ?? 0}</span>
       </button>
@@ -60,16 +109,38 @@ const PostActions: React.FC<PostActionsProps> = ({
       <div className="repost-wrapper">
         <button
           className="action-btn"
-          onClick={() => setShowRepostMenu(!showRepostMenu)}
+          onClick={handleRepostClick}
           title="Repost"
+          type="button"
         >
           <Repeat2 size={18} />
           <span>{stats.reposts ?? 0}</span>
         </button>
+
         {showRepostMenu && (
-          <div className="repost-menu">
-            <button className="repost-option">Repost</button>
-            <button className="repost-option">Repost with Quote</button>
+          <div className="repost-menu" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="repost-option"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Repost');
+                setShowRepostMenu(false);
+              }}
+              type="button"
+            >
+              Repost
+            </button>
+            <button
+              className="repost-option"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Repost with Quote');
+                setShowRepostMenu(false);
+              }}
+              type="button"
+            >
+              Repost with Quote
+            </button>
           </div>
         )}
       </div>
@@ -77,7 +148,8 @@ const PostActions: React.FC<PostActionsProps> = ({
       <button
         className="action-btn"
         title="Share"
-        onClick={onShare}
+        onClick={handleShareClick}
+        type="button"
       >
         <Share size={18} />
         <span>{stats.shares ?? 0}</span>
@@ -87,11 +159,17 @@ const PostActions: React.FC<PostActionsProps> = ({
         className={`action-btn ${saved ? 'active' : ''}`}
         onClick={handleSaveClick}
         title="Save"
+        type="button"
       >
         <Bookmark size={18} fill={saved ? 'currentColor' : 'none'} />
       </button>
 
-      <button className="action-btn donate" title="Donate">
+      <button
+        className="action-btn donate"
+        onClick={handleDonateClick}
+        title="Donate"
+        type="button"
+      >
         <Send size={18} />
       </button>
     </div>

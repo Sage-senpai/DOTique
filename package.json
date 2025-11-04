@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/sm-provider": "^0.1.12",
     "@polkadot-api/smoldot": "^0.3.14",
@@ -38,6 +39,7 @@
     "dedot": "^0.18.4",
     "ethers": "^6.15.0",
     "framer-motion": "^12.23.24",
+    "gsap": "^3.13.0",
     "ipfs-http-client": "^60.0.1",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",

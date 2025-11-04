@@ -16,6 +16,7 @@ export interface Post {
   };
   content: string;
   image_url?: string;
+  media_url?: string;
   created_at: string;
   likes_count?: number;
   comments_count?: number;
@@ -43,9 +44,10 @@ export interface Comment {
 
 export interface UserProfile {
   id: string;
+  auth_uid: string;
   username: string;
   display_name: string;
-  avatar?: string;
+  avatar_url?: string;
   bio?: string;
   followers_count: number;
   following_count: number;
@@ -54,60 +56,196 @@ export interface UserProfile {
 }
 
 // -------------------------------------------------------------
+// Helper: Get profile ID from auth UID
+// -------------------------------------------------------------
+async function getProfileIdFromAuthUid(authUid: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_uid", authUid)
+      .single();
+
+    if (error) {
+      console.error("❌ Error fetching profile ID:", error.message);
+      return null;
+    }
+
+    return data?.id || null;
+  } catch (err) {
+    console.error("❌ Exception in getProfileIdFromAuthUid:", err);
+    return null;
+  }
+}
+
+// -------------------------------------------------------------
+// Helper: Ensure profile exists
+// -------------------------------------------------------------
+async function ensureProfileExists(authUid: string): Promise<string | null> {
+  try {
+    // First, check if profile exists
+    let profileId = await getProfileIdFromAuthUid(authUid);
+    
+    if (profileId) {
+      return profileId;
+    }
+
+    // Profile doesn't exist, create it
+    console.log("🧩 Profile not found, creating new profile for auth_uid:", authUid);
+    
+    const { data: userData } = await supabase.auth.getUser();
+    const email = userData?.user?.email || `${authUid.slice(0, 8)}@placeholder.com`;
+    
+    const { data: newProfile, error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        auth_uid: authUid,
+        username: `user_${authUid.slice(0, 8)}`,
+        display_name: "New User",
+        email: email,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error("❌ Failed to create profile:", insertError.message);
+      return null;
+    }
+
+    console.log("✅ Profile created successfully:", newProfile.id);
+    return newProfile.id;
+  } catch (err) {
+    console.error("❌ Exception in ensureProfileExists:", err);
+    return null;
+  }
+}
+
+// -------------------------------------------------------------
 // Main Service
 // -------------------------------------------------------------
 export const socialService = {
-  // 📝 Create a post
-  async createPost(userId: string, content: string, imageUrl?: string) {
-  try {
-    // Validation
-    if (!userId) {
-      console.error("❌ User ID is missing");
-      throw new Error("User ID is required to create a post");
+  // 📝 Create a post (RLS-safe, UUID-friendly, with mention detection)
+  async createPost(content: string, media_url?: string) {
+    try {
+      // 1. Get authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error("You must be logged in to create a post");
+      }
+
+      console.log("📝 Creating post for auth user:", user.id);
+
+      // 2. Ensure profile exists and get profile ID
+      const profileId = await ensureProfileExists(user.id);
+
+      if (!profileId) {
+        throw new Error("Could not find or create user profile");
+      }
+
+      console.log("✅ Using profile ID:", profileId);
+
+      // 3. Extract mentions from content (@username format)
+      const mentions = this.extractMentions(content);
+      console.log("📌 Mentions found:", mentions);
+
+      // 4. Create the post with profile ID - content is already a string, don't wrap it
+      const { data, error } = await supabase
+        .from("posts")
+        .insert([{ 
+          user_id: profileId, 
+          content: content, // Just pass the string directly
+          media_url: media_url || null 
+        }])
+        .select(`
+          id,
+          user_id,
+          content,
+          media_url,
+          created_at,
+          profiles!posts_user_id_fkey (
+            id,
+            username,
+            display_name,
+            avatar_url,
+            verified
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error("❌ createPost error:", error.message);
+        throw new Error(`Cannot create post: ${error.message}`);
+      }
+
+      console.log("✅ Post created successfully:", data);
+
+      // 5. Process mentions and create notifications (optional future feature)
+      if (mentions.length > 0) {
+        await this.processMentions(data.id, mentions, profileId);
+      }
+
+      // Transform to match Post interface
+      return {
+        ...data,
+        image_url: data.media_url, // Map for compatibility
+        author: {
+          id: data.profiles?.id || data.user_id,
+          name: data.profiles?.display_name || "User",
+          username: data.profiles?.username || "user",
+          avatar: data.profiles?.avatar_url || "👤",
+          verified: data.profiles?.verified || false,
+        },
+      };
+    } catch (err: any) {
+      console.error("❌ createPost fatal error:", err.message);
+      throw err;
     }
+  },
 
-    if (!content || !content.trim()) {
-      console.error("❌ Content is empty");
-      throw new Error("Post content cannot be empty");
+  // 🏷️ Extract @mentions from post content
+  extractMentions(content: string): string[] {
+    const mentionRegex = /@(\w+)/g;
+    const mentions: string[] = [];
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      mentions.push(match[1]); // Extract username without @
     }
+    
+    return [...new Set(mentions)]; // Remove duplicates
+  },
 
-    const postData = {
-      user_id: userId,
-      content: content.trim(),
-      image_url: imageUrl || null,
-      created_at: new Date().toISOString(),
-    };
+  // 📢 Process mentions and create notifications
+  async processMentions(postId: string, usernames: string[], mentionerId: string) {
+    try {
+      // Get user IDs for mentioned usernames
+      const { data: mentionedUsers, error } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("username", usernames);
 
-    console.log("📝 Inserting post to Supabase:", postData);
+      if (error) {
+        console.error("❌ Error fetching mentioned users:", error);
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from("posts")
-      .insert([postData])
-      .select();
+      console.log("👥 Found mentioned users:", mentionedUsers);
 
-    if (error) {
-      console.error("❌ Supabase error:", error);
-      throw new Error(`Supabase error: ${error.message}`);
+      // TODO: Create notifications for mentioned users
+      // This would insert into a notifications table
+      // For now, just log it
+      if (mentionedUsers && mentionedUsers.length > 0) {
+        console.log(`📬 Would notify ${mentionedUsers.length} users about mention in post ${postId}`);
+      }
+    } catch (err) {
+      console.error("❌ Error processing mentions:", err);
     }
-
-    if (!data || data.length === 0) {
-      console.error("❌ No data returned from insert");
-      throw new Error("Post was not created (no data returned)");
-    }
-
-    console.log("✅ Post created successfully:", data[0]);
-    return data[0];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("❌ createPost error:", error.message || error);
-    throw error;
-  }
-},
+  },
 
   // 📚 Get timeline posts (feed/following/followers)
   async getTimelinePosts(
-    userId: string,
+    profileId: string,
     limit = 20,
     offset = 0,
     tab: "feed" | "following" | "followers" = "feed"
@@ -115,76 +253,106 @@ export const socialService = {
     try {
       let query = supabase
         .from("posts")
-        .select(
-          `
-          *,
-          users:user_id(id, username, display_name, dotvatar_url, verified),
+        .select(`
+          id,
+          user_id,
+          content,
+          media_url,
+          created_at,
+          profiles!posts_user_id_fkey (
+            id,
+            username,
+            display_name,
+            avatar_url,
+            verified
+          ),
           post_likes(user_id),
           post_comments(id)
-        `
-        )
-        .order("created_at", { ascending: false });
+        `)
+        .order("created_at", { ascending: false })
+        .limit(limit)
+        .range(offset, offset + limit - 1);
 
       if (tab === "following") {
         const { data: following } = await supabase
           .from("follows")
           .select("following_id")
-          .eq("follower_id", userId);
-
+          .eq("follower_id", profileId);
         const followingIds = following?.map((f) => f.following_id) || [];
-        query = query.in("user_id", [...followingIds, userId]);
+        if (followingIds.length > 0) {
+          query = query.in("user_id", [...followingIds, profileId]);
+        } else {
+          query = query.eq("user_id", profileId);
+        }
       } else if (tab === "followers") {
         const { data: followers } = await supabase
           .from("follows")
           .select("follower_id")
-          .eq("following_id", userId);
-
+          .eq("following_id", profileId);
         const followerIds = followers?.map((f) => f.follower_id) || [];
-        query = query.in("user_id", [...followerIds, userId]);
-      } else {
-        query = query.limit(limit).range(offset, offset + limit - 1);
+        if (followerIds.length > 0) {
+          query = query.in("user_id", [...followerIds, profileId]);
+        } else {
+          query = query.eq("user_id", profileId);
+        }
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+
+      const postsWithAuthors = data.map((post: any) => ({
+        ...post,
+        image_url: post.media_url, // Map media_url to image_url for compatibility
+        author: {
+          id: post.profiles?.id || post.user_id,
+          name: post.profiles?.display_name || "User",
+          username: post.profiles?.username || "user",
+          avatar: post.profiles?.avatar_url || "👤",
+          verified: post.profiles?.verified || false,
+        },
+        likes_count: post.post_likes?.length || 0,
+        comments_count: post.post_comments?.length || 0,
+      }));
+
+      return postsWithAuthors;
     } catch (error) {
       console.error("❌ Failed to fetch timeline:", error);
       throw error;
     }
   },
 
-  // 👤 Get user profile with stats
-  async getUserProfile(userId: string): Promise<UserProfile | null> {
+  // 👤 Get user profile with stats by profile ID
+  async getUserProfile(profileId: string): Promise<UserProfile | null> {
     try {
       const { data: user, error: userError } = await supabase
-        .from("users")
-        .select("id, username, display_name, dotvatar_url, bio, verified")
-        .eq("id", userId)
+        .from("profiles")
+        .select("id, auth_uid, username, display_name, avatar_url, bio, verified")
+        .eq("id", profileId)
         .single();
-
+      
       if (userError) throw userError;
 
       const { count: followersCount } = await supabase
         .from("follows")
         .select("id", { count: "exact" })
-        .eq("following_id", userId);
-
+        .eq("following_id", profileId);
+      
       const { count: followingCount } = await supabase
         .from("follows")
         .select("id", { count: "exact" })
-        .eq("follower_id", userId);
-
+        .eq("follower_id", profileId);
+      
       const { count: postsCount } = await supabase
         .from("posts")
         .select("id", { count: "exact" })
-        .eq("user_id", userId);
+        .eq("user_id", profileId);
 
       return {
         id: user.id,
+        auth_uid: user.auth_uid,
         username: user.username,
         display_name: user.display_name,
-        avatar: user.dotvatar_url,
+        avatar_url: user.avatar_url,
         bio: user.bio,
         followers_count: followersCount || 0,
         following_count: followingCount || 0,
@@ -197,79 +365,60 @@ export const socialService = {
     }
   },
 
-  // 🔍 Search users
-  async searchUsers(query: string, limit = 10) {
+  // 👤 Get user profile by auth UID
+  async getUserProfileByAuthUid(authUid: string): Promise<UserProfile | null> {
     try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("id, username, display_name, dotvatar_url, bio, verified")
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-        .limit(limit);
-
-      if (error) throw error;
-      return data || [];
+      const profileId = await getProfileIdFromAuthUid(authUid);
+      if (!profileId) return null;
+      return await this.getUserProfile(profileId);
     } catch (error) {
-      console.error("❌ Search failed:", error);
-      throw error;
+      console.error("❌ Failed to fetch user profile by auth UID:", error);
+      return null;
     }
   },
 
-  // ❤️ Like or unlike a post
-  async toggleLike(postId: string, userId: string) {
+  // Helper to get current user's profile
+  async getCurrentUserProfile(): Promise<UserProfile | null> {
     try {
-      const { data: existingLike } = await supabase
-        .from("post_likes")
-        .select("id")
-        .eq("post_id", postId)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (existingLike) {
-        await supabase.from("post_likes").delete().eq("id", existingLike.id);
-        return { liked: false };
-      } else {
-        await supabase.from("post_likes").insert([{ post_id: postId, user_id: userId }]);
-        return { liked: true };
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      return await this.getUserProfileByAuthUid(user.id);
     } catch (error) {
-      console.error("❌ Failed to toggle like:", error);
-      throw error;
+      console.error("❌ Failed to get current user profile:", error);
+      return null;
     }
   },
 
-  // 💬 Add comment
-  async addComment(postId: string, userId: string, content: string) {
+  // 👥 Toggle follow/unfollow
+  async toggleFollow(followerId: string, followingId: string): Promise<{ following: boolean }> {
     try {
-      const { data, error } = await supabase
-        .from("post_comments")
-        .insert([{ post_id: postId, user_id: userId, content }])
-        .select();
-
-      if (error) throw error;
-      return data?.[0];
-    } catch (error) {
-      console.error("❌ Failed to add comment:", error);
-      throw error;
-    }
-  },
-
-  // 👥 Follow / Unfollow user
-  async toggleFollow(followerId: string, followingId: string) {
-    try {
-      const { data: existing } = await supabase
+      // Check if already following
+      const { data: existingFollow } = await supabase
         .from("follows")
         .select("id")
         .eq("follower_id", followerId)
         .eq("following_id", followingId)
         .maybeSingle();
 
-      if (existing) {
-        await supabase.from("follows").delete().eq("id", existing.id);
+      if (existingFollow) {
+        // Unfollow
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", followerId)
+          .eq("following_id", followingId);
+
+        if (error) throw error;
+        console.log("✅ Unfollowed user");
         return { following: false };
       } else {
-        await supabase
+        // Follow
+        const { error } = await supabase
           .from("follows")
-          .insert([{ follower_id: followerId, following_id: followingId }]);
+          .insert({ follower_id: followerId, following_id: followingId });
+
+        if (error) throw error;
+        console.log("✅ Followed user");
         return { following: true };
       }
     } catch (error) {
@@ -278,18 +427,52 @@ export const socialService = {
     }
   },
 
-  // 🧾 Get posts by a specific user
-  async getUserPosts(userId: string, limit = 20) {
+  // 📝 Get user's posts (alias for getTimelinePosts for specific user)
+  async getUserPosts(userId: string, limit = 50, offset = 0) {
     try {
+      console.log("📝 Fetching posts for user:", userId);
+      
       const { data, error } = await supabase
         .from("posts")
-        .select("*")
+        .select(`
+          id,
+          user_id,
+          content,
+          media_url,
+          created_at,
+          profiles!posts_user_id_fkey (
+            id,
+            username,
+            display_name,
+            avatar_url,
+            verified
+          ),
+          post_likes(user_id),
+          post_comments(id)
+        `)
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .limit(limit)
+        .range(offset, offset + limit - 1);
 
       if (error) throw error;
-      return data || [];
+
+      const postsWithAuthors = data.map((post: any) => ({
+        ...post,
+        image_url: post.media_url,
+        author: {
+          id: post.profiles?.id || post.user_id,
+          name: post.profiles?.display_name || "User",
+          username: post.profiles?.username || "user",
+          avatar: post.profiles?.avatar_url || "👤",
+          verified: post.profiles?.verified || false,
+        },
+        likes_count: post.post_likes?.length || 0,
+        comments_count: post.post_comments?.length || 0,
+      }));
+
+      console.log("✅ Fetched", postsWithAuthors.length, "posts");
+      return postsWithAuthors;
     } catch (error) {
       console.error("❌ Failed to fetch user posts:", error);
       throw error;

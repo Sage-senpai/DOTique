@@ -1,3 +1,4 @@
+//src/screens/NFTstudio/CanvasStudio.tsx
 import  { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 
 /**

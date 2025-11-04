@@ -1,0 +1,354 @@
+$primary: #60519b;
+$secondary: #1e202c;
+$accent: #bfc0d1;
+$neutral: #31323e;
+$font-family-sans: "Poppins", sans-serif;
+
+.buy-nft {
+  min-height: 100vh;
+  background: $secondary;
+  color: white;
+  font-family: $font-family-sans;
+  padding: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: $neutral;
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: 12px;
+    padding: 12px 20px;
+    color: white;
+    font-family: $font-family-sans;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: $primary;
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+    }
+  }
+
+  &__title {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+  }
+
+  &__preview {
+    background: $neutral;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba($accent, 0.1);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+
+    @media (max-width: 1024px) {
+      position: relative;
+      top: 0;
+    }
+  }
+
+  &__preview-image {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__preview-info {
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      color: $accent;
+      margin: 0 0 16px 0;
+    }
+  }
+
+  &__preview-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .badge {
+      padding: 6px 12px;
+      background: rgba($accent, 0.1);
+      border: 1px solid rgba($accent, 0.2);
+      border-radius: 16px;
+      font-size: 13px;
+    }
+  }
+
+  &__transaction {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__step {
+    background: $neutral;
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid rgba($accent, 0.1);
+    transition: all 0.3s ease;
+
+    &.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  &__step-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h3 {
+      flex: 1;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  &__step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $primary;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  &__check {
+    color: #4CAF50;
+  }
+
+  &__wallets {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__wallet {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba($accent, 0.05);
+    border: 2px solid rgba($accent, 0.2);
+    border-radius: 12px;
+    color: white;
+    font-family: $font-family-sans;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+
+    &:hover {
+      border-color: $primary;
+      background: rgba($primary, 0.1);
+    }
+
+    &.selected {
+      border-color: $primary;
+      background: rgba($primary, 0.2);
+    }
+  }
+
+  &__wallet-logo {
+    font-size: 32px;
+  }
+
+  &__wallet-name {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  &__wallet-connecting {
+    font-size: 14px;
+    color: $primary;
+  }
+
+  &__connected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background: rgba(#4CAF50, 0.1);
+    border: 1px solid #4CAF50;
+    border-radius: 12px;
+    color: #4CAF50;
+    font-weight: 500;
+  }
+
+  &__summary {
+    background: rgba($accent, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  &__summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    font-size: 15px;
+
+    span:first-child {
+      color: $accent;
+    }
+
+    span:last-child {
+      color: white;
+      font-weight: 500;
+    }
+
+    &.total {
+      font-size: 20px;
+      font-weight: 700;
+
+      span:last-child {
+        color: $primary;
+      }
+    }
+  }
+
+  &__summary-divider {
+    height: 1px;
+    background: rgba($accent, 0.2);
+    margin: 12px 0;
+  }
+
+  &__purchase-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 18px;
+    background: $primary;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-family: $font-family-sans;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
+
+    &:hover:not(:disabled) {
+      background: lighten($primary, 5%);
+      box-shadow: 0 8px 24px rgba($primary, 0.5);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba($accent, 0.05);
+    border-radius: 8px;
+    color: $accent;
+    font-size: 13px;
+    line-height: 1.5;
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  &__success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    text-align: center;
+  }
+
+  &__success-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(#4CAF50, 0.4);
+
+    svg {
+      color: white;
+    }
+  }
+
+  &__success {
+    h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      color: white;
+    }
+
+    p {
+      color: $accent;
+      font-size: 16px;
+      margin: 0 0 8px 0;
+    }
+  }
+
+  &__success-redirect {
+    color: $primary !important;
+    font-weight: 500;
+  }
+}

@@ -190,6 +190,130 @@ $color-neutral: #31323e;
   margin-bottom: 20px;
 }
 
+// =====================================================
+// 🆕 Textarea Wrapper (for mention dropdown positioning)
+// =====================================================
+.textarea-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+
+  .form-textarea {
+    margin-bottom: 8px;
+  }
+
+  // 🆕 Mention Suggestions Dropdown
+  .mention-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    margin-top: 4px;
+    animation: dropdownSlide 200ms ease;
+
+    @keyframes dropdownSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .mention-suggestion-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 150ms ease;
+      border-bottom: 1px solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: rgba($color-primary, 0.05);
+      }
+
+      .avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .user-info-small {
+        flex: 1;
+
+        .display-name-small {
+          font-weight: 600;
+          font-size: 14px;
+          color: #333;
+        }
+
+        .username-small {
+          font-size: 13px;
+          color: #666;
+        }
+      }
+    }
+
+    // Dark mode for mention dropdown
+    .dark & {
+      background: rgba($color-neutral, 0.95);
+      border-color: rgba($color-accent, 0.1);
+
+      .mention-suggestion-item {
+        border-bottom-color: rgba($color-accent, 0.05);
+
+        &:hover {
+          background: rgba($color-primary, 0.15);
+        }
+
+        .user-info-small {
+          .display-name-small {
+            color: $color-accent;
+          }
+
+          .username-small {
+            color: rgba($color-accent, 0.6);
+          }
+        }
+      }
+    }
+  }
+
+  // 🆕 Character Counter
+  .char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+
+    .dark & {
+      color: rgba($color-accent, 0.6);
+    }
+  }
+}
+
+// =====================================================
+// Form Inputs & Textareas
+// =====================================================
 .form-input,
 .form-textarea {
   font-family: inherit;
@@ -234,6 +358,34 @@ $color-neutral: #31323e;
 .form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+// =====================================================
+// Form Group (for NFT fields)
+// =====================================================
+.form-group {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+
+    .dark & {
+      color: $color-accent;
+    }
+  }
+
+  &.half {
+    flex: 1;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
 }
 
 // =====================================================
@@ -402,11 +554,16 @@ $color-neutral: #31323e;
   }
 
   .media-tools {
-    flex-direction: column;
-
     .media-btn {
-      width: 100%;
-      justify-content: center;
+      span {
+        display: none; // Hide text on mobile, keep icons only
+      }
+    }
+  }
+
+  .textarea-wrapper {
+    .mention-suggestions {
+      max-height: 150px; // Smaller on mobile
     }
   }
 }

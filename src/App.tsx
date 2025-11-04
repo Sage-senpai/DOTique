@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { DotApiContext } from "./hooks/useDotApi";
+import { NFTProvider } from "./contexts/NFTContext";
+import { WalletProvider } from "./contexts/WalletContext";
 import Router from "./router/router";
 import ConnectionStatus from "./components/ConnectionStatus";
 import { createClient } from "polkadot-api";
@@ -12,6 +14,8 @@ import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
 // @ts-ignore - descriptor exports not properly typed
 import { dot } from "@polkadot-api/descriptors";
+import { supabase } from "./services/supabase";
+import { ensureUserProfiles } from "./services/profileService";
 
 import "./styles/App.scss";
 
@@ -19,6 +23,7 @@ export default function App() {
   const [isConnecting, setIsConnecting] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [dotApi, setDotApi] = useState<any>(null);
+  const [profilesBackfilled, setProfilesBackfilled] = useState(false);
 
   useEffect(() => {
     let smoldot: any;
@@ -27,6 +32,14 @@ export default function App() {
     const init = async () => {
       try {
         setIsConnecting(true);
+
+        // 🔹 Backfill missing profiles for existing users (once)
+        if (!profilesBackfilled) {
+          await ensureUserProfiles();
+          setProfilesBackfilled(true);
+          console.log("✅ Missing user profiles backfilled");
+        }
+
         console.log("🔄 Initializing Smoldot Polkadot client...");
 
         const sm = startFromWorker(worker);
@@ -40,7 +53,7 @@ export default function App() {
 
         console.log("✅ Polkadot API ready:", api);
 
-        // ✅ Use Smoldot's JSON-RPC directly
+        // Verify basic on-chain info
         try {
           const chainName = await chain.sendJsonRpc("system_chain");
           const runtimeVersion = await chain.sendJsonRpc("system_version");
@@ -75,25 +88,29 @@ export default function App() {
       window.removeEventListener("offline", handleOffline);
       if (smoldot?.terminate) smoldot.terminate();
     };
-  }, []);
+  }, [profilesBackfilled]);
 
   if (isConnecting || !isConnected) {
-    return (
-      <ConnectionStatus
-        isConnecting={isConnecting}
-        isConnected={isConnected}
-      />
-    );
+    return <ConnectionStatus isConnecting={isConnecting} isConnected={isConnected} />;
+  }
+
+  // ⚠️ Debug line — remove later
+  if (typeof window !== "undefined") {
+    (window as any).supabase = supabase;
   }
 
   return (
     <DotApiContext.Provider value={dotApi}>
       <AuthProvider>
-        <BrowserRouter>
-          <div className="safe-area">
-            <Router />
-          </div>
-        </BrowserRouter>
+        <WalletProvider>
+          <NFTProvider>
+            <BrowserRouter>
+              <div className="safe-area">
+                <Router />
+              </div>
+            </BrowserRouter>
+          </NFTProvider>
+        </WalletProvider>
       </AuthProvider>
     </DotApiContext.Provider>
   );

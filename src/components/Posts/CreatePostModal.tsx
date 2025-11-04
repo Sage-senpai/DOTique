@@ -1,14 +1,22 @@
 // src/components/Posts/CreatePostModal.tsx
-import React, { useState } from "react";
-import { X, Camera, Image as ImageIcon, Video } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Camera, Image as ImageIcon, Video, AtSign } from "lucide-react";
 import MintNFTModal from "../NFT/MintNFTModal";
 import { uploadToIPFS } from "../../services/ipfsService";
+import { supabase } from "../../services/supabase";
 import "./CreatePostModal.scss";
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreatePost?: (content: string, imageUrl?: string) => Promise<void>;
+}
+
+interface UserSuggestion {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url?: string;
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({
@@ -23,6 +31,14 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showMintModal, setShowMintModal] = useState(false);
 
+  // Mention autocomplete states
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionSuggestions, setMentionSuggestions] = useState<UserSuggestion[]>([]);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [cursorPosition, setCursorPosition] = useState(0);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   // NFT-specific fields
   const [nftTitle, setNftTitle] = useState("");
   const [nftDescription, setNftDescription] = useState("");
@@ -30,19 +46,87 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [nftRarity, setNftRarity] = useState("common");
   const [royalty, setRoyalty] = useState("5");
 
+  // ✅ FIX: Hooks must come before conditional returns
+  useEffect(() => {
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && isOpen) {
+      handleClose();
+    }
+  };
+  window.addEventListener("keydown", handleEscape);
+  return () => window.removeEventListener("keydown", handleEscape);
+}, [isOpen]);
   if (!isOpen) return null;
+
+  // Search for users when @ is typed
+  const searchUsers = async (query: string) => {
+    if (query.length < 1) {
+      setMentionSuggestions([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .ilike("username", `${query}%`)
+        .limit(5);
+
+      if (error) throw error;
+      setMentionSuggestions(data || []);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      setMentionSuggestions([]);
+    }
+  };
+
+  // Handle text change and detect @ mentions
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart;
+
+    setContent(value);
+    setCursorPosition(cursorPos);
+
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+
+    if (mentionMatch) {
+      const query = mentionMatch[1];
+      setMentionQuery(query);
+      setShowMentionSuggestions(true);
+      searchUsers(query);
+    } else {
+      setShowMentionSuggestions(false);
+      setMentionSuggestions([]);
+    }
+  };
+
+  const insertMention = (username: string) => {
+    const textBeforeCursor = content.slice(0, cursorPosition);
+    const textAfterCursor = content.slice(cursorPosition);
+    const newTextBefore = textBeforeCursor.replace(/@\w*$/, `@${username} `);
+    const newContent = newTextBefore + textAfterCursor;
+
+    setContent(newContent);
+    setShowMentionSuggestions(false);
+    setMentionSuggestions([]);
+    textareaRef.current?.focus();
+  };
 
   const handleImageSelect = (file: File) => {
     setImageFile(file);
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
+    reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handlePostSubmit = async () => {
-    if (!content.trim() && !imageFile) return;
+    if (!content.trim() && !imageFile) {
+      alert("Please add some content or an image");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -56,9 +140,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
         imageUrl = uploadResult.url;
       }
 
-      if (onCreatePost) await onCreatePost(content, imageUrl);
+      if (onCreatePost) {
+        await onCreatePost(content.trim(), imageUrl);
+      }
 
-      // Reset
       setContent("");
       setImagePreview("");
       setImageFile(null);
@@ -81,9 +166,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setNftPrice("");
     setNftRarity("common");
     setRoyalty("5");
+    setShowMentionSuggestions(false);
+    setMentionSuggestions([]);
     onClose();
   };
 
+ 
+  
   return (
     <>
       <div className="modal-overlay" onClick={handleClose}>
@@ -115,13 +204,38 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           {/* ===== POST MODE ===== */}
           {postType === "post" ? (
             <div className="post-form">
-              <textarea
-                placeholder="What's on your mind? 🎨"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={6}
-                className="form-textarea"
-              />
+              <div className="textarea-wrapper">
+                <textarea
+                  ref={textareaRef}
+                  placeholder="What's on your mind? 🎨 Use @ to mention users..."
+                  value={content}
+                  onChange={handleContentChange}
+                  rows={6}
+                  className="form-textarea"
+                  maxLength={500}
+                />
+                
+                {/* Mention Suggestions Dropdown */}
+                {showMentionSuggestions && mentionSuggestions.length > 0 && (
+                  <div className="mention-suggestions">
+                    {mentionSuggestions.map((user) => (
+                      <div
+                        key={user.id}
+                        className="mention-suggestion-item"
+                        onClick={() => insertMention(user.username)}
+                      >
+                        <div className="avatar-small">{user.avatar_url || "👤"}</div>
+                        <div className="user-info-small">
+                          <div className="display-name-small">{user.display_name}</div>
+                          <div className="username-small">@{user.username}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="char-count">{content.length}/500</div>
+              </div>
 
               {imagePreview && (
                 <div className="image-preview">
@@ -145,6 +259,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleImageSelect(file);
@@ -165,6 +280,24 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                     style={{ display: "none" }}
                   />
                 </label>
+                <button 
+                  className="media-btn" 
+                  onClick={() => {
+                    const textarea = textareaRef.current;
+                    if (textarea) {
+                      const pos = textarea.selectionStart;
+                      const newContent = content.slice(0, pos) + "@" + content.slice(pos);
+                      setContent(newContent);
+                      setCursorPosition(pos + 1);
+                      textarea.focus();
+                      textarea.setSelectionRange(pos + 1, pos + 1);
+                    }
+                  }}
+                  title="Mention user"
+                >
+                  <AtSign size={18} />
+                  <span>Mention</span>
+                </button>
                 <button className="media-btn" title="Video (coming soon)">
                   <Video size={18} />
                   <span>Video</span>
@@ -271,15 +404,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       </div>
 
       {/* NFT Mint Modal */}
-      <MintNFTModal
-        isOpen={showMintModal}
-        onClose={() => setShowMintModal(false)}
-        onMint={async (data) => {
-          console.log("Minting NFT:", data);
-          // Actual mint logic later
-          setShowMintModal(false);
-        }}
-      />
+      {showMintModal && (
+        <MintNFTModal isOpen={showMintModal} onClose={() => setShowMintModal(false)} />
+      )}
     </>
   );
 };

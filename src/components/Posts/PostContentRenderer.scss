@@ -1,0 +1,37 @@
+// src/components/Posts/PostContentRenderer.scss
+.post-content-renderer {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  .mention {
+    color: #1d9bf0;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+      color: #0c7abf;
+    }
+
+    &:active {
+      opacity: 0.8;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    color: #e7e9ea;
+
+    .mention {
+      color: #1d9bf0;
+
+      &:hover {
+        color: #4ab3f4;
+      }
+    }
+  }
+}

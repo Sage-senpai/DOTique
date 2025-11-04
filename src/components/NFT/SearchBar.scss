@@ -1,0 +1,155 @@
+$primary: #60519b;
+$secondary: #1e202c;
+$accent: #bfc0d1;
+$neutral: #31323e;
+$font-family-sans: "Poppins", sans-serif;
+
+.search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+
+  &__container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: $neutral;
+    border: 2px solid rgba($accent, 0.2);
+    border-radius: 16px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+
+    &--focused {
+      border-color: $primary;
+    }
+
+    &:hover {
+      border-color: rgba($primary, 0.5);
+    }
+  }
+
+  &__icon {
+    color: $accent;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+
+    .search-bar__container--focused & {
+      color: $primary;
+    }
+  }
+
+  &__input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-family: $font-family-sans;
+    font-size: 16px;
+    padding: 0;
+
+    &::placeholder {
+      color: rgba($accent, 0.5);
+    }
+
+    &:focus::placeholder {
+      color: rgba($accent, 0.7);
+    }
+  }
+
+  &__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($accent, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: $accent;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba($primary, 0.2);
+      color: $primary;
+    }
+  }
+
+  &__suggestions {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: $neutral;
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: 12px;
+    padding: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($accent, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba($accent, 0.5);
+      }
+    }
+  }
+
+  &__suggestion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: $accent;
+    transition: all 0.2s ease;
+
+    svg {
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    span {
+      font-family: $font-family-sans;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &:hover {
+      color: white;
+
+      svg {
+        opacity: 1;
+        color: $primary;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    max-width: 100%;
+
+    &__input {
+      font-size: 14px;
+    }
+  }
+}

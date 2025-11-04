@@ -3,6 +3,7 @@
 // =====================================================
 import React from "react";
 import PostCard from "../Posts/PostCard";
+import PostContentRenderer from '../Posts/PostContentRenderer'; 
 import "./FeedCenter.scss";
 
 interface Post {
@@ -66,40 +67,38 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
       {!loading && posts.length > 0 && (
         <>
           {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={{
-  ...post,
-  createdAt: post.createdAt || (post.created_at ? new Date(post.created_at) : new Date()),
-  author: post.author || {
+           <PostCard
+  key={post.id}
+  post={{
+    ...post,
+    createdAt: post.createdAt || (post.created_at ? new Date(post.created_at) : new Date()),
+    author: post.author || {
+      id: post.user_id || "unknown",
+      name: post.display_name || post.name || "Anonymous",
+      username: post.username || "unknown_user",
+      avatar: post.avatar_url || post.avatar || "👤",
+      verified: post.verified || false,
+    },
+    stats: post.stats || {
+      views: 0,
+      likes: 0,
+      comments: 0,
+      reposts: 0,
+      shares: 0,
+    },
+    userInteraction: post.userInteraction || {
+      liked: false,
+      saved: false,
+      reposted: false,
+    },
+    media:
+      post.media ||
+      (post.image_url ? [{ type: "image", url: post.image_url }] : []),
+  }}
+  onLike={() => onPostLike?.(post.id)}
+  onShare={() => onPostShare?.(post.id)}
+/>
 
-                  id: post.user_id || "unknown",
-                  name: "User",
-                  username: "user",
-                  avatar: "👤",
-                  verified: false,
-                },
-                stats: post.stats || {
-                  views: 0,
-                  likes: 0,
-                  comments: 0,
-                  reposts: 0,
-                  shares: 0,
-                },
-                userInteraction: post.userInteraction || {
-                  liked: false,
-                  saved: false,
-                   reposted: false,
-                },
-                media:
-                  post.media ||
-                  (post.image_url
-                    ? [{ type: "image", url: post.image_url }]
-                    : []),
-              }}
-              onLike={() => onPostLike?.(post.id)}
-              onShare={() => onPostShare?.(post.id)}
-            />
           ))}
 
           {/* ✅ Optional: End of Feed Message */}

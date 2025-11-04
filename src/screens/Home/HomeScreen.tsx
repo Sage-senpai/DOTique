@@ -8,6 +8,7 @@ import RightSidebar from "../../components/Homepage/RightSidebar";
 import NotificationCenter from "../../components/Notifications/NotificationCenter";
 import CreatePostModal from "../../components/Posts/CreatePostModal";
 import SearchModal from "../../components/Search/SearchModal";
+import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import { socialService } from "../../services/socialService";
 import "./homescreen.scss";
@@ -45,7 +46,7 @@ const DUMMY_POSTS = [
       verified: true,
     },
     content:
-      "Fashion is about expressing yourself. Today’s outfit is from my latest wardrobe NFTs 🔥",
+      "Fashion is about expressing yourself. Today's outfit is from my latest wardrobe NFTs 🔥",
     media: [
       {
         type: "image",
@@ -112,23 +113,57 @@ const DUMMY_NOTIFICATIONS = [
 // MAIN COMPONENT
 // =====================================================
 const HomeScreen: React.FC = () => {
-  const { profile } = useAuthStore();
+  const { profile, setProfile } = useAuthStore();
   const [posts, setPosts] = useState<any[]>(DUMMY_POSTS);
   const [notifications, _setNotifications] = useState<any[]>(DUMMY_NOTIFICATIONS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"feed" | "following" | "followers">("feed");
   const [loading, setLoading] = useState(false);
+  const [userProfileId, setUserProfileId] = useState<string | null>(null);
 
-  // Fetch posts dynamically if user is logged in
+  // ✅ Fetch current user profile on mount
   useEffect(() => {
-    if (!profile?.id) return;
+    const fetchProfile = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+
+        // Get profile from profiles table using auth_uid
+        const { data: profileData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("auth_uid", userData.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          // Profile doesn't exist, it will be auto-created on first post
+          return;
+        }
+
+        if (profileData) {
+          console.log("🔄 User profile loaded:", profileData);
+          setProfile(profileData);
+          setUserProfileId(profileData.id);
+        }
+      } catch (err) {
+        console.error("Failed to refresh user profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [setProfile]);
+
+  // Fetch posts dynamically when profile ID is available
+  useEffect(() => {
+    if (!userProfileId) return;
 
     const fetchPosts = async () => {
       setLoading(true);
       try {
         const timelinePosts = await socialService.getTimelinePosts(
-          profile.id,
+          userProfileId,
           50,
           0,
           activeTab
@@ -143,30 +178,28 @@ const HomeScreen: React.FC = () => {
     };
 
     fetchPosts();
-  }, [activeTab, profile?.id]);
+  }, [activeTab, userProfileId]);
 
+  // ✅ Fixed post creation - no more double JSON stringification
   const handleCreatePost = async (content: string, imageUrl?: string) => {
-  if (!profile?.id) {
-    alert("❌ Error: You must be logged in to create a post");
-    console.error("No profile.id available");
-    return;
-  }
+    try {
+      console.log("📝 Creating post with content:", content);
+      console.log("🖼️ Image URL:", imageUrl);
+      
+      // Just pass the content string and imageUrl directly
+      const newPost = await socialService.createPost(content, imageUrl);
 
-  try {
-    console.log("📝 Creating post for user:", profile.id);
-    
-    const newPost = await socialService.createPost(profile.id, content, imageUrl);
-    
-    if (newPost) {
-      setPosts([newPost, ...posts]);
-      console.log("✅ Post added to feed");
-      alert("✅ Post created successfully!");
+      if (newPost) {
+        setPosts([newPost, ...posts]);
+        console.log("✅ Post added to feed");
+        setIsCreateModalOpen(false);
+      }
+    } catch (error: any) {
+      console.error("❌ Post creation failed:", error);
+      alert(`❌ Failed to create post: ${error.message}`);
     }
-  } catch (error: any) {
-    console.error("❌ Post creation failed:", error);
-    alert(`❌ Failed to create post: ${error.message}`);
-  }
-};
+  };
+
   return (
     <div className="home-page">
       {/* Header */}
@@ -193,7 +226,9 @@ const HomeScreen: React.FC = () => {
         <div className="header-right">
           <NotificationCenter notifications={notifications} />
           <div className="user-menu">
-            <div className="avatar-small">👤</div>
+            <div className="avatar-small">
+              {profile?.avatar_url || "👤"}
+            </div>
           </div>
         </div>
       </header>

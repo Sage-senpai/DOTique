@@ -1,5 +1,5 @@
 import React from "react";
-import "./LeftSidebar.scss";
+import "./Leftsidebar.scss";
 declare const LeftSidebar: React.FC;
 export default LeftSidebar;
 //# sourceMappingURL=LeftSidebar.d.ts.map

@@ -1,68 +1,311 @@
 // =====================================================
-// src/components/NFT/NFTCard.scss
+// src/components/NFT/NFTCard.scss (COMBINED VERSION)
 // =====================================================
 
+$primary: #60519b;
+$secondary: #1e202c;
+$accent: #bfc0d1;
+$neutral: #31323e;
+$font-family-sans: "Poppins", sans-serif;
+
+// Light mode fallback variables
+$light-bg: #ffffff;
+$light-text: #212121;
+$light-muted: #999;
+$light-border: #e5e5e5;
+
 .nft-card {
-  background: white;
-  border-radius: 12px;
+  position: relative;
+  background: $neutral;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   &:hover {
     transform: translateY(-8px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba($primary, 0.3);
   }
 
+  // ---------- Protection Layer ----------
+  &__protection {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  // ---------- Image Section ----------
+  &__image-container,
   &__image {
     position: relative;
     width: 100%;
-    height: 200px;
+    aspect-ratio: 1;
     overflow: hidden;
-    background: #f0f0f0;
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+  &__image-container {
+    background: linear-gradient(135deg, $neutral 0%, darken($neutral, 5%) 100%);
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    pointer-events: none;
+    -webkit-user-drag: none;
+
+    .nft-card--hovered & {
+      transform: scale(1.1);
     }
   }
 
+  // ---------- Watermark ----------
+  &__watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 48px;
+    font-weight: 700;
+    color: rgba(white, 0.05);
+    letter-spacing: 8px;
+    pointer-events: none;
+    z-index: 2;
+    text-shadow: 0 0 20px rgba(white, 0.1);
+  }
+
+  // ---------- Rarity Badge ----------
   &__rarity {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 4px 8px;
-    background: white;
-    border: 2px solid;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
+    top: 12px;
+    right: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 3;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(white, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
-  &__content {
-    padding: 12px;
-  }
-
-  &__name {
+  // ---------- Description Overlay ----------
+  &__description {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba($secondary, 0.95), transparent);
+    color: $accent;
     font-size: 14px;
-    font-weight: 700;
-    margin: 0 0 4px;
-    color: #212121;
+    line-height: 1.5;
+    z-index: 3;
+    pointer-events: none;
+
+    p {
+      margin: 0;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+  }
+
+  // ---------- Info Section ----------
+  &__info {
+    padding: 16px;
+    background: $neutral;
+    position: relative;
+    z-index: 6;
+  }
+
+  &__header {
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__artist {
+    font-size: 14px;
+    color: $accent;
+    opacity: 0.8;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ---------- Meta Row ----------
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba($accent, 0.1);
+  }
+
+  &__type {
+    font-size: 13px;
+    color: $accent;
+    opacity: 0.7;
   }
 
   &__price {
-    font-size: 12px;
-    color: #60519b;
-    font-weight: 600;
-    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: $primary;
+    text-shadow: 0 0 8px rgba($primary, 0.5);
   }
 
-  &__owner {
-    font-size: 11px;
-    color: #999;
-    margin: 4px 0 0;
+  // ---------- Actions ----------
+  &__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
   }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba($accent, 0.1);
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: 8px;
+    color: $accent;
+    font-size: 13px;
+    font-family: $font-family-sans;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    position: relative;
+
+    &:hover {
+      background: rgba($primary, 0.2);
+      border-color: $primary;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    svg {
+      transition: all 0.3s ease;
+    }
+
+    span {
+      font-weight: 500;
+    }
+
+    &--liked {
+      background: rgba(#ff6b9d, 0.2);
+      border-color: #ff6b9d;
+      color: #ff6b9d;
+
+      &:hover {
+        background: rgba(#ff6b9d, 0.3);
+      }
+    }
+
+    &--primary {
+      background: rgba($primary, 0.2);
+      border-color: $primary;
+      color: $primary;
+
+      &:hover {
+        background: $primary;
+        color: white;
+        box-shadow: 0 4px 16px rgba($primary, 0.5);
+      }
+    }
+
+    &--donate {
+      background: rgba(#4caf50, 0.2);
+      border-color: #4caf50;
+      color: #4caf50;
+
+      &:hover {
+        background: #4caf50;
+        color: white;
+        box-shadow: 0 4px 16px rgba(#4caf50, 0.5);
+      }
+    }
+  }
+
+  // ---------- Glow ----------
+  &__glow {
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    opacity: 0;
+    filter: blur(20px);
+    z-index: -1;
+    transition: opacity 0.3s ease;
+  }
+
+  // ---------- Light Mode Variant ----------
+  &--light {
+    background: $light-bg;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    &__title {
+      color: $light-text;
+      text-shadow: none;
+    }
+
+    &__artist {
+      color: $light-muted;
+    }
+
+    &__info {
+      background: $light-bg;
+    }
+
+    &__meta {
+      border-bottom-color: $light-border;
+    }
+
+    &__price {
+      color: $primary;
+    }
+
+    &__action {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: $light-border;
+      color: $light-muted;
+
+      &:hover {
+        background: rgba($primary, 0.15);
+        border-color: $primary;
+        color: $primary;
+      }
+    }
+  }
+}
+
+// Prevent dragging or text selection
+.nft-card * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }

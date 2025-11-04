@@ -3,8 +3,9 @@ import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import AuthLayout from "./AuthLayout";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { upsertUserProfile } from "../../services/profileService";
 import "./authlayout.scss";
 
 type SignupForm = { email: string; password: string; confirmPassword: string };
@@ -13,6 +14,7 @@ export default function SignupScreen() {
   const { control, handleSubmit, watch, formState: { errors } } = useForm<SignupForm>();
   const [loading, setLoading] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const navigate = useNavigate();
 
   const setProfile = useAuthStore((s) => s.setProfile);
   const setSession = useAuthStore((s) => s.setSession);
@@ -27,6 +29,8 @@ export default function SignupScreen() {
 
     try {
       setLoading(true);
+      
+      // Step 1: Sign up with Supabase Auth
       const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -37,18 +41,66 @@ export default function SignupScreen() {
         return;
       }
 
-      if (signUpData?.user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("*")
-          .eq("auth_uid", signUpData.user.id)
-          .single();
-
-        setSession(signUpData.session ?? null);
-        setProfile(profile ?? null);
-        alert("Account created successfully!");
+      if (!signUpData?.user) {
+        alert("Signup failed. Please try again.");
+        return;
       }
+
+      console.log("✅ Auth user created:", signUpData.user.id);
+
+      // Step 2: Create/upsert profile in profiles table
+      try {
+        await upsertUserProfile({
+          auth_uid: signUpData.user.id,
+          username: `user_${signUpData.user.id.slice(0, 8)}`,
+          display_name: "New User",
+          dotvatar_url: "",
+          email: signUpData.user.email ?? data.email,
+        });
+        console.log("✅ Profile created in profiles table");
+      } catch (profileError) {
+        console.error("⚠️ Profile creation warning:", profileError);
+        // Continue anyway - profile might be created by trigger
+      }
+
+      // Step 3: Fetch the created profile
+      let profile = null;
+      let retries = 3;
+      
+      while (retries > 0 && !profile) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("auth_uid", signUpData.user.id)
+            .single();
+
+          if (profileError) {
+            console.warn(`Profile fetch attempt ${4 - retries}:`, profileError.message);
+            retries--;
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+            }
+          } else {
+            profile = profileData;
+            console.log("✅ Profile fetched:", profile);
+          }
+        } catch (err) {
+          console.error("Profile fetch error:", err);
+          retries--;
+        }
+      }
+
+      // Step 4: Set session and profile in store
+      setSession(signUpData.session ?? null);
+      setProfile(profile ?? null);
+
+      // Step 5: Redirect to complete profile or home
+      alert("Account created successfully! Please complete your profile.");
+      navigate("/home"); // or "/home"
+
     } catch (err: any) {
+      console.error("❌ Signup error:", err);
       alert(err.message ?? "Sign up failed");
     } finally {
       setLoading(false);

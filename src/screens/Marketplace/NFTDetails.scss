@@ -1,0 +1,464 @@
+// ==============================================
+// NFT DETAIL SCREEN (Enhanced SCSS Version)
+// ==============================================
+
+// ====== VARIABLES ======
+$primary: #7b61ff;
+$primary-light: lighten($primary, 10%);
+$secondary: #1b1e2b;
+$accent: #c0c1d8;
+$neutral: #2b2d3d;
+$success: #4caf50;
+$error: #ff6b9d;
+
+$font-sans: "Poppins", sans-serif;
+$radius: 12px;
+$transition: 0.3s ease;
+
+// ====== MAIN CONTAINER ======
+.nft-detail {
+  min-height: 100vh;
+  background: linear-gradient(145deg, $secondary, darken($secondary, 5%));
+  color: white;
+  font-family: $font-sans;
+  padding: 20px 24px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+
+  // ===== HEADER =====
+  &__header {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px auto 40px;
+
+    &-actions {
+      display: flex;
+      gap: 12px;
+    }
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba($neutral, 0.8);
+    border: 1px solid rgba($accent, 0.2);
+    border-radius: $radius;
+    padding: 10px 18px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all $transition;
+
+    &:hover {
+      border-color: $primary;
+      box-shadow: 0 0 16px rgba($primary, 0.4);
+      transform: translateY(-2px);
+    }
+  }
+
+  &__action-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius;
+    background: rgba($neutral, 0.8);
+    color: $accent;
+    border: 1px solid rgba($accent, 0.2);
+    cursor: pointer;
+    transition: all $transition;
+
+    &:hover {
+      color: white;
+      border-color: $primary;
+      box-shadow: 0 0 14px rgba($primary, 0.4);
+    }
+  }
+
+  // ===== CONTENT =====
+  &__content {
+    width: 100%;
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+
+  // ===== IMAGE SECTION =====
+  &__image-section {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: linear-gradient(
+        145deg,
+        rgba($primary, 0.05),
+        rgba($primary, 0.1)
+      );
+      pointer-events: none;
+    }
+  }
+
+  &__image-container {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba($neutral, 0.9);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    transition: transform $transition;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+
+  &__watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 64px;
+    font-weight: 700;
+    color: rgba(white, 0.05);
+    letter-spacing: 12px;
+    pointer-events: none;
+  }
+
+  &__quick-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+
+    .nft-detail__quick-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border-radius: $radius;
+      background: rgba($neutral, 0.9);
+      color: $accent;
+      font-size: 15px;
+      cursor: pointer;
+      border: 1px solid rgba($accent, 0.2);
+      transition: all $transition;
+
+      &:hover {
+        border-color: $primary;
+        color: white;
+        box-shadow: 0 4px 12px rgba($primary, 0.3);
+        transform: translateY(-2px);
+      }
+
+      &.liked {
+        color: $error;
+        border-color: $error;
+      }
+    }
+  }
+
+  // ===== INFO SECTION =====
+  &__info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__title-block {
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba($accent, 0.15);
+  }
+
+  &__title {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 12px;
+
+    @media (max-width: 768px) {
+      font-size: 28px;
+    }
+  }
+
+  &__artist {
+    font-size: 18px;
+    color: $accent;
+    margin-bottom: 16px;
+  }
+
+  &__badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    &-item {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba($accent, 0.2);
+      background: rgba($accent, 0.1);
+      font-size: 14px;
+      font-weight: 500;
+
+      &--rarity {
+        background: rgba($primary, 0.2);
+        border-color: $primary;
+        color: $primary;
+      }
+    }
+  }
+
+  // ===== PRICE BLOCK =====
+  &__price-block {
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba($neutral, 0.8);
+    border: 1px solid rgba($accent, 0.1);
+    backdrop-filter: blur(12px);
+  }
+
+  &__price-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+
+    &-label {
+      color: $accent;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    &-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: $primary;
+      text-shadow: 0 0 12px rgba($primary, 0.5);
+    }
+
+    &-usd {
+      color: $accent;
+      opacity: 0.8;
+    }
+  }
+
+  &__action-buttons {
+    display: flex;
+    gap: 12px;
+
+    .nft-detail__buy-btn,
+    .nft-detail__donate-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      border-radius: $radius;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all $transition;
+    }
+
+    .nft-detail__buy-btn {
+      background: $primary;
+      color: white;
+      border: none;
+
+      &:hover {
+        background: $primary-light;
+        box-shadow: 0 8px 24px rgba($primary, 0.5);
+      }
+    }
+
+    .nft-detail__donate-btn {
+      background: rgba($success, 0.2);
+      border: 1px solid $success;
+      color: $success;
+
+      &:hover {
+        background: $success;
+        color: white;
+        box-shadow: 0 8px 24px rgba($success, 0.4);
+      }
+    }
+  }
+
+  // ===== TABS =====
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid rgba($accent, 0.1);
+  }
+
+  &__tab {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    color: $accent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all $transition;
+    margin-bottom: -2px;
+
+    &:hover {
+      color: white;
+    }
+
+    &.active {
+      color: $primary;
+      border-bottom-color: $primary;
+    }
+  }
+
+  // ===== TAB CONTENT =====
+  &__tab-content {
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: $accent;
+      line-height: 1.6;
+    }
+  }
+
+  // ===== METADATA =====
+  &__metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__meta-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba($accent, 0.1);
+
+    span:first-child {
+      color: $accent;
+      opacity: 0.7;
+    }
+
+    span:last-child {
+      color: white;
+      font-weight: 500;
+    }
+  }
+
+  &__link-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: $radius;
+    border: 1px solid rgba($accent, 0.2);
+    background: rgba($accent, 0.1);
+    color: $accent;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all $transition;
+
+    &:hover {
+      color: white;
+      border-color: $primary;
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+    }
+  }
+  // ===== COMMENTS SECTION =====
+  &__comments {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: $radius;
+    background: rgba($neutral, 0.8);
+    border: 1px solid rgba($accent, 0.15);
+    backdrop-filter: blur(12px);
+  }
+
+  &__no-comments {
+    color: rgba($accent, 0.8);
+    font-size: 15px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  &__comment-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: $radius;
+    border: 1px solid rgba($accent, 0.25);
+    background: rgba($accent, 0.1);
+    color: white;
+    font-size: 15px;
+    font-family: $font-sans;
+    resize: none;
+    outline: none;
+    transition: all $transition;
+
+    &::placeholder {
+      color: rgba($accent, 0.6);
+    }
+
+    &:focus {
+      background: rgba($accent, 0.2);
+      border-color: $primary;
+      box-shadow: 0 0 10px rgba($primary, 0.3);
+    }
+  }
+
+  &__comment-btn {
+    align-self: flex-end;
+    padding: 12px 24px;
+    border-radius: $radius;
+    border: none;
+    background: $primary;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all $transition;
+    box-shadow: 0 4px 12px rgba($primary, 0.3);
+
+    &:hover {
+      background: lighten($primary, 8%);
+      box-shadow: 0 6px 18px rgba($primary, 0.4);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}

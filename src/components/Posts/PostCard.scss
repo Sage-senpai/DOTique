@@ -41,6 +41,8 @@ $color-accent: #bfc0d1;
         font-size: 22px;
         flex-shrink: 0;
         overflow: hidden;
+        cursor: pointer;
+        transition: opacity 150ms ease;
 
         img {
           width: 100%;
@@ -64,6 +66,12 @@ $color-accent: #bfc0d1;
           display: flex;
           align-items: center;
           gap: 6px;
+          cursor: pointer;
+          transition: color 150ms ease;
+
+          &:hover {
+            color: lighten($color-accent, 10%);
+          }
 
           .verified {
             color: $color-primary;
@@ -74,6 +82,12 @@ $color-accent: #bfc0d1;
         .author-username {
           font-size: 13px;
           color: rgba($color-accent, 0.6);
+          cursor: pointer;
+          transition: color 150ms ease;
+
+          &:hover {
+            color: rgba($color-accent, 0.8);
+          }
         }
       }
     }
@@ -96,6 +110,26 @@ $color-accent: #bfc0d1;
     line-height: 1.6;
     margin-bottom: 12px;
     color: $color-accent;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+
+    // 🆕 Mention styling (when using PostContentRenderer)
+    .mention {
+      color: $color-primary;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+        color: lighten($color-primary, 10%);
+      }
+
+      &:active {
+        opacity: 0.8;
+      }
+    }
   }
 
   // ================= MEDIA =================
@@ -121,6 +155,52 @@ $color-accent: #bfc0d1;
     color: rgba($color-accent, 0.6);
     padding: 12px 0;
     border-top: 1px solid rgba($color-accent, 0.1);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+
+    .time-ago {
+      margin-left: auto;
+    }
+  }
+
+  .clickable {
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .post-card {
+    padding: 12px;
+
+    .post-header {
+      .post-author {
+        .avatar {
+          width: 36px;
+          height: 36px;
+          font-size: 18px;
+        }
+
+        .author-info {
+          .author-name {
+            font-size: 13px;
+          }
+
+          .author-username {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+
+    .post-content {
+      font-size: 13px;
+    }
+
+    .post-media .post-image {
+      max-height: 300px;
+    }
   }
 }

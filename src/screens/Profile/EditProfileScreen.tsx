@@ -1,5 +1,5 @@
 // src/screens/Profile/EditProfileScreen.tsx
-import  { useState } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +7,10 @@ import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
 import { uploadProfileMetadata } from "../../services/ipfsService";
 import { connectPolkadotWallets } from "../../services/polkadotService";
+import { socialService } from "../../services/socialService";
+import { upsertUserProfile } from "../../services/profileService";
 import "./profile.scss";
+
 
 
 type PrivacySetting = "Public" | "Private" | "Friends Only";
@@ -34,16 +37,12 @@ export default function EditProfileScreen() {
       location: profile?.location || "",
       birthday: profile?.birthday || "",
       fashion_archetype: profile?.fashion_archetype || "",
-      profile_privacy: profile?.profile_privacy as PrivacySetting || "Public",
+      profile_privacy: (profile?.profile_privacy as PrivacySetting) || "Public",
     },
   });
 
-  const [primaryWallet, setPrimaryWallet] = useState(
-    profile?.primary_wallet || ""
-  );
-  const [connectedWallets, setConnectedWallets] = useState<string[]>(
-    profile?.connected_wallets || []
-  );
+  const [primaryWallet, setPrimaryWallet] = useState(profile?.primary_wallet || "");
+  const [connectedWallets, setConnectedWallets] = useState<string[]>(profile?.connected_wallets || []);
   const [uploading, setUploading] = useState(false);
   const [imageUri, setImageUri] = useState(profile?.dotvatar_url || "");
 
@@ -60,13 +59,13 @@ export default function EditProfileScreen() {
     { label: "Friends Only", value: "Friends Only" },
   ];
 
+
   const handleConnectWallet = async () => {
     try {
       const wallets = await connectPolkadotWallets();
       const newAddresses = wallets.map((w: { address: string }) => w.address);
       setConnectedWallets(newAddresses);
-      if (!primaryWallet && newAddresses.length > 0)
-        setPrimaryWallet(newAddresses[0]);
+      if (!primaryWallet && newAddresses.length > 0) setPrimaryWallet(newAddresses[0]);
       alert(`${newAddresses.length} wallet(s) linked successfully.`);
     } catch (err: any) {
       alert(err.message || "Connection failed");
@@ -81,42 +80,65 @@ export default function EditProfileScreen() {
   };
 
   const onSubmit = async (values: any) => {
-    setUploading(true);
-    try {
-      const { metadataUrl, imageUrl } = await uploadProfileMetadata(
-        {
-          ...values,
-          primary_wallet: primaryWallet,
-          connected_wallets: connectedWallets,
-        },
-        imageUri
-      );
+  setUploading(true);
+  try {
+    // 1️⃣ Upload metadata + image to IPFS
+    const { metadataUrl, imageUrl } = await uploadProfileMetadata(
+      { ...values, primary_wallet: primaryWallet, connected_wallets: connectedWallets },
+      imageUri
+    );
 
-      const updates = {
-        ...values,
-        primary_wallet: primaryWallet,
-        connected_wallets: connectedWallets,
-        dotvatar_url: imageUrl,
-        ipfs_metadata: metadataUrl,
-      };
+    const updates = {
+      ...values,
+      primary_wallet: primaryWallet,
+      connected_wallets: connectedWallets,
+      dotvatar_url: imageUrl,
+      ipfs_metadata: metadataUrl,
+    };
 
-      const { data, error } = await supabase
-        .from("users")
-        .update(updates)
-        .eq("auth_uid", profile?.auth_uid)
-        .select()
-        .single();
+    // 2️⃣ Update Supabase "users" table
+    const { data: userData, error } = await supabase
+      .from("users")
+      .update(updates)
+      .eq("auth_uid", profile?.auth_uid)
+      .select()
+      .single();
+    if (error) throw error;
+    setProfile(userData);
 
-      if (error) throw error;
-      setProfile(data);
-      alert("✅ Profile Updated — saved to IPFS + Supabase.");
-      navigate(-1);
-    } catch (err: any) {
-      alert(err.message || "Error saving profile");
-    } finally {
-      setUploading(false);
-    }
-  };
+    // 3️⃣ Ensure a "profiles" row exists (new unified call)
+    const profileRow = await upsertUserProfile({
+      auth_uid: profile?.auth_uid,
+      username: values.username,
+      display_name: values.display_name,
+      dotvatar_url: imageUrl,
+    });
+
+    // 4️⃣ Update via socialService
+    await socialService.updateUserProfile(profileRow.id, {
+      username: values.username,
+      display_name: values.display_name,
+    });
+
+    // 5️⃣ Refresh session + refetch user
+    await supabase.auth.refreshSession();
+    const { data: refreshedUser, error: refreshError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth_uid", profile?.auth_uid)
+      .single();
+    if (refreshError) console.warn("Refresh fetch failed:", refreshError);
+    if (refreshedUser) setProfile(refreshedUser);
+
+    alert("✅ Profile Updated — saved to IPFS + Supabase + Profiles.");
+    navigate(-1);
+  } catch (err: any) {
+    alert(err.message || "Error saving profile");
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   return (
     <motion.div
@@ -355,4 +377,37 @@ export default function EditProfileScreen() {
       
     </motion.div>
   );
+
+  
+}   
+// ------------------------------
+// 🔹 Migration snippet: retroactively populate missing profiles
+// ------------------------------
+export async function migrateMissingProfiles() {
+  const { data: users, error } = await supabase.from("users").select("*");
+  if (error) {
+    console.error("Failed to fetch users:", error);
+    return;
+  }
+
+  for (const user of users) {
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("auth_uid", user.auth_uid)
+      .maybeSingle();
+
+    if (!profileRow) {
+      const { error: insertError } = await supabase.from("profiles").insert([
+        {
+          auth_uid: user.auth_uid,
+          username: user.username || "",
+          display_name: user.display_name || "",
+          dotvatar_url: user.dotvatar_url || "",
+        },
+      ]);
+      if (insertError) console.error(`Failed to insert profile for ${user.auth_uid}:`, insertError);
+      else console.log(`Inserted missing profile for ${user.auth_uid}`);
+    }
+  }
 }
