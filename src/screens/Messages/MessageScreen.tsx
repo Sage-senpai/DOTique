@@ -1,4 +1,4 @@
-i//src/screens/Messages/MessageScreen.tsx
+//src/screens/Messages/MessageScreen.tsx
 import { motion } from "framer-motion";
 // import { supabase } from "../../services/supabase";
 import "./MessagesScreen.scss";
