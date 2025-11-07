@@ -1,3 +1,4 @@
+i//src/screens/Messages/MessageScreen.tsx
 import { motion } from "framer-motion";
 // import { supabase } from "../../services/supabase";
 import "./MessagesScreen.scss";
@@ -42,6 +43,7 @@ export default function MessagesScreen() {
         <div className="thread__header">
           <h3>Ava Designer</h3>
           <div className="thread__sub">Online</div>
+          <div className="thread__sub">settings</div>
         </div>
 
         <div className="thread__messages">

@@ -2,64 +2,32 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
+/* GLOBAL COLOR VARIABLES */
+:root {
+  --color-primary: #60519b;
+  --color-secondary: #1e202c;
+  --color-accent: #bfc0d1;
+  --color-neutral: #31323e;
+}
 
 /* GLOBAL APP LAYOUT */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  //padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 .safe-area {
-  //padding: 16px;
   min-height: 90vh;
   display: flex;
   flex-direction: column;
   background-color: var(--color-secondary);
   color: var(--color-accent);
+  position: relative;
 }
 
-/* BOTTOM NAV LAYOUT */
-.bottom-nav-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  font-size: 14px;
-
-  .tab {
-    text-decoration: none;
-    color: #888;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-
-    &.active {
-      color: var(--color-primary);
-      transform: translateY(-2px);
-    }
-
-    &.logout {
-      color: #e74c3c;
-    }
-  }
-}
+/* BOTTOM NAV LAYOUT - Moved to BottomNav.scss for better organization */
 
 /* LOGO EFFECTS */
 .logo {
@@ -112,13 +80,14 @@
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
+/* CONNECTION SCREEN */
 .connection-screen {
   height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom,#E6007A, #020617);
+  background: linear-gradient(to bottom, #E6007A, #020617);
   color: #ffffff;
   font-family: "Inter", sans-serif;
   text-align: center;
@@ -147,5 +116,98 @@
     to {
       transform: rotate(360deg);
     }
+  }
+}
+
+/* ENSURE CONTENT DOESN'T OVERFLOW OR GET HIDDEN */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* SCROLLBAR STYLING */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+
+  &:hover {
+    background: lighten(#60519b, 10%);
+  }
+}
+
+/* UTILITY CLASSES */
+.no-scroll {
+  overflow: hidden;
+}
+
+.hide-on-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.show-on-mobile {
+  display: none !important;
+
+  @media (max-width: 768px) {
+    display: block !important;
+  }
+}
+
+/* Z-INDEX MANAGEMENT */
+.z-header {
+  z-index: 998;
+}
+
+.z-nav {
+  z-index: 999;
+}
+
+.z-fab {
+  z-index: 997;
+}
+
+.z-modal {
+  z-index: 1000;
+}
+
+.z-modal-overlay {
+  z-index: 999;
+}
+
+.z-dropdown {
+  z-index: 950;
+}
+
+/* RESPONSIVE UTILITIES */
+@media (max-width: 1400px) {
+  #root {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .safe-area {
+    padding-bottom: 85px; // Extra space for bottom nav on mobile
+  }
+}
+
+@media (max-width: 480px) {
+  .safe-area {
+    padding-bottom: 80px;
   }
 }

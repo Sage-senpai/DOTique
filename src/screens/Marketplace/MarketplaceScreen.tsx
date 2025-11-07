@@ -5,6 +5,7 @@ import SearchBar from '../../components/NFT/SearchBar';
 import FilterTabs from '../../components/NFT/FilterTabs';
 import NFTCard from '../../components/NFT/NFTCard';
 import FloatingButton from '../../components/NFT/FloatingButton';
+import { supabase } from '../../services/supabase';
 import { dummyNFTs } from '../../data/nftData';
 import './MarketplaceScreen.scss';
 
@@ -22,13 +23,65 @@ interface NFT {
 }
 
 const Marketplace: React.FC = () => {
+  // 🧩 STATE HOOKS
   const [nfts, setNfts] = useState<NFT[]>(dummyNFTs);
   const [filteredNfts, setFilteredNfts] = useState<NFT[]>(dummyNFTs);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortBy, setSortBy] = useState('recently-added');
+  const [loading, setLoading] = useState(true); // ⏳ LOADING STATE
   const navigate = useNavigate();
 
+  // 🧠 FETCH NFTS FROM SUPABASE (with dummy fallback)
+  useEffect(() => {
+    const fetchNFTs = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('nfts')
+          .select('*, profiles:creator_id(username, avatar_url)')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // ✅ MAP SUPABASE DATA TO LOCAL INTERFACE
+        if (data && data.length > 0) {
+          const formattedNFTs: NFT[] = data.map((nft: any) => ({
+            id: nft.id,
+            name: nft.name,
+            artist: nft.profiles?.username || 'Unknown Artist',
+            image: nft.image_url,
+            type: nft.category || 'General',
+            rarity: nft.rarity || 'Common',
+            price: nft.price || 0,
+            likes: nft.likes_count || 0,
+            comments: nft.comments_count || 0,
+            description: nft.description || '',
+          }));
+
+          setNfts(formattedNFTs);
+          setFilteredNfts(formattedNFTs);
+        } else {
+          // 🧱 DUMMY DATA FALLBACK (remove later if live data works)
+          console.warn('No NFTs found from Supabase — using dummyNFTs.');
+          setNfts(dummyNFTs);
+          setFilteredNfts(dummyNFTs);
+        }
+      } catch (err) {
+        console.error('Error fetching NFTs:', err);
+        // 🧱 DUMMY DATA FALLBACK (remove later)
+        setNfts(dummyNFTs);
+        setFilteredNfts(dummyNFTs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNFTs();
+  }, []);
+
+  // 🧮 FILTER + SORT
   useEffect(() => {
     filterAndSortNFTs();
   }, [searchQuery, activeFilter, sortBy]);
@@ -36,7 +89,7 @@ const Marketplace: React.FC = () => {
   const filterAndSortNFTs = () => {
     let filtered = [...nfts];
 
-    // Search filter
+    // 🔍 Search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (nft) =>
@@ -46,14 +99,14 @@ const Marketplace: React.FC = () => {
       );
     }
 
-    // Category filter
+    // 🗂 Category filter
     if (activeFilter !== 'All') {
       filtered = filtered.filter((nft) =>
         nft.type.toLowerCase().includes(activeFilter.toLowerCase())
       );
     }
 
-    // Sort
+    // ⚖️ Sort
     switch (sortBy) {
       case 'price-high':
         filtered.sort((a, b) => b.price - a.price);
@@ -79,54 +132,31 @@ const Marketplace: React.FC = () => {
     setFilteredNfts(filtered);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleFilterChange = (filter: string) => {
-    setActiveFilter(filter);
-  };
-
-  const handleSortChange = (sort: string) => {
-    setSortBy(sort);
-  };
-
-  const handleNFTClick = (nftId: string) => {
-    navigate(`/marketplace/nft/${nftId}`);
-  };
-
-  const handleLike = (nftId: string) => {
+  // ⚡ HANDLERS
+  const handleSearch = (query: string) => setSearchQuery(query);
+  const handleFilterChange = (filter: string) => setActiveFilter(filter);
+  const handleSortChange = (sort: string) => setSortBy(sort);
+  const handleNFTClick = (nftId: string) => navigate(`/marketplace/nft/${nftId}`);
+  const handleLike = (nftId: string) =>
     setNfts((prevNfts) =>
       prevNfts.map((nft) =>
         nft.id === nftId ? { ...nft, likes: nft.likes + 1 } : nft
       )
     );
-  };
+  const handleComment = (nftId: string) => navigate(`/marketplace/nft/${nftId}?view=comments`);
+  const handleRepost = (nftId: string) => navigate(`/repost/${nftId}`);
+  const handleBuy = (nftId: string) => navigate(`/marketplace/buy/${nftId}`);
+  const handleDonate = (nftId: string) => navigate(`/marketplace/donate/${nftId}`);
 
-  const handleComment = (nftId: string) => {
-    navigate(`/marketplace/nft/${nftId}?view=comments`);
-  };
-
-  const handleRepost = (nftId: string) => {
-    navigate(`/repost/${nftId}`);
-  };
-
-  const handleBuy = (nftId: string) => {
-    navigate(`/marketplace/buy/${nftId}`);
-  };
-
-  const handleDonate = (nftId: string) => {
-    navigate(`/marketplace/donate/${nftId}`);
-  };
-
+  // 🧭 RENDER
   return (
     <div className="marketplace">
       <div className="marketplace__header">
         <SearchBar onSearch={handleSearch} placeholder="Search NFTs, artists, collections..." />
-        
+
         <div className="marketplace__controls">
           <FilterTabs activeFilter={activeFilter} onFilterChange={handleFilterChange} />
-          
+
           <div className="marketplace__sort">
             <select
               className="marketplace__sort-select"
@@ -143,51 +173,58 @@ const Marketplace: React.FC = () => {
         </div>
       </div>
 
-      <motion.div
-        className="marketplace__grid"
-        layout
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <AnimatePresence mode="popLayout">
-          {filteredNfts.map((nft, index) => (
-            <motion.div
-              key={nft.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{
-                duration: 0.4,
-                delay: index * 0.05,
-                type: 'spring',
-                stiffness: 100,
-              }}
-            >
-              <NFTCard
-                nft={nft}
-                onClick={() => handleNFTClick(nft.id)}
-                onLike={() => handleLike(nft.id)}
-                onComment={() => handleComment(nft.id)}
-                onRepost={() => handleRepost(nft.id)}
-                onBuy={() => handleBuy(nft.id)}
-                onDonate={() => handleDonate(nft.id)}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      {/* 🌀 LOADING STATE (remove later if not needed) */}
+      {loading ? (
+        <div className="marketplace__loading">Loading NFTs...</div>
+      ) : (
+        <>
+          <motion.div
+            className="marketplace__grid"
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredNfts.map((nft, index) => (
+                <motion.div
+                  key={nft.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.05,
+                    type: 'spring',
+                    stiffness: 100,
+                  }}
+                >
+                  <NFTCard
+                    nft={nft}
+                    onClick={() => handleNFTClick(nft.id)}
+                    onLike={() => handleLike(nft.id)}
+                    onComment={() => handleComment(nft.id)}
+                    onRepost={() => handleRepost(nft.id)}
+                    onBuy={() => handleBuy(nft.id)}
+                    onDonate={() => handleDonate(nft.id)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
 
-      {filteredNfts.length === 0 && (
-        <motion.div
-          className="marketplace__empty"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h3>No NFTs Found</h3>
-          <p>Try adjusting your search or filters</p>
-        </motion.div>
+          {filteredNfts.length === 0 && (
+            <motion.div
+              className="marketplace__empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h3>No NFTs Found</h3>
+              <p>Try adjusting your search or filters</p>
+            </motion.div>
+          )}
+        </>
       )}
 
       <FloatingButton />

@@ -1,4 +1,4 @@
-// src/screens/Profile/EditProfileScreen.tsx
+// src/screens/Profile/EditProfileScreen.tsx - FIXED
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -7,13 +7,11 @@ import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
 import { uploadProfileMetadata } from "../../services/ipfsService";
 import { connectPolkadotWallets } from "../../services/polkadotService";
-import { socialService } from "../../services/socialService";
-import { upsertUserProfile } from "../../services/profileService";
+import { COUNTRY_CODES, formatPhoneNumber } from "../../data/countryCodes";
 import "./profile.scss";
 
-
-
 type PrivacySetting = "Public" | "Private" | "Friends Only";
+
 type EditProfileForm = {
   display_name: string;
   username: string;
@@ -22,6 +20,8 @@ type EditProfileForm = {
   birthday: string;
   fashion_archetype: string;
   profile_privacy: PrivacySetting;
+  phone_number: string;
+  phone_country_code: string;
 };
 
 export default function EditProfileScreen() {
@@ -29,7 +29,11 @@ export default function EditProfileScreen() {
   const setProfile = useAuthStore((s) => s.setProfile);
   const navigate = useNavigate();
 
-  const { control, handleSubmit, setValue, watch } = useForm<EditProfileForm>({
+  // Parse existing phone data
+  const existingPhone = profile?.metadata?.phone_number || "";
+  const existingCountryCode = profile?.metadata?.phone_country_code || "+234";
+
+  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<EditProfileForm>({
     defaultValues: {
       display_name: profile?.display_name || "",
       username: profile?.username || "",
@@ -38,13 +42,19 @@ export default function EditProfileScreen() {
       birthday: profile?.birthday || "",
       fashion_archetype: profile?.fashion_archetype || "",
       profile_privacy: (profile?.profile_privacy as PrivacySetting) || "Public",
+      phone_number: existingPhone,
+      phone_country_code: existingCountryCode,
     },
   });
 
   const [primaryWallet, setPrimaryWallet] = useState(profile?.primary_wallet || "");
-  const [connectedWallets, setConnectedWallets] = useState<string[]>(profile?.connected_wallets || []);
+  const [connectedWallets, setConnectedWallets] = useState<string[]>(
+    profile?.connected_wallets || []
+  );
   const [uploading, setUploading] = useState(false);
   const [imageUri, setImageUri] = useState(profile?.dotvatar_url || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saveError, setSaveError] = useState<string>("");
 
   const archetypeOptions = [
     { label: "Avant-Garde", value: "Avant-Garde" },
@@ -59,7 +69,6 @@ export default function EditProfileScreen() {
     { label: "Friends Only", value: "Friends Only" },
   ];
 
-
   const handleConnectWallet = async () => {
     try {
       const wallets = await connectPolkadotWallets();
@@ -72,73 +81,114 @@ export default function EditProfileScreen() {
     }
   };
 
-  const handlePickImage = async (file?: File | null) => {
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUri(url);
-    }
+  const handlePickImage = async (file: File) => {
+    const url = URL.createObjectURL(file);
+    setImageUri(url);
+    setImageFile(file);
   };
 
-  const onSubmit = async (values: any) => {
-  setUploading(true);
-  try {
-    // 1️⃣ Upload metadata + image to IPFS
-    const { metadataUrl, imageUrl } = await uploadProfileMetadata(
-      { ...values, primary_wallet: primaryWallet, connected_wallets: connectedWallets },
-      imageUri
-    );
+  const onSubmit = async (values: EditProfileForm) => {
+    if (!profile?.auth_uid) {
+      alert("No profile found. Please log in again.");
+      return;
+    }
 
-    const updates = {
-      ...values,
-      primary_wallet: primaryWallet,
-      connected_wallets: connectedWallets,
-      dotvatar_url: imageUrl,
-      ipfs_metadata: metadataUrl,
-    };
+    setUploading(true);
+    setSaveError("");
+    try {
+      console.log("📝 Updating profile...");
 
-    // 2️⃣ Update Supabase "users" table
-    const { data: userData, error } = await supabase
-      .from("users")
-      .update(updates)
-      .eq("auth_uid", profile?.auth_uid)
-      .select()
-      .single();
-    if (error) throw error;
-    setProfile(userData);
+      // 1️⃣ Upload to IPFS if image changed
+      let imageUrl = profile.dotvatar_url || "";
+      let metadataUrl = "";
 
-    // 3️⃣ Ensure a "profiles" row exists (new unified call)
-    const profileRow = await upsertUserProfile({
-      auth_uid: profile?.auth_uid,
-      username: values.username,
-      display_name: values.display_name,
-      dotvatar_url: imageUrl,
-    });
+      if (imageFile) {
+        console.log("📤 Uploading to IPFS...");
+        const ipfsResult = await uploadProfileMetadata(
+          {
+            ...values,
+            primary_wallet: primaryWallet,
+            connected_wallets: connectedWallets,
+          },
+          imageUri
+        );
+        imageUrl = ipfsResult.imageUrl;
+        metadataUrl = ipfsResult.metadataUrl;
+        console.log("✅ IPFS upload complete:", metadataUrl);
+      }
 
-    // 4️⃣ Update via socialService
-    await socialService.updateUserProfile(profileRow.id, {
-      username: values.username,
-      display_name: values.display_name,
-    });
+      // 2️⃣ Prepare metadata with phone info
+      const updatedMetadata = {
+        ...(profile.metadata || {}),
+        phone_number: values.phone_number,
+        phone_country_code: values.phone_country_code,
+        ipfs_metadata: metadataUrl || profile.metadata?.ipfs_metadata,
+      };
 
-    // 5️⃣ Refresh session + refetch user
-    await supabase.auth.refreshSession();
-    const { data: refreshedUser, error: refreshError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("auth_uid", profile?.auth_uid)
-      .single();
-    if (refreshError) console.warn("Refresh fetch failed:", refreshError);
-    if (refreshedUser) setProfile(refreshedUser);
+      // 3️⃣ Prepare updates (handle empty values properly)
+      const updates: any = {
+        display_name: values.display_name,
+        username: values.username,
+        bio: values.bio || null,
+        location: values.location || null,
+        birthday: values.birthday || null, // ✅ Convert empty string to null
+        fashion_archetype: values.fashion_archetype || null,
+        profile_privacy: values.profile_privacy,
+        primary_wallet: primaryWallet || null,
+        connected_wallets: connectedWallets.length > 0 ? connectedWallets : null,
+        dotvatar_url: imageUrl || null,
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+      };
 
-    alert("✅ Profile Updated — saved to IPFS + Supabase + Profiles.");
-    navigate(-1);
-  } catch (err: any) {
-    alert(err.message || "Error saving profile");
-  } finally {
-    setUploading(false);
-  }
-};
+      // Remove any undefined values
+      Object.keys(updates).forEach(key => {
+        if (updates[key] === undefined) {
+          delete updates[key];
+        }
+      });
 
+      console.log("💾 Saving to profiles table...", updates);
+
+      const { data: updatedProfile, error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("auth_uid", profile.auth_uid)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ Update error:", error);
+        
+        // Better error messages
+        let errorMessage = error.message;
+        if (error.code === '23505') {
+          errorMessage = "Username already taken. Please choose another.";
+        } else if (error.message.includes('date')) {
+          errorMessage = "Invalid date format. Please check the birthday field.";
+        } else if (error.message.includes('phone')) {
+          errorMessage = "Invalid phone number format.";
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      console.log("✅ Profile updated:", updatedProfile);
+
+      // 4️⃣ Update local store
+      setProfile(updatedProfile);
+
+      alert("✅ Profile updated successfully!");
+      navigate(-1);
+    } catch (err: any) {
+      console.error("❌ Save failed:", err);
+      const errorMessage = err.message || "Error saving profile. Please try again.";
+      setSaveError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -164,7 +214,19 @@ export default function EditProfileScreen() {
         </button>
       </div>
 
-      <form className="edit-profile-screen__form">
+      <form className="edit-profile-screen__form" onSubmit={handleSubmit(onSubmit)}>
+        {/* Error Message */}
+        {saveError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="edit-profile-screen__error-banner"
+          >
+            ❌ {saveError}
+          </motion.div>
+        )}
+
+        {/* Avatar Section */}
         <div className="edit-profile-screen__avatar-section">
           {uploading ? (
             <div className="edit-profile-screen__spinner" />
@@ -198,12 +260,16 @@ export default function EditProfileScreen() {
             <button
               type="button"
               className="edit-profile-screen__upload-btn"
+              onClick={() => {
+                document.querySelector('input[type="file"]')?.dispatchEvent(new MouseEvent('click'));
+              }}
             >
               Upload Avatar
             </button>
           </label>
         </div>
 
+        {/* Display Name */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Name</label>
           <Controller
@@ -218,8 +284,14 @@ export default function EditProfileScreen() {
               />
             )}
           />
+          {errors.display_name && (
+            <span className="edit-profile-screen__error">
+              {errors.display_name.message}
+            </span>
+          )}
         </div>
 
+        {/* Email (Read-only) */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Email Address</label>
           <input
@@ -230,14 +302,19 @@ export default function EditProfileScreen() {
           />
         </div>
 
+        {/* Username */}
         <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">User name</label>
+          <label className="edit-profile-screen__label">Username</label>
           <Controller
             control={control}
             name="username"
             rules={{
               required: "Username required",
               minLength: { value: 3, message: "Min 3 chars" },
+              pattern: {
+                value: /^[a-zA-Z0-9_]+$/,
+                message: "Only letters, numbers, and underscores"
+              }
             }}
             render={({ field }) => (
               <input
@@ -247,37 +324,55 @@ export default function EditProfileScreen() {
               />
             )}
           />
+          {errors.username && (
+            <span className="edit-profile-screen__error">
+              {errors.username.message}
+            </span>
+          )}
         </div>
 
+        {/* Phone Number (Editable) */}
         <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Password</label>
-          <div className="edit-profile-screen__password-wrapper">
-            <input
-              type="password"
-              placeholder="••••••••"
-              disabled
-              className="edit-profile-screen__input edit-profile-screen__input--disabled"
-            />
-            <button type="button" className="edit-profile-screen__password-toggle">
-              👁️
-            </button>
-          </div>
-        </div>
-
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Phone number</label>
+          <label className="edit-profile-screen__label">Phone Number</label>
           <div className="edit-profile-screen__phone-wrapper">
-            <select className="edit-profile-screen__country-code">
-              <option>+91</option>
+            <select
+              value={watch("phone_country_code")}
+              onChange={(e) => setValue("phone_country_code", e.target.value)}
+              className="edit-profile-screen__country-code"
+            >
+              {COUNTRY_CODES.map((country) => (
+                <option key={`${country.code}-${country.iso}`} value={country.code}>
+                  {country.flag} {country.code} {country.country}
+                </option>
+              ))}
             </select>
-            <input
-              type="tel"
-              className="edit-profile-screen__input"
-              placeholder="6895312"
+            <Controller
+              control={control}
+              name="phone_number"
+              rules={{
+                validate: (value) => {
+                  if (!value) return true; // Allow empty
+                  return /^[0-9]{7,15}$/.test(value) || "Enter valid phone number (7-15 digits)";
+                }
+              }}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="tel"
+                  className="edit-profile-screen__input"
+                  placeholder="8012345678"
+                />
+              )}
             />
           </div>
+          {errors.phone_number && (
+            <span className="edit-profile-screen__error">
+              {errors.phone_number.message}
+            </span>
+          )}
         </div>
 
+        {/* Bio */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Bio</label>
           <Controller
@@ -288,11 +383,16 @@ export default function EditProfileScreen() {
                 {...field}
                 className="edit-profile-screen__input edit-profile-screen__textarea"
                 placeholder="Describe your fashion style..."
+                maxLength={200}
               />
             )}
           />
+          <span className="edit-profile-screen__char-count">
+            {watch("bio")?.length || 0}/200
+          </span>
         </div>
 
+        {/* Location */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Location</label>
           <Controller
@@ -302,12 +402,16 @@ export default function EditProfileScreen() {
               <input
                 {...field}
                 className="edit-profile-screen__input"
-                placeholder="City or Country"
+                placeholder="Lagos, Nigeria"
               />
             )}
           />
+          <small className="edit-profile-screen__hint">
+            💡 Tip: Use format "City, Country" for best results
+          </small>
         </div>
 
+        {/* Birthday */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Birthday</label>
           <input
@@ -315,9 +419,11 @@ export default function EditProfileScreen() {
             value={watch("birthday") || ""}
             onChange={(e) => setValue("birthday", e.target.value)}
             className="edit-profile-screen__input"
+            max={new Date().toISOString().split('T')[0]}
           />
         </div>
 
+        {/* Fashion Archetype */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Fashion Archetype</label>
           <select
@@ -334,6 +440,7 @@ export default function EditProfileScreen() {
           </select>
         </div>
 
+        {/* Primary Wallet */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Primary Wallet</label>
           <div className="edit-profile-screen__wallet-display">
@@ -344,70 +451,35 @@ export default function EditProfileScreen() {
             className="edit-profile-screen__wallet-btn"
             onClick={handleConnectWallet}
           >
-            Connect Wallet
+            🔗 Connect Wallet
           </button>
         </div>
 
+        {/* Profile Privacy */}
         <div className="edit-profile-screen__field">
           <label className="edit-profile-screen__label">Profile Privacy</label>
           <select
-  value={watch("profile_privacy")}
-  onChange={(e) => setValue("profile_privacy", e.target.value as PrivacySetting)}
-  className="edit-profile-screen__input"
->
-  {privacyOptions.map((o) => (
-    <option key={o.value} value={o.value}>
-      {o.label}
-    </option>
-  ))}
-</select>
-
+            value={watch("profile_privacy")}
+            onChange={(e) => setValue("profile_privacy", e.target.value as PrivacySetting)}
+            className="edit-profile-screen__input"
+          >
+            {privacyOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
 
+        {/* Submit Button */}
         <button
           type="submit"
           className="edit-profile-screen__submit"
           disabled={uploading}
-          onClick={handleSubmit(onSubmit)}
         >
           {uploading ? "Saving..." : "💾 Save Changes"}
         </button>
       </form>
-
-      
     </motion.div>
   );
-
-  
-}   
-// ------------------------------
-// 🔹 Migration snippet: retroactively populate missing profiles
-// ------------------------------
-export async function migrateMissingProfiles() {
-  const { data: users, error } = await supabase.from("users").select("*");
-  if (error) {
-    console.error("Failed to fetch users:", error);
-    return;
-  }
-
-  for (const user of users) {
-    const { data: profileRow } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("auth_uid", user.auth_uid)
-      .maybeSingle();
-
-    if (!profileRow) {
-      const { error: insertError } = await supabase.from("profiles").insert([
-        {
-          auth_uid: user.auth_uid,
-          username: user.username || "",
-          display_name: user.display_name || "",
-          dotvatar_url: user.dotvatar_url || "",
-        },
-      ]);
-      if (insertError) console.error(`Failed to insert profile for ${user.auth_uid}:`, insertError);
-      else console.log(`Inserted missing profile for ${user.auth_uid}`);
-    }
-  }
 }

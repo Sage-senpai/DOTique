@@ -1,0 +1,455 @@
+// src/screens/NFTstudio/CanvasStudio.scss
+
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$color-success: #22c55e;
+$font: 'Poppins', sans-serif;
+
+.canvas-studio {
+  background: rgba($color-neutral, 0.5);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba($color-primary, 0.2);
+  backdrop-filter: blur(10px);
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba($color-secondary, 0.8);
+    border-radius: 12px;
+    flex-wrap: wrap;
+    border: 1px solid rgba($color-primary, 0.2);
+  }
+
+  &__workspace {
+    background: rgba($color-secondary, 0.6);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid rgba($color-primary, 0.3);
+    position: relative;
+    overflow: auto;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        linear-gradient(90deg, rgba($color-primary, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba($color-primary, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+  }
+
+  &__canvas {
+    max-width: 100%;
+    max-height: 600px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    cursor: crosshair;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    background: white;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 15px 50px rgba($color-primary, 0.3);
+    }
+  }
+
+  &__instructions {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba($color-primary, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba($color-primary, 0.2);
+    
+    p {
+      margin: 5px 0;
+      color: $color-accent;
+      font-size: 14px;
+      
+      strong {
+        color: white;
+      }
+    }
+  }
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tool-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($color-neutral, 0.6);
+  border: 2px solid rgba($color-primary, 0.3);
+  border-radius: 8px;
+  color: $color-accent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: $font;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba($color-primary, 0.6);
+    color: white;
+    border-color: $color-primary;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba($color-primary, 0.3);
+
+    &::before {
+      width: 100px;
+      height: 100px;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.active {
+    background: $color-primary;
+    color: white;
+    border-color: $color-primary;
+    box-shadow: 0 0 20px rgba($color-primary, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  &--primary {
+    background: linear-gradient(135deg, $color-success 0%, darken($color-success, 10%) 100%);
+    color: white;
+    border-color: $color-success;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, lighten($color-success, 5%) 0%, $color-success 100%);
+      box-shadow: 0 5px 15px rgba($color-success, 0.4);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+
+    &:hover {
+      background: rgba($color-neutral, 0.6);
+      color: $color-accent;
+      border-color: rgba($color-primary, 0.3);
+      box-shadow: none;
+    }
+  }
+}
+
+.tool-divider {
+  width: 2px;
+  height: 40px;
+  background: rgba($color-primary, 0.2);
+  margin: 0 5px;
+}
+
+.color-picker-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 11px;
+    color: $color-accent;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.color-picker {
+  width: 50px;
+  height: 44px;
+  border: 2px solid rgba($color-primary, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+  padding: 4px;
+
+  &:hover {
+    border-color: $color-primary;
+    box-shadow: 0 5px 15px rgba($color-primary, 0.3);
+    transform: scale(1.05);
+  }
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  &::-webkit-color-swatch {
+    border-radius: 4px;
+    border: none;
+  }
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+
+  label {
+    font-size: 11px;
+    color: $color-accent;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.brush-size {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba($color-neutral, 0.8);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.3);
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba($color-primary, 0.4);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: 0 5px 15px rgba($color-primary, 0.6);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 3px 10px rgba($color-primary, 0.4);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: 0 5px 15px rgba($color-primary, 0.6);
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba($color-primary, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba($color-primary, 0.8);
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .canvas-studio {
+    &__toolbar {
+      gap: 10px;
+      padding: 12px;
+    }
+
+    &__canvas {
+      max-height: 500px;
+    }
+  }
+
+  .tool-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .slider-wrapper {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas-studio {
+    padding: 15px;
+
+    &__toolbar {
+      padding: 10px;
+      gap: 8px;
+    }
+
+    &__workspace {
+      padding: 15px;
+    }
+
+    &__canvas {
+      max-height: 400px;
+    }
+
+    &__instructions {
+      padding: 12px;
+
+      p {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .tool-btn {
+    width: 38px;
+    height: 38px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .tool-divider {
+    height: 30px;
+    margin: 0 3px;
+  }
+
+  .color-picker {
+    width: 44px;
+    height: 38px;
+  }
+
+  .slider-wrapper {
+    min-width: 100%;
+    
+    label {
+      font-size: 10px;
+    }
+  }
+
+  .brush-size {
+    height: 5px;
+
+    &::-webkit-slider-thumb {
+      width: 16px;
+      height: 16px;
+    }
+
+    &::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .color-picker-wrapper {
+    label {
+      font-size: 10px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .canvas-studio {
+    padding: 10px;
+
+    &__toolbar {
+      padding: 8px;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    &__workspace {
+      padding: 10px;
+    }
+
+    &__canvas {
+      max-height: 300px;
+    }
+  }
+
+  .tool-group {
+    gap: 6px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .tool-btn {
+    width: 36px;
+    height: 36px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .tool-divider {
+    display: none;
+  }
+
+  .slider-wrapper {
+    order: 10;
+  }
+
+  .color-picker-wrapper {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      margin: 0;
+    }
+  }
+
+  .color-picker {
+    width: 40px;
+    height: 36px;
+  }
+}

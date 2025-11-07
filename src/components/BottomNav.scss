@@ -1,0 +1,369 @@
+// src/components/BottomNav.scss
+
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$color-danger: #ff6b6b;
+$font: 'Poppins', sans-serif;
+
+.bottom-nav-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 90px; // Space for bottom nav
+  position: relative;
+  z-index: 1;
+  overflow-x: hidden; // Prevent horizontal scroll
+
+  // Ensure proper spacing for different content types
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.bottom-nav-enhanced {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  pointer-events: none;
+  
+  .nav-container {
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 20px 12px;
+    margin: 0 auto;
+    max-width: 600px;
+    pointer-events: all;
+  }
+
+  .nav-background {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 600px;
+    height: 70px;
+    background: linear-gradient(
+      135deg,
+      rgba($color-secondary, 0.95) 0%,
+      rgba($color-neutral, 0.95) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid rgba($color-primary, 0.3);
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+      0 0 60px rgba($color-primary, 0.2);
+    z-index: -1;
+    pointer-events: none;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba($color-primary, 0.1) 50%,
+        transparent 70%
+      );
+      border-radius: 24px;
+      animation: shimmer 3s ease-in-out infinite;
+      opacity: 0.5;
+    }
+  }
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: rgba($color-accent, 0.6);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: $font;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 70px;
+  z-index: 1;
+
+  &:hover {
+    color: $color-accent;
+    transform: translateY(-2px);
+
+    .nav-icon-wrapper {
+      transform: scale(1.1);
+    }
+
+    .nav-emoji {
+      transform: scale(1.2) rotate(5deg);
+    }
+  }
+
+  &.active {
+    color: white;
+
+    .nav-icon-wrapper {
+      transform: scale(1.15);
+    }
+
+    .nav-icon {
+      filter: drop-shadow(0 0 8px rgba($color-primary, 0.8));
+    }
+
+    .nav-emoji {
+      transform: scale(1.3);
+      filter: drop-shadow(0 0 10px rgba($color-primary, 1));
+    }
+  }
+
+  &.logout-item {
+    color: rgba($color-danger, 0.7);
+
+    &:hover {
+      color: $color-danger;
+      
+      .nav-icon-wrapper {
+        transform: scale(1.1) rotate(-5deg);
+      }
+    }
+  }
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .glow-effect {
+    position: absolute;
+    inset: -4px;
+    background: radial-gradient(
+      circle,
+      rgba($color-primary, 0.4) 0%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+    z-index: -1;
+  }
+}
+
+.nav-icon {
+  position: absolute;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.nav-emoji {
+  position: absolute;
+  font-size: 24px;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+
+  .nav-item:hover &,
+  .nav-item.active & {
+    opacity: 1;
+  }
+
+  .nav-item:hover & {
+    animation: bounce 0.6s ease;
+  }
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: $color-primary;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba($color-primary, 0.8);
+  animation: indicatorPulse 2s ease-in-out infinite;
+}
+
+// Animations
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1.3) translateY(0);
+  }
+  50% {
+    transform: scale(1.4) translateY(-5px);
+  }
+}
+
+@keyframes indicatorPulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 85px;
+  }
+
+  .bottom-nav-enhanced {
+    .nav-container {
+      padding: 10px 15px 10px;
+      max-width: 100%;
+    }
+
+    .nav-background {
+      width: calc(100% - 30px);
+      bottom: 8px;
+      height: 65px;
+    }
+  }
+
+  .nav-item {
+    min-width: 60px;
+    padding: 6px 8px;
+    gap: 2px;
+  }
+
+  .nav-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .nav-emoji {
+    font-size: 22px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-bottom: 80px;
+  }
+
+  .bottom-nav-enhanced {
+    .nav-container {
+      padding: 8px 10px 8px;
+      gap: 4px;
+    }
+
+    .nav-background {
+      width: calc(100% - 20px);
+      bottom: 6px;
+      height: 60px;
+      border-radius: 20px;
+    }
+  }
+
+  .nav-item {
+    min-width: 50px;
+    padding: 4px 6px;
+  }
+
+  .nav-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-emoji {
+    font-size: 20px;
+  }
+
+  .nav-label {
+    font-size: 9px;
+  }
+
+  .active-indicator {
+    width: 3px;
+    height: 3px;
+  }
+}
+
+// Ensure content doesn't get hidden behind nav on specific screens
+@media (max-height: 700px) {
+  .main-content {
+    padding-bottom: 75px;
+  }
+
+  .bottom-nav-enhanced .nav-background {
+    height: 55px;
+  }
+
+  .nav-item {
+    padding: 4px 8px;
+  }
+
+  .nav-label {
+    font-size: 9px;
+  }
+}

@@ -1,29 +1,47 @@
-/**
- * 🌐 Unified IPFS Service (Vite + React + TS)
- * 
- * ✅ Works in browser environments (no React Native dependencies)
- * ✅ Uploads metadata/images via Pinata, Infura, or backend route
- * ✅ Pins redundancy copy on Crust (JWT or wallet signature)
- */
+// src/services/ipfsService.ts
+// ============================================================
+// 🌐 Unified IPFS Service (Pinata + Infura + Crust + Backend)
+// ------------------------------------------------------------
+// ✅ Works in browser environments (no React Native deps)
+// ✅ Supports upload via:
+//   - Local backend routes (/api/ipfs/upload + /api/ipfs/upload-json)
+//   - Pinata JSON upload (JWT-based)
+//   - Infura IPFS API (fallback)
+//   - Crust network pinning (JWT or wallet signature)
+// ------------------------------------------------------------
 
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 
-// Minimal local type definitions
+// ============================================================
+// 🧩 Types
+// ============================================================
+export interface IPFSUploadResult {
+  url: string;
+  cid: string;
+  gateway: string;
+}
+
 type SignerResult = { signature: string; id?: string };
 type SignerPayloadRaw = { address: string; data: string; type: string };
 
-// ------------------
+export interface UploadArgs {
+  content: string;
+  fileName?: string;
+  contentType?: string;
+}
+
+// ============================================================
 // ⚙️ Configuration
-// ------------------
+// ============================================================
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT || "";
 const CRUST_JWT = import.meta.env.VITE_CRUST_JWT || "";
 const PINATA_ENDPOINT = "https://api.pinata.cloud/pinning";
 
-// ------------------
+// ============================================================
 // 🔌 Lazy Infura client loader
-// ------------------
+// ============================================================
 let infuraClient: any = null;
 
 async function getInfuraClient() {
@@ -36,9 +54,9 @@ async function getInfuraClient() {
   return infuraClient;
 }
 
-// ------------------
-// 📦 Upload JSON (Pinata)
-// ------------------
+// ============================================================
+// 📦 Upload JSON (Pinata direct)
+// ============================================================
 export async function uploadJSON(metadata: object): Promise<string> {
   const res = await fetch(`${PINATA_ENDPOINT}/pinJSONToIPFS`, {
     method: "POST",
@@ -54,9 +72,9 @@ export async function uploadJSON(metadata: object): Promise<string> {
   return data.IpfsHash;
 }
 
-// ------------------
+// ============================================================
 // 🖼️ Upload via Infura
-// ------------------
+// ============================================================
 export async function uploadToInfura(uri: string): Promise<string> {
   const client = await getInfuraClient();
   const response = await fetch(uri);
@@ -65,16 +83,10 @@ export async function uploadToInfura(uri: string): Promise<string> {
   return `https://ipfs.infura.io/ipfs/${result.path}`;
 }
 
-// ------------------
+// ============================================================
 // 🚀 Upload via Backend (Web Fallback)
-// ------------------
-export interface UploadArgs {
-  content: string;
-  fileName?: string;
-  contentType?: string;
-}
-
-export async function uploadToIPFS({
+// ============================================================
+export async function uploadToIPFSBackend({
   content,
   fileName = "asset.png",
   contentType = "image/png",
@@ -98,9 +110,89 @@ export async function uploadToIPFS({
   };
 }
 
-// ------------------
-// 🪶 Crust Integration
-// ------------------
+// ============================================================
+// 🧩 Legacy Local Uploads (frontend routes /api/ipfs/*)
+// ============================================================
+export async function uploadToIPFS({
+  content,
+  fileName,
+  contentType = "image/png",
+}: {
+  content: string;
+  fileName: string;
+  contentType?: string;
+}): Promise<IPFSUploadResult> {
+  try {
+    // Convert base64 to Blob if needed
+    let blob: Blob;
+    if (content.startsWith("data:")) {
+      const base64Data = content.split(",")[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      blob = new Blob([byteArray], { type: contentType });
+    } else {
+      blob = new Blob([content], { type: contentType });
+    }
+
+    const formData = new FormData();
+    formData.append("file", blob, fileName);
+
+    const response = await fetch("/api/ipfs/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "IPFS upload failed");
+    }
+
+    const data = await response.json();
+    return {
+      url: `ipfs://${data.cid}`,
+      cid: data.cid,
+      gateway: `https://gateway.pinata.cloud/ipfs/${data.cid}`,
+    };
+  } catch (error) {
+    console.error("IPFS upload error:", error);
+    throw error;
+  }
+}
+
+export async function uploadJSONToIPFS(json: object): Promise<IPFSUploadResult> {
+  try {
+    const response = await fetch("/api/ipfs/upload-json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(json),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "IPFS upload failed");
+    }
+
+    const data = await response.json();
+    return {
+      url: `ipfs://${data.cid}`,
+      cid: data.cid,
+      gateway: `https://gateway.pinata.cloud/ipfs/${data.cid}`,
+    };
+  } catch (error) {
+    console.error("IPFS JSON upload error:", error);
+    throw error;
+  }
+}
+
+// ============================================================
+// 🪶 Crust Integration (pinning redundancy)
+// ============================================================
 export async function generateCrustAuth(address: string) {
   const injector = await web3FromAddress(address);
   const signRaw = injector?.signer?.signRaw as
@@ -155,9 +247,9 @@ export async function pinToCrust(ipfsHash: string, walletAddress?: string) {
   }
 }
 
-// ------------------
-// 🧠 Combined Metadata Flow
-// ------------------
+// ============================================================
+// 🧠 Combined Metadata Flow (Profile Metadata Upload)
+// ============================================================
 export async function uploadProfileMetadata(
   profileData: any,
   imageUri?: string,
@@ -175,7 +267,7 @@ export async function uploadProfileMetadata(
       const arrayBuffer = await response.arrayBuffer();
       const base64Data = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
 
-      const serverRes = await uploadToIPFS({ content: base64Data });
+      const serverRes = await uploadToIPFS({ content: base64Data, fileName: "fallback.png" });
       imageUrl = serverRes.gateway;
     }
   }
@@ -196,4 +288,4 @@ export async function uploadProfileMetadata(
   };
 }
 
-console.log("✅ IPFS Service ready (Pinata + Infura + Crust + Backend)");
+console.log("✅ Unified IPFS Service ready (Pinata + Infura + Crust + Backend + Local Routes)");

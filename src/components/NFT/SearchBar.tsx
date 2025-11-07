@@ -1,3 +1,4 @@
+// src/components/NFT/SearchBar.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';

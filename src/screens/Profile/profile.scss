@@ -581,6 +581,97 @@ $font: "Poppins", sans-serif;
       opacity: 1;
     }
   }
+
+  &__error-banner {
+    padding: 12px 16px;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 8px;
+    color: #c33;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    animation: shake 0.3s ease;
+  }
+
+  &__error {
+    font-size: 0.8rem;
+    color: #ff6b6b;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  &__char-count {
+    font-size: 0.75rem;
+    color: $color-neutral;
+    text-align: right;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  &__hint {
+    font-size: 0.8rem;
+    color: $color-neutral;
+    margin-top: 0.25rem;
+    display: block;
+    font-style: italic;
+  }
+
+  &__phone-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+
+    .edit-profile-screen__input {
+      flex: 1;
+    }
+  }
+
+  &__country-code {
+    min-width: 140px;
+    max-width: 180px;
+    padding: 12px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: $color-accent;
+    font-family: $font;
+    font-size: 0.8rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    padding-right: 32px;
+
+    &:focus {
+      border-color: $color-primary;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(96, 81, 155, 0.1);
+    }
+
+    option {
+      background: white;
+      color: #333;
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// Shake animation for errors
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+
 }
 
 // ============================================================
@@ -1066,178 +1157,3 @@ $font: "Poppins", sans-serif;
   }
 }
 
-// ============================================================
-// WARDROBE SCREEN
-// ============================================================
-.wardrobe-screen {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: $color-secondary;
-  font-family: $font;
-  padding-bottom: 80px;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    background: $color-primary;
-    color: white;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  &__back {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__title {
-    flex: 1;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
-  }
-
-  &__content {
-    flex: 1;
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-
-  &__subtitle {
-    font-size: 0.95rem;
-    color: $color-neutral;
-    margin: 0 0 1.5rem;
-  }
-
-  &__spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-top: 4px solid $color-primary;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 2rem auto;
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  &__nft-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform 150ms ease;
-
-    &:active {
-      transform: translateY(-4px);
-    }
-  }
-
-  &__nft-image {
-    width: 100%;
-    height: 120px;
-    border-radius: 8px;
-    object-fit: cover;
-    margin-bottom: 0.75rem;
-  }
-
-  &__nft-placeholder {
-    width: 100%;
-    height: 120px;
-    background: rgba($color-primary, 0.1);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 0.75rem;
-  }
-
-  &__nft-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: $color-secondary;
-    margin: 0 0 0.5rem;
-  }
-
-  &__nft-rarity {
-    font-size: 0.85rem;
-    color: $color-primary;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    text-align: center;
-  }
-
-  &__empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-
-  &__empty-text {
-    font-size: 0.95rem;
-    color: $color-accent;
-    margin: 0;
-  }
-}
-// For SettingsScreen delete button
-.settings-screen__danger-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: $color-accent;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 1rem 0 0.75rem;
-  padding: 0 1.5rem;
-}
-
-.settings-screen__delete-btn {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba($color-danger, 0.1);
-  color: $color-danger;
-  border: 1px solid $color-danger;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: $font;
-  font-size: 0.95rem;
-  margin-top: 0.75rem;
-  transition: background 150ms ease;
-
-  &:active:not(:disabled) {
-    background: rgba($color-danger, 0.2);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.profile-follow-link {
-      font-family: $font;
-      font-size: 20px;
-
-  }

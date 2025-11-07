@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // src/screens/Home/HomeScreen.tsx
 import React, { useState, useEffect } from "react";
-import { Plus, Search as SearchIcon } from "lucide-react";
+import { Plus, Search as SearchIcon, Bell, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LeftSidebar from "../../components/Homepage/LeftSidebar";
 import FeedCenter from "../../components/Homepage/FeedCenter";
 import RightSidebar from "../../components/Homepage/RightSidebar";
@@ -114,6 +115,7 @@ const DUMMY_NOTIFICATIONS = [
 // =====================================================
 const HomeScreen: React.FC = () => {
   const { profile, setProfile } = useAuthStore();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<any[]>(DUMMY_POSTS);
   const [notifications, _setNotifications] = useState<any[]>(DUMMY_NOTIFICATIONS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -138,7 +140,6 @@ const HomeScreen: React.FC = () => {
 
         if (error) {
           console.error("Error fetching profile:", error);
-          // Profile doesn't exist, it will be auto-created on first post
           return;
         }
 
@@ -180,13 +181,12 @@ const HomeScreen: React.FC = () => {
     fetchPosts();
   }, [activeTab, userProfileId]);
 
-  // ✅ Fixed post creation - no more double JSON stringification
+  // ✅ Fixed post creation
   const handleCreatePost = async (content: string, imageUrl?: string) => {
     try {
       console.log("📝 Creating post with content:", content);
       console.log("🖼️ Image URL:", imageUrl);
       
-      // Just pass the content string and imageUrl directly
       const newPost = await socialService.createPost(content, imageUrl);
 
       if (newPost) {
@@ -200,13 +200,22 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Navigate to user profile
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <div className="home-page">
-      {/* Header */}
+      {/* Enhanced Header */}
       <header className="home-header">
         <div className="header-left">
-          <div className="logo">DOTique</div>
+          <div className="logo">
+            <span className="logo-text">DOTique</span>
+            <div className="logo-glow" />
+          </div>
         </div>
+        
         <div className="header-center">
           <div
             className="search-bar"
@@ -214,22 +223,32 @@ const HomeScreen: React.FC = () => {
             role="button"
             tabIndex={0}
           >
-            <SearchIcon size={18} />
+            <SearchIcon size={18} className="search-icon" />
             <input
               type="text"
               placeholder="Search users, posts, NFTs..."
               readOnly
               onClick={() => setIsSearchOpen(true)}
             />
+            <div className="search-glow" />
           </div>
         </div>
+        
         <div className="header-right">
           <NotificationCenter notifications={notifications} />
-          <div className="user-menu">
-            <div className="avatar-small">
-              {profile?.avatar_url || "👤"}
+          
+          <button 
+            className="user-menu" 
+            onClick={handleProfileClick}
+            title="View Profile"
+          >
+            <div className="avatar-wrapper">
+              <div className="avatar-small">
+                {profile?.avatar_url || <UserIcon size={20} />}
+              </div>
+              <div className="avatar-glow" />
             </div>
-          </div>
+          </button>
         </div>
       </header>
 
@@ -243,19 +262,25 @@ const HomeScreen: React.FC = () => {
               className={`feed-tab ${activeTab === "feed" ? "active" : ""}`}
               onClick={() => setActiveTab("feed")}
             >
-              🏠 Feed
+              <span className="tab-icon">🏠</span>
+              <span className="tab-text">Feed</span>
+              {activeTab === "feed" && <div className="tab-indicator" />}
             </button>
             <button
               className={`feed-tab ${activeTab === "following" ? "active" : ""}`}
               onClick={() => setActiveTab("following")}
             >
-              👥 Following
+              <span className="tab-icon">👥</span>
+              <span className="tab-text">Following</span>
+              {activeTab === "following" && <div className="tab-indicator" />}
             </button>
             <button
               className={`feed-tab ${activeTab === "followers" ? "active" : ""}`}
-              onClick={() => setActiveTab("followers")}
+              onClick={() => setActiveTab("friends")}
             >
-              ⭐ Followers
+              <span className="tab-icon">⭐</span>
+              <span className="tab-text">Friends</span>
+              {activeTab === "friends" && <div className="tab-indicator" />}
             </button>
           </div>
 
@@ -277,6 +302,7 @@ const HomeScreen: React.FC = () => {
         title="Create Post or Mint NFT"
       >
         <Plus size={28} />
+        <div className="fab-glow" />
       </button>
 
       {/* Modals */}

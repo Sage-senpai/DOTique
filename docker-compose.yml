@@ -1,0 +1,96 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # Main blockchain node
+  chain:
+    image: uniquenetwork/unique-node-public:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    command: >
+      --dev
+      --idle-autoseal-interval 2000
+      --disable-autoseal-on-tx
+      --autoseal-finalization-delay 1
+      --state-pruning archive
+      --blocks-pruning archive
+      --base-path /unique/data
+      --port 30333
+      --rpc-port 9833
+      --no-prometheus
+      --no-mdns
+      --no-telemetry
+      --unsafe-rpc-external
+      --rpc-cors=all
+    ports:
+      - "9833:9833"     # WebSocket RPC
+      - "30333:30333"   # P2P
+    volumes:
+      - chain-data:/unique/data
+
+  # HTTP REST API proxy
+  http-proxy:
+    image: uniquenetwork/substrate-proxy-http-proxy:master
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      - chain
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - CHAIN=ws://chain:9833
+      - MIN_LOG_LEVEL=info
+      - EXTRINSIC_MORTAL_BLOCK_LENGTH=64
+      - OPENAPI_SERVER_URL=http://localhost:3000/
+      - OPENAPI_SERVER_DESCRIPTION="Dotique Unique Network"
+      - OPENAPI_SERVER_PUBLIC_PATH=/
+
+  # PostgreSQL database for indexer
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dotique_user
+      POSTGRES_PASSWORD: dotique_pass_2024
+      POSTGRES_DB: unique_scan_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - scan-postgres:/var/lib/postgresql/data
+
+  # Indexer crawler
+  scan-crawler:
+    image: uniquenetwork/substrate-proxy-scan-crawler:master
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - chain
+    environment:
+      - DB_URL=postgres://dotique_user:dotique_pass_2024@postgres:5432/unique_scan_db
+      - CHAIN=ws://chain:9833
+
+  # Indexer API
+  scan-api:
+    image: uniquenetwork/substrate-proxy-scan-api:master
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_URL=postgres://dotique_user:dotique_pass_2024@postgres:5432/unique_scan_db
+      - PORT=3001
+      - OPENAPI_SERVER_URL=http://localhost:3001/
+      - OPENAPI_SERVER_DESCRIPTION="Dotique Indexer"
+      - OPENAPI_SERVER_PUBLIC_PATH=/
+
+volumes:
+  chain-data:
+  scan-postgres:
+
+networks:
+  default:
+    name: dotique-network

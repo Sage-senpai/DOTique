@@ -32,6 +32,7 @@
     "@reactive-dot/react": "^0.57.0",
     "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query": "^5.90.5",
+    "@unique-nft/sdk": "^0.7.7",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",

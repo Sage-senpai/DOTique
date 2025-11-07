@@ -1,0 +1,749 @@
+// src/components/NFT/AdvancedNFTComponents.scss
+
+// Import global variables
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$color-danger: #ff6b6b;
+$color-success: #22c55e;
+$color-warning: #fbbf24;
+$font: 'Poppins', sans-serif;
+
+// ==========================================
+// 3D PREVIEW COMPONENT
+// ==========================================
+
+.threed-preview {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  background: linear-gradient(135deg, $color-secondary 0%, $color-neutral 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(96, 81, 155, 0.1) 50%, transparent 70%);
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  &__controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.view-btn {
+  padding: 10px 16px;
+  background: rgba($color-neutral, 0.9);
+  border: 2px solid rgba($color-primary, 0.3);
+  border-radius: 8px;
+  color: $color-accent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-family: $font;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    background: rgba($color-primary, 0.8);
+    color: white;
+    border-color: $color-primary;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba($color-primary, 0.4);
+  }
+
+  &.active {
+    background: $color-primary;
+    color: white;
+    border-color: $color-primary;
+    box-shadow: 0 0 20px rgba($color-primary, 0.5);
+  }
+}
+
+.preview-2d,
+.preview-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.preview-2d img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fadeIn 0.4s ease;
+}
+
+.preview-3d {
+  animation: fadeIn 0.4s ease;
+}
+
+// ==========================================
+// AR TRY-ON COMPONENT
+// ==========================================
+
+.ar-tryon {
+  margin-top: 20px;
+
+  &__btn {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-family: $font;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba($color-primary, 0.5);
+
+      &::before {
+        width: 300px;
+        height: 300px;
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &__viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+.ar-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ar-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 400px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.ar-nft {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 10px 30px rgba($color-primary, 0.8));
+}
+
+.ar-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  background: rgba($color-danger, 0.9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: $font;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: $color-danger;
+    transform: scale(1.05);
+  }
+}
+
+// ==========================================
+// LIST NFT MODAL
+// ==========================================
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+.list-modal {
+  background: linear-gradient(135deg, $color-secondary 0%, darken($color-neutral, 5%) 100%);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  border: 2px solid rgba($color-primary, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba($color-primary, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+  }
+
+  h3 {
+    margin: 0 0 20px 0;
+    color: white;
+    font-size: 24px;
+    font-family: $font;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.nft-preview-small {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background: rgba($color-neutral, 0.5);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba($color-primary, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    border-color: rgba($color-primary, 0.5);
+    transform: translateY(-2px);
+  }
+
+  img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  h4 {
+    margin: 0;
+    color: white;
+    font-family: $font;
+  }
+
+  p {
+    margin: 5px 0 0 0;
+    color: $color-accent;
+    font-size: 14px;
+    font-family: $font;
+  }
+}
+
+.listing-type {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+
+  button {
+    padding: 12px;
+    background: rgba($color-neutral, 0.8);
+    border: 2px solid rgba($color-primary, 0.3);
+    border-radius: 8px;
+    color: $color-accent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    font-family: $font;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background: rgba($color-primary, 0.6);
+      color: white;
+      border-color: $color-primary;
+      transform: translateY(-2px);
+    }
+
+    &.active {
+      background: $color-primary;
+      color: white;
+      border-color: $color-primary;
+      box-shadow: 0 5px 20px rgba($color-primary, 0.4);
+    }
+  }
+}
+
+.form-field {
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    color: $color-accent;
+    font-weight: 500;
+    font-family: $font;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 12px;
+    background: rgba($color-neutral, 0.8);
+    border: 2px solid rgba($color-primary, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-family: $font;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+    }
+
+    &::placeholder {
+      color: rgba($color-accent, 0.5);
+    }
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: $font;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  color: white;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba($color-primary, 0.5);
+
+    &::before {
+      width: 300px;
+      height: 300px;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: rgba($color-neutral, 0.8);
+  color: $color-accent;
+  border: 2px solid rgba($color-primary, 0.3);
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+    border-color: $color-primary;
+  }
+}
+
+// ==========================================
+// ANALYTICS DASHBOARD
+// ==========================================
+
+.nft-analytics {
+  padding: 30px;
+  background: linear-gradient(135deg, $color-secondary 0%, $color-neutral 100%);
+  border-radius: 20px;
+  color: $color-accent;
+  font-family: $font;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba($color-primary, 0.1) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+  }
+
+  h2 {
+    margin: 0 0 30px 0;
+    color: white;
+    font-size: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  h3 {
+    margin: 0 0 20px 0;
+    color: white;
+    font-size: 20px;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card {
+  background: rgba($color-neutral, 0.6);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  border: 1px solid rgba($color-primary, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    border-color: rgba($color-primary, 0.5);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba($color-primary, 0.3);
+  }
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba($color-primary, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  transition: all 0.3s ease;
+
+  .stat-card:hover & {
+    background: rgba($color-primary, 0.3);
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.stat-value {
+  margin: 0 0 5px 0;
+  font-size: 24px;
+  color: white;
+  font-weight: 700;
+}
+
+.stat-change {
+  font-size: 13px;
+  font-weight: 500;
+
+  &.positive {
+    color: $color-success;
+  }
+
+  &.negative {
+    color: $color-danger;
+  }
+}
+
+.trending-section,
+.activity-section {
+  margin-top: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.trending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.trending-item {
+  display: grid;
+  grid-template-columns: 120px 1fr 60px;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($color-neutral, 0.3);
+  }
+}
+
+.trending-name {
+  font-weight: 500;
+  color: white;
+}
+
+.trending-bar {
+  height: 8px;
+  background: rgba($color-neutral, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
+  }
+}
+
+.trending-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary, lighten($color-primary, 10%));
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba($color-primary, 0.5);
+}
+
+.trending-count {
+  text-align: right;
+  font-weight: 600;
+  color: white;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba($color-neutral, 0.4);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: rgba($color-primary, 0.3);
+    background: rgba($color-neutral, 0.6);
+  }
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &.mint {
+    background: rgba($color-success, 0.2);
+    color: $color-success;
+  }
+
+  &.sale {
+    background: rgba($color-primary, 0.2);
+    color: $color-primary;
+  }
+
+  &.list {
+    background: rgba($color-warning, 0.2);
+    color: $color-warning;
+  }
+}
+
+.activity-user {
+  flex: 1;
+  font-family: monospace;
+  color: white;
+}
+
+.activity-type {
+  text-transform: capitalize;
+  padding: 4px 10px;
+  background: rgba($color-primary, 0.2);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.activity-time {
+  color: $color-accent;
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+// ==========================================
+// ANIMATIONS
+// ==========================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-10px);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trending-item {
+    grid-template-columns: 100px 1fr 50px;
+  }
+
+  .list-modal {
+    padding: 20px;
+  }
+
+  .threed-preview {
+    height: 350px;
+  }
+}

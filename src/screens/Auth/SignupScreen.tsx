@@ -1,11 +1,11 @@
-import  { useState } from "react";
+// src/screens/Auth/SignupScreen.tsx 
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import AuthLayout from "./AuthLayout";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { upsertUserProfile } from "../../services/profileService";
 import "./authlayout.scss";
 
 type SignupForm = { email: string; password: string; confirmPassword: string };
@@ -14,6 +14,7 @@ export default function SignupScreen() {
   const { control, handleSubmit, watch, formState: { errors } } = useForm<SignupForm>();
   const [loading, setLoading] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const navigate = useNavigate();
 
   const setProfile = useAuthStore((s) => s.setProfile);
@@ -21,87 +22,146 @@ export default function SignupScreen() {
 
   const password = watch("password");
 
+  // Helper to check Supabase connection
+  const checkConnection = async () => {
+    try {
+      const { error } = await supabase.from('profiles').select('count').limit(1);
+      return !error;
+    } catch {
+      return false;
+    }
+  };
+
   const onSubmit = async (data: SignupForm) => {
     if (!agreedToPolicy) {
-      alert("Please agree to the privacy policy to continue.");
+      setErrorMessage("Please agree to the privacy policy to continue.");
       return;
     }
 
+    setErrorMessage("");
+    setLoading(true);
+
     try {
-      setLoading(true);
+      console.log("🔐 Starting signup process...");
       
+      // Pre-flight check
+      const isConnected = await checkConnection();
+      if (!isConnected) {
+        throw new Error("Cannot connect to Supabase. Please check your internet connection and Supabase configuration.");
+      }
+
       // Step 1: Sign up with Supabase Auth
+      console.log("📝 Creating auth user...");
       const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            display_name: "New User",
+            username: `user_${Date.now().toString().slice(-8)}`,
+          }
+        }
       });
 
       if (authError) {
-        alert(authError.message);
-        return;
+        console.error("❌ Auth error:", authError);
+        
+        // Better error messages
+        if (authError.message.includes("fetch")) {
+          throw new Error("Network error. Please check your Supabase configuration and try again.");
+        } else if (authError.message.includes("already registered")) {
+          throw new Error("This email is already registered. Please login instead.");
+        } else {
+          throw new Error(authError.message);
+        }
       }
 
       if (!signUpData?.user) {
-        alert("Signup failed. Please try again.");
-        return;
+        throw new Error("Signup failed: No user data returned.");
       }
 
       console.log("✅ Auth user created:", signUpData.user.id);
 
-      // Step 2: Create/upsert profile in profiles table
-      try {
-        await upsertUserProfile({
-          auth_uid: signUpData.user.id,
-          username: `user_${signUpData.user.id.slice(0, 8)}`,
-          display_name: "New User",
-          dotvatar_url: "",
-          email: signUpData.user.email ?? data.email,
-        });
-        console.log("✅ Profile created in profiles table");
-      } catch (profileError) {
-        console.error("⚠️ Profile creation warning:", profileError);
-        // Continue anyway - profile might be created by trigger
+      // Step 2: Check if email confirmation is required
+      if (signUpData.user.identities?.length === 0) {
+        setErrorMessage("⚠️ Please check your email to confirm your account before logging in.");
+        setTimeout(() => navigate("/login"), 3000);
+        return;
       }
 
-      // Step 3: Fetch the created profile
-      let profile = null;
-      let retries = 3;
+      // Step 3: Create or fetch profile
+      console.log("👤 Setting up profile...");
       
-      while (retries > 0 && !profile) {
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("auth_uid", signUpData.user.id)
-            .single();
+      // Wait a moment for any database triggers
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-          if (profileError) {
-            console.warn(`Profile fetch attempt ${4 - retries}:`, profileError.message);
-            retries--;
-            if (retries > 0) {
-              await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-            }
-          } else {
-            profile = profileData;
-            console.log("✅ Profile fetched:", profile);
-          }
-        } catch (err) {
-          console.error("Profile fetch error:", err);
-          retries--;
+      let profile = null;
+      
+      // Try to fetch existing profile first
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("auth_uid", signUpData.user.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        profile = existingProfile;
+        console.log("✅ Profile found via trigger:", profile.id);
+      } else {
+        // Create profile manually
+        console.log("🧩 Creating profile manually...");
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            auth_uid: signUpData.user.id,
+            email: data.email,
+            username: `user_${signUpData.user.id.slice(0, 8)}`,
+            display_name: "New User",
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("❌ Profile creation error:", createError);
+          throw new Error(`Failed to create profile: ${createError.message}`);
         }
+
+        profile = newProfile;
+        console.log("✅ Profile created:", profile.id);
       }
 
       // Step 4: Set session and profile in store
-      setSession(signUpData.session ?? null);
-      setProfile(profile ?? null);
+      if (signUpData.session) {
+        setSession(signUpData.session);
+        console.log("✅ Session set");
+      }
 
-      // Step 5: Redirect to complete profile or home
-      alert("Account created successfully! Please complete your profile.");
-      navigate("/home"); // or "/home"
+      if (profile) {
+        setProfile(profile);
+        console.log("✅ Profile set in store");
+      }
+
+      // Step 5: Success - navigate to home
+      console.log("🎉 Signup complete!");
+      navigate("/home");
 
     } catch (err: any) {
       console.error("❌ Signup error:", err);
-      alert(err.message ?? "Sign up failed");
+      
+      // User-friendly error message
+      const message = err.message || "Sign up failed. Please try again.";
+      setErrorMessage(message);
+      
+      // Log detailed error for debugging
+      if (err.name === "TypeError" && err.message.includes("fetch")) {
+        console.error("🔴 FETCH ERROR - Possible causes:");
+        console.error("1. Supabase URL/Key not configured");
+        console.error("2. CORS issues");
+        console.error("3. Network connectivity");
+        console.error("4. Supabase project paused");
+        setErrorMessage("Connection failed. Please check your Supabase configuration.");
+      }
     } finally {
       setLoading(false);
     }
@@ -116,6 +176,19 @@ export default function SignupScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
+        {errorMessage && (
+          <div style={{ 
+            padding: '12px', 
+            backgroundColor: '#fee', 
+            border: '1px solid #fcc',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            color: '#c33'
+          }}>
+            {errorMessage}
+          </div>
+        )}
+
         <div className="auth-input-group">
           <label htmlFor="email">Email Address</label>
           <Controller
@@ -198,7 +271,7 @@ export default function SignupScreen() {
         </label>
 
         <button type="submit" className="auth-button" disabled={loading || !agreedToPolicy}>
-          {loading ? "Creating..." : "Sign Up"}
+          {loading ? "Creating Account..." : "Sign Up"}
         </button>
 
         <div className="auth-footer">

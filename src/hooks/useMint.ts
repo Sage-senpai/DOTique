@@ -1,61 +1,97 @@
-// src/hooks/useMint.ts
-import { useState } from "react";
-import { polkadotService } from "../services/polkadotService";
+// src/hooks/useMint.ts (Updated)
+// ==========================================
 
-type MintArgs = {
-  metadata: {
-    metadataUri?: string;
-    image?: string;
-    ownerAddress?: string;
-    [k: string]: any;
-  };
-  royalty?: number;
-  edition?: number;
-};
+import { useState, useCallback } from 'react';
+import { uniqueNetworkService } from '../services/uniqueNetworkService';
+import { useWallet } from '../contexts/WalletContext';
+import { uploadToIPFS } from '../services/ipfsService';
 
-export type MintResponse = {
-  success: boolean;
+export interface MintResponse {
+  tokenId: string;
+  collectionId: string;
   txHash: string;
-  metadataUri: string;
-  owner: string;
-  endpoint: string | null;
-  tokenId?: string | number; 
-  nftId?: string | number; 
-  blockHash?: string | null;
-};
+  nftId: string;
+  success: boolean;
+}
 
-export const useMintNFT = () => {
-  const [isMinting, setIsMinting] = useState(false);
+export function useMintNFT() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { selectedAccount } = useWallet();
 
-  async function mint({ metadata, royalty = 5, edition = 1 }: MintArgs): Promise<MintResponse> {
-    setIsMinting(true);
-    try {
-      const metadataUri = metadata.metadataUri ?? metadata.image;
-      if (!metadataUri) throw new Error("No metadata URI provided for minting.");
+  const mint = useCallback(
+    async ({
+      metadata,
+      royalty = 5,
+      price = 0,
+      collectionId,
+    }: {
+      metadata: any;
+      royalty?: number;
+      price?: number;
+      collectionId?: string;
+    }): Promise<MintResponse> => {
+      if (!selectedAccount) {
+        throw new Error('No wallet connected');
+      }
 
-      const resp = await polkadotService.mintNFT({
-        metadataUri,
-        ownerAddress: metadata.ownerAddress ?? "",
-        royalty,
-        edition,
-      });
+      setLoading(true);
+      setError(null);
 
-      // Return normalized response — works even if tokenId doesn’t exist
-      return {
-        ...resp,
-        blockHash: resp.txHash, // fallback alias for clarity
-        tokenId: (resp as any).tokenId ?? undefined,
-        nftId: (resp as any).nftId ?? (resp as any).tokenId ?? undefined,
-      };
-    } catch (err) {
-      console.error("Minting failed:", err);
-      throw err;
-    } finally {
-      setIsMinting(false);
-    }
-  }
+      try {
+        // Upload image to IPFS if it's base64
+        let imageUrl = metadata.image;
+        if (metadata.image?.startsWith('data:')) {
+          const uploadResult = await uploadToIPFS({
+            content: metadata.image,
+            fileName: `${metadata.name}.png`,
+            contentType: 'image/png',
+          });
+          imageUrl = uploadResult.url;
+        }
 
-  return { isMinting, mint };
-};
+        // Prepare full metadata
+        const fullMetadata = {
+          ...metadata,
+          image: imageUrl,
+          royalties: {
+            version: 1,
+            splitPercentage: [
+              {
+                address: selectedAccount.address,
+                percent: royalty,
+              },
+            ],
+          },
+        };
 
-export default useMintNFT;
+        // Mint via Unique Network
+        const result = await uniqueNetworkService.mintToken({
+          collectionId,
+          ownerAddress: selectedAccount.address,
+          metadata: fullMetadata,
+          royalty,
+          price,
+        });
+
+        return {
+          ...result,
+          success: true,
+        };
+      } catch (err: any) {
+        console.error('Mint error:', err);
+        setError(err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedAccount]
+  );
+
+  return {
+    mint,
+    loading,
+    error,
+  };
+}
