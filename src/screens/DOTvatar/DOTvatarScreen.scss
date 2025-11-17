@@ -1,0 +1,438 @@
+// src/screens/DOTvatar/DOTvatarScreen.scss
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$color-success: #22c55e;
+$color-warning: #fbbf24;
+
+.dotvatar-screen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $color-secondary 0%, $color-neutral 100%);
+  padding: 20px;
+  color: $color-accent;
+}
+
+.dotvatar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba($color-neutral, 0.6);
+  border-radius: 16px;
+  border: 2px solid rgba($color-primary, 0.2);
+  backdrop-filter: blur(10px);
+
+  &__left {
+    h1 {
+      margin: 0 0 5px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+    }
+
+    p {
+      margin: 0;
+      color: $color-accent;
+      opacity: 0.8;
+    }
+
+    .unsaved-badge {
+      display: inline-block;
+      margin-left: 15px;
+      padding: 4px 12px;
+      background: rgba($color-warning, 0.2);
+      border: 1px solid $color-warning;
+      border-radius: 12px;
+      font-size: 12px;
+      color: $color-warning;
+      font-weight: 600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.dotvatar-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+
+  &--primary {
+    background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
+    color: white;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba($color-primary, 0.5);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--secondary {
+    background: rgba($color-neutral, 0.8);
+    border: 2px solid rgba($color-primary, 0.3);
+    color: $color-accent;
+
+    &:hover {
+      background: rgba($color-primary, 0.3);
+      border-color: $color-primary;
+      color: white;
+    }
+  }
+}
+
+.dotvatar-content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 30px;
+}
+
+.dotvatar-preview {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+
+  &__canvas {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: $color-neutral;
+    border-radius: 16px;
+    border: 3px solid rgba($color-primary, 0.3);
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+
+    .dotvatar-svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__info {
+    text-align: center;
+    padding: 15px;
+    background: rgba($color-neutral, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba($color-primary, 0.2);
+
+    h3 {
+      margin: 0 0 5px 0;
+      font-size: 18px;
+      color: white;
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: $color-accent;
+      opacity: 0.8;
+    }
+  }
+}
+
+.dotvatar-customizer {
+  background: rgba($color-neutral, 0.6);
+  border-radius: 16px;
+  border: 2px solid rgba($color-primary, 0.2);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.customizer-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 2px solid rgba($color-primary, 0.2);
+}
+
+.customizer-tab {
+  padding: 15px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: $color-accent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.1);
+    color: white;
+  }
+
+  &.active {
+    background: rgba($color-primary, 0.2);
+    border-bottom-color: $color-primary;
+    color: white;
+  }
+}
+
+.customizer-content {
+  padding: 25px;
+  max-height: 600px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($color-neutral, 0.3);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $color-primary;
+    border-radius: 4px;
+  }
+}
+
+.customizer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.customizer-group {
+  h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+
+    h3 {
+      margin: 0;
+    }
+  }
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+
+  &--large {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.color-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border-color: rgba(white, 0.5);
+  }
+
+  &.active {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+    transform: scale(1.1);
+  }
+}
+
+.option-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-btn {
+  padding: 10px 20px;
+  background: rgba($color-neutral, 0.8);
+  border: 2px solid rgba($color-primary, 0.3);
+  border-radius: 8px;
+  color: $color-accent;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($color-primary, 0.3);
+    border-color: $color-primary;
+    color: white;
+  }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: white;
+    box-shadow: 0 5px 15px rgba($color-primary, 0.4);
+  }
+}
+
+.clothing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.clothing-item {
+  background: rgba($color-neutral, 0.8);
+  border: 2px solid rgba($color-primary, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+    border-color: $color-primary;
+    transform: translateY(-3px);
+  }
+
+  &.active {
+    background: rgba($color-primary, 0.3);
+    border-color: $color-primary;
+    box-shadow: 0 5px 20px rgba($color-primary, 0.4);
+  }
+
+  &__preview {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    svg {
+      color: white;
+      opacity: 0.8;
+    }
+  }
+
+  &__name {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: white;
+    font-weight: 500;
+  }
+
+  &__nft-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    background: linear-gradient(135deg, #ff6b9d, #c44569);
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+  }
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+
+  &--free {
+    background: rgba($color-success, 0.2);
+    color: $color-success;
+    border: 1px solid $color-success;
+  }
+
+  &--nft {
+    background: linear-gradient(135deg, rgba(#ff6b9d, 0.2), rgba(#c44569, 0.2));
+    color: #ff6b9d;
+    border: 1px solid #ff6b9d;
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .dotvatar-content {
+    grid-template-columns: 1fr;
+  }
+
+  .dotvatar-preview {
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dotvatar-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+
+    &__actions {
+      width: 100%;
+      flex-wrap: wrap;
+
+      button {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+  }
+
+  .customizer-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .clothing-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .dotvatar-screen {
+    padding: 10px;
+  }
+
+  .color-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .option-buttons {
+    .option-btn {
+      flex: 1;
+      min-width: 80px;
+    }
+  }
+}

@@ -18,13 +18,15 @@
   padding: 0;
 }
 
+/* CRITICAL: Remove ALL height/overflow constraints from safe-area */
 .safe-area {
-  min-height: 90vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background-color: var(--color-secondary);
   color: var(--color-accent);
   position: relative;
+  /* NO min-height, NO overflow properties! */
 }
 
 /* BOTTOM NAV LAYOUT - Moved to BottomNav.scss for better organization */
@@ -124,10 +126,32 @@
   box-sizing: border-box;
 }
 
+/* CRITICAL FIX: Proper overflow management */
+html {
+  overflow-x: hidden;
+  overflow-y: scroll; /* Force scrollbar to prevent layout shift */
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  overflow-y: visible; /* Let content flow naturally */
+  height: 100%;
+}
+
+/* CRITICAL: Fix the main-content wrapper that's breaking sticky */
+.main-content {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible !important; /* Override any other styles */
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
 }
 
 /* SCROLLBAR STYLING */

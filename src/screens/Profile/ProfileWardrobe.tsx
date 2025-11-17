@@ -1,572 +1,519 @@
-// src/screens/Profile/ProfileWardrobe.tsx
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Filter, Grid, List, Star, Eye, EyeOff, Layers, TrendingUp } from 'lucide-react';
-import { ThreeDPreview, ListNFTModal, NFTAnalytics } from '../../components/NFT/AdvancedNFTComponents';
-import './ProfileWardrobe.scss';
+// src/screens/Profile/ProfileScreen.tsx - FIXED WITH WARDROBE INTEGRATION
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { ProfileSkeleton, SkeletonGrid } from '../../components/Skeletons/SkeletonLoaders';
+import { 
+  MoreVertical, Bell, Share2, Link as LinkIcon, VolumeX, UserX, Flag,
+  Copy, Check, Edit, Settings, Search
+} from "lucide-react";
+import { useAuthStore } from "../../stores/authStore";
+import { useUserStore } from "../../stores/userStore";
+import { supabase } from "../../services/supabase";
+import { socialService } from "../../services/socialService";
+import { getUserProfileWithCounts } from "../../services/profileService";
+import PostCard from "../../components/Posts/PostCard";
+import NFTCard from "../../components/NFT/NFTCard";
+import WardrobeTab from "../../components/Profile/WardrobeTab";
+import "./profile.scss";
 
-interface WardrobeNFT {
-  id: string;
-  nfts: {
-    id: string;
-    token_id: string;
-    metadata: {
-      name: string;
-      image: string;
-      glb?: string;
-      nestable?: boolean;
-      composable?: boolean;
-      level?: number;
-      experience?: number;
-    };
-    rarity?: string;
-  };
-  is_featured: boolean;
-}
+export default function ProfileScreen() {
+  const profile = useAuthStore((s) => s.profile);
+  const setProfile = useAuthStore((s) => s.setProfile);
+  const { user, addRepost } = useUserStore();
 
-export default function ProfileWardrobe() {
-  const navigate = useNavigate();
-  const [nfts, setNfts] = useState<WardrobeNFT[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [reposts, setLocalReposts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"posts" | "tagged" | "wardrobe">("posts");
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [filter, setFilter] = useState<'all' | 'featured' | 'nestable' | 'composable'>('all');
-  const [selectedNFTs, setSelectedNFTs] = useState<string[]>([]);
-  const [showCompose, setShowCompose] = useState(false);
-  const [showListModal, setShowListModal] = useState(false);
-  const [selectedNFT, setSelectedNFT] = useState<any>(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [composing, setComposing] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [copiedWallet, setCopiedWallet] = useState(false);
+  const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
-  // Load NFTs from localStorage with dummy data
+  const headerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Scroll listener for sticky header
   useEffect(() => {
-    const loadWardrobe = () => {
+    const handleScroll = () => {
+      if (headerRef.current) {
+        const headerBottom = headerRef.current.offsetHeight;
+        setIsHeaderMinimized(window.scrollY > headerBottom - 100);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // ✅ Auto-refresh user data with updated counts using profileService
+  useEffect(() => {
+    const refreshProfile = async () => {
+      if (!profile?.id) return;
+      
       try {
-        let wardrobeData = localStorage.getItem('user_wardrobe');
-        
-        // If no data exists, create dummy data
-        if (!wardrobeData) {
-          const dummyNFTs = [
-            {
-              id: '1',
-              token_id: 'TOKEN_001',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Cyber Punk Jacket',
-                description: 'A futuristic neon jacket for the metaverse',
-                image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400',
-                level: 5,
-                experience: 250,
-                nestable: true,
-                composable: true,
-              },
-              rarity: 'Epic',
-              is_featured: true,
-              status: 'minted'
-            },
-            {
-              id: '2',
-              token_id: 'TOKEN_002',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Holographic Sneakers',
-                description: 'Limited edition holographic footwear',
-                image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
-                level: 3,
-                experience: 120,
-                nestable: false,
-                composable: true,
-              },
-              rarity: 'Rare',
-              is_featured: false,
-              status: 'minted'
-            },
-            {
-              id: '3',
-              token_id: 'TOKEN_003',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Neon Visor',
-                description: 'High-tech AR visor with neon accents',
-                image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400',
-                level: 7,
-                experience: 480,
-                nestable: true,
-                composable: false,
-              },
-              rarity: 'Legendary',
-              is_featured: true,
-              status: 'minted'
-            },
-            {
-              id: '4',
-              token_id: 'TOKEN_004',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Digital Gloves',
-                description: 'Interactive haptic feedback gloves',
-                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400',
-                level: 2,
-                experience: 75,
-                nestable: false,
-                composable: true,
-              },
-              rarity: 'Common',
-              is_featured: false,
-              status: 'minted'
-            },
-            {
-              id: '5',
-              token_id: 'TOKEN_005',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Tech Pants',
-                description: 'Smart fabric pants with LED strips',
-                image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400',
-                level: 4,
-                experience: 180,
-                nestable: false,
-                composable: true,
-              },
-              rarity: 'Rare',
-              is_featured: false,
-              status: 'minted'
-            },
-            {
-              id: '6',
-              token_id: 'TOKEN_006',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Quantum Backpack',
-                description: 'Infinite storage quantum backpack',
-                image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
-                level: 6,
-                experience: 350,
-                nestable: true,
-                composable: false,
-              },
-              rarity: 'Epic',
-              is_featured: true,
-              status: 'minted'
-            },
-            {
-              id: '7',
-              token_id: 'TOKEN_007',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Cyber Goggles',
-                description: 'Night vision cyber goggles',
-                image: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400',
-                level: 5,
-                experience: 220,
-                nestable: true,
-                composable: true,
-              },
-              rarity: 'Epic',
-              is_featured: false,
-              status: 'minted'
-            },
-            {
-              id: '8',
-              token_id: 'TOKEN_008',
-              chain: 'unique-network',
-              metadata: {
-                name: 'Neon Boots',
-                description: 'Glowing neon boots with hover capability',
-                image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400',
-                level: 8,
-                experience: 520,
-                nestable: false,
-                composable: true,
-              },
-              rarity: 'Legendary',
-              is_featured: true,
-              status: 'minted'
-            }
-          ];
-          
-          localStorage.setItem('user_wardrobe', JSON.stringify(dummyNFTs));
-          wardrobeData = JSON.stringify(dummyNFTs);
+        console.log("🔄 Refreshing profile with accurate counts...");
+        const freshProfile = await getUserProfileWithCounts(profile.id);
+        if (freshProfile) {
+          console.log("✅ Profile updated with counts:", freshProfile);
+          setProfile(freshProfile);
         }
-        
-        const parsedNFTs = JSON.parse(wardrobeData);
-        // Transform to match expected structure
-        const transformedNFTs = parsedNFTs.map((nft: any) => ({
-          id: nft.id,
-          nfts: {
-            id: nft.id,
-            token_id: nft.token_id,
-            metadata: nft.metadata,
-            rarity: nft.rarity || 'Common'
-          },
-          is_featured: nft.is_featured || false
-        }));
-        setNfts(transformedNFTs);
       } catch (err) {
-        console.error('Failed to load wardrobe:', err);
+        console.error('Failed to refresh profile:', err);
+      }
+    };
+
+    refreshProfile();
+  }, [profile?.id, setProfile]);
+
+  // ✅ Also refresh from Supabase on mount
+  useEffect(() => {
+    const refreshProfile = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("auth_uid", userData.user.id)
+          .single();
+
+        if (error) console.warn("⚠️ Could not refresh profile:", error);
+        if (data) {
+          console.log("🔄 Latest profile fetched from Supabase:", data);
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error("❌ Error refreshing profile:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadWardrobe();
-  }, []);
+    refreshProfile();
+  }, [setProfile]);
 
-  const filteredNFTs = nfts.filter((item) => {
-    const nft = item.nfts;
-    if (filter === 'featured') return item.is_featured;
-    if (filter === 'nestable') return nft.metadata?.nestable;
-    if (filter === 'composable') return nft.metadata?.composable;
-    return true;
-  });
+  const dummyPosts = useMemo(
+    () => [
+      {
+        id: "p1",
+        author: profile,
+        content: "Exploring Web3 and creativity through code 🚀",
+        media: null,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "p2",
+        author: profile,
+        content: "Every block tells a story — let's write ours on-chain 🧠",
+        media: null,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    [profile]
+  );
 
-  const handleSelectNFT = (nftId: string) => {
-    setSelectedNFTs((prev) =>
-      prev.includes(nftId) ? prev.filter((id) => id !== nftId) : [...prev, nftId]
-    );
+  const fetchProfileData = useCallback(async () => {
+    try {
+      setPostsLoading(true);
+      
+      if (!profile?.auth_uid) {
+        navigate("/login");
+        return;
+      }
+
+      const [postsRes, repostsRes] = await Promise.all([
+        profile?.id ? socialService.getUserPosts(profile.id) : [],
+        profile?.id && socialService.getUserReposts ? socialService.getUserReposts(profile.id) : [],
+      ]);
+
+      setPosts(postsRes || dummyPosts);
+      setLocalReposts(repostsRes || []);
+    } catch (err) {
+      console.error("❌ Error loading profile data:", err);
+      setPosts(dummyPosts);
+    } finally {
+      setPostsLoading(false);
+    }
+  }, [profile?.auth_uid, profile?.id, dummyPosts, navigate]);
+
+  useEffect(() => {
+    if (!profile?.auth_uid) return;
+    fetchProfileData();
+  }, [profile?.auth_uid, fetchProfileData]);
+
+  const handleCopyWallet = async () => {
+    if (!profile?.primary_wallet) return;
+    
+    try {
+      await navigator.clipboard.writeText(profile.primary_wallet);
+      setCopiedWallet(true);
+      setTimeout(() => setCopiedWallet(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   };
 
-  const handleComposeNFTs = async () => {
-    if (selectedNFTs.length < 2) {
-      alert('Select at least 2 NFTs to compose');
-      return;
-    }
+  const formatWallet = (address: string) => {
+    if (!address) return "";
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
-    setComposing(true);
+  const handleShareProfile = async () => {
     try {
-      // Simulate composition
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const composedNFT = {
-        id: Date.now().toString(),
-        token_id: `COMPOSED_${Date.now()}`,
-        metadata: {
-          name: 'Composite Fashion NFT',
-          image: nfts.find(n => selectedNFTs.includes(n.id))?.nfts.metadata.image || '',
-          composable: true,
-          level: 1,
-          experience: 0
-        },
-        rarity: 'Epic',
-        is_featured: false,
-        created_at: new Date().toISOString(),
-        status: 'minted'
+      const shareData = {
+        title: `${profile?.display_name || "User"}'s DOTique Profile`,
+        text: `Check out ${profile?.display_name || "my"} DOTique fashion profile 👗✨`,
+        url: window.location.href
       };
 
-      // Add to wardrobe
-      const updatedWardrobe = [...nfts, {
-        id: composedNFT.id,
-        nfts: {
-          id: composedNFT.id,
-          token_id: composedNFT.token_id,
-          metadata: composedNFT.metadata,
-          rarity: composedNFT.rarity
-        },
-        is_featured: false
-      }];
-
-      setNfts(updatedWardrobe);
-      localStorage.setItem('user_wardrobe', JSON.stringify(updatedWardrobe));
-      
-      alert(`✅ Composed successfully! Token ID: ${composedNFT.token_id}`);
-      setSelectedNFTs([]);
-      setShowCompose(false);
-    } catch (err) {
-      console.error('Failed to compose:', err);
-      alert('Failed to compose NFTs');
-    } finally {
-      setComposing(false);
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Profile link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
     }
+    setShowDropdown(false);
   };
 
-  const setFeatured = (nftId: string, featured: boolean) => {
-    const updatedNFTs = nfts.map(nft => 
-      nft.id === nftId ? { ...nft, is_featured: featured } : nft
-    );
-    setNfts(updatedNFTs);
-    
-    // Save to localStorage
-    const wardrobeData = updatedNFTs.map(item => ({
-      ...item.nfts,
-      is_featured: item.is_featured
-    }));
-    localStorage.setItem('user_wardrobe', JSON.stringify(wardrobeData));
-  };
-
-  const handleListNFT = async (listingData: any) => {
+  const handleCopyLink = async () => {
     try {
-      console.log('Listing NFT:', selectedNFT, listingData);
-      alert('NFT listed successfully!');
-      setShowListModal(false);
-    } catch (err) {
-      console.error('Failed to list NFT:', err);
-      alert('Failed to list NFT');
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Profile link copied!");
+    } catch (error) {
+      console.error("Copy failed:", error);
     }
+    setShowDropdown(false);
   };
 
-  if (loading) {
-    return (
-      <div className="wardrobe-screen">
-        <div className="wardrobe-screen__loading">
-          <div className="spinner"></div>
-          <p>Loading wardrobe...</p>
-        </div>
-      </div>
-    );
+  const dropdownItems = [
+    {
+      icon: <Bell size={18} />,
+      label: "Turn on notifications",
+      action: () => {
+        alert("Notifications enabled! 🔔");
+        setShowDropdown(false);
+      }
+    },
+    {
+      icon: <Share2 size={18} />,
+      label: "Share profile",
+      action: handleShareProfile
+    },
+    {
+      icon: <LinkIcon size={18} />,
+      label: "Copy link",
+      action: handleCopyLink
+    },
+    {
+      icon: <VolumeX size={18} />,
+      label: "Mute user",
+      action: () => {
+        alert("User muted 🔇");
+        setShowDropdown(false);
+      }
+    },
+    {
+      icon: <UserX size={18} />,
+      label: "Block user",
+      action: () => {
+        if (confirm("Are you sure you want to block this user?")) {
+          alert("User blocked 🚫");
+          setShowDropdown(false);
+        }
+      },
+      danger: true
+    },
+    {
+      icon: <Flag size={18} />,
+      label: "Report",
+      action: () => {
+        alert("Report submitted 🚩");
+        setShowDropdown(false);
+      },
+      danger: true
+    }
+  ];
+
+  if (loading || !profile) {
+    return <ProfileSkeleton />;
   }
+
+  const globalReposts: any[] = [];
+  const allReposts = reposts.length ? reposts : globalReposts;
 
   return (
     <motion.div
-      className="wardrobe-screen"
+      className="profile-screen"
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Header */}
-      <div className="wardrobe-screen__header">
-        <button className="wardrobe-screen__back" onClick={() => navigate(-1)}>
-          <ArrowLeft size={20} />
-        </button>
-        <h2 className="wardrobe-screen__title">Wardrobe Gallery</h2>
-        <button
-          className="wardrobe-screen__analytics"
-          onClick={() => setShowAnalytics(!showAnalytics)}
-          title="Toggle Analytics"
-        >
-          <TrendingUp size={20} />
-        </button>
-      </div>
-
-      {/* Analytics */}
+      {/* Sticky Minimized Header */}
       <AnimatePresence>
-        {showAnalytics && (
+        {isHeaderMinimized && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="analytics-container"
+            className="profile-screen__sticky-header"
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <NFTAnalytics />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Controls */}
-      <div className="wardrobe-screen__controls">
-        <div className="filter-buttons">
-          {(['all', 'featured', 'nestable', 'composable'] as const).map((f) => (
-            <button
-              key={f}
-              className={filter === f ? 'active' : ''}
-              onClick={() => setFilter(f)}
-            >
-              {f === 'all' && <Filter size={16} />}
-              {f === 'featured' && <Star size={16} />}
-              {f === 'nestable' && <Layers size={16} />}
-              {f === 'composable' && <Layers size={16} />}
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        <div className="view-buttons">
-          <button
-            className={view === 'grid' ? 'active' : ''}
-            onClick={() => setView('grid')}
-            title="Grid View"
-          >
-            <Grid size={18} />
-          </button>
-          <button
-            className={view === 'list' ? 'active' : ''}
-            onClick={() => setView('list')}
-            title="List View"
-          >
-            <List size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Composition Mode */}
-      <AnimatePresence>
-        {selectedNFTs.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="composition-bar"
-          >
-            <span>{selectedNFTs.length} NFTs selected</span>
-            <div className="composition-actions">
-              <button 
-                className="btn-compose" 
-                onClick={handleComposeNFTs} 
-                disabled={composing || selectedNFTs.length < 2}
-              >
-                {composing ? '⏳ Composing...' : '🔗 Compose Selected'}
-              </button>
-              <button className="btn-cancel" onClick={() => setSelectedNFTs([])}>
-                Cancel
-              </button>
+            <div className="sticky-header__content">
+              <div className="sticky-header__left">
+                <div className="sticky-header__avatar">
+                  {profile.dotvatar_url ? (
+                    <img src={profile.dotvatar_url} alt="avatar" />
+                  ) : (
+                    <div className="avatar-placeholder">🪞</div>
+                  )}
+                </div>
+                <div className="sticky-header__info">
+                  <h3 className="sticky-header__name">{profile.display_name || "User"}</h3>
+                  <div className="sticky-header__stats">
+                    <span>{profile.posts_count ?? posts.length} posts</span>
+                    <span>·</span>
+                    <span>{profile.followers_count ?? 0} followers</span>
+                    <span>·</span>
+                    <span>{profile.following_count ?? 0} following</span>
+                  </div>
+                </div>
+              </div>
+              <div className="sticky-header__actions">
+                <button 
+                  className="sticky-header__btn sticky-header__btn--search"
+                  onClick={() => setShowSearchModal(true)}
+                  title="Search posts"
+                >
+                  <Search size={18} />
+                </button>
+                <button 
+                  className="sticky-header__btn sticky-header__btn--share"
+                  onClick={handleShareProfile}
+                  title="Share profile"
+                >
+                  <Share2 size={18} />
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* NFT Grid/List */}
-      <div className={`wardrobe-screen__content wardrobe-screen__content--${view}`}>
-        {filteredNFTs.length > 0 ? (
-          filteredNFTs.map((item) => {
-            const nft = item.nfts;
-            const isSelected = selectedNFTs.includes(nft.id);
-
-            return (
-              <motion.div
-                key={nft.id}
-                className={`nft-card ${isSelected ? 'nft-card--selected' : ''} ${view === 'list' ? 'nft-card--list' : ''}`}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ y: -5 }}
-                onClick={() => {
-                  if (showCompose) {
-                    handleSelectNFT(nft.id);
-                  } else {
-                    navigate(`/marketplace/nft/${nft.id}`);
-                  }
-                }}
-              >
-                {/* Preview */}
-                <div className="nft-card__image">
-                  {nft.metadata?.glb ? (
-                    <ThreeDPreview
-                      modelUrl={nft.metadata.glb}
-                      imageUrl={nft.metadata.image}
-                      name={nft.metadata.name}
-                    />
-                  ) : (
-                    <img src={nft.metadata?.image} alt={nft.token_id} />
-                  )}
-
-                  {/* Selection Overlay */}
-                  {showCompose && (
-                    <div className="nft-card__select-overlay">
-                      <div className={`select-checkbox ${isSelected ? 'checked' : ''}`}>
-                        {isSelected && '✓'}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Badges */}
-                  <div className="nft-card__badges">
-                    {item.is_featured && (
-                      <span className="badge badge--featured">
-                        <Star size={14} /> Featured
-                      </span>
-                    )}
-                    {nft.metadata?.nestable && (
-                      <span className="badge badge--nestable">
-                        <Layers size={14} /> Nestable
-                      </span>
-                    )}
-                    {nft.metadata?.composable && (
-                      <span className="badge badge--composable">
-                        <Layers size={14} /> Composable
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="nft-card__info">
-                  <h4>{nft.metadata?.name || `Token #${nft.token_id}`}</h4>
-                  <p className="nft-card__rarity">{nft.rarity || 'Common'}</p>
-
-                  {/* Dynamic Stats */}
-                  {nft.metadata?.level && (
-                    <div className="nft-stats">
-                      <div className="stat">
-                        <span className="stat-label">Level</span>
-                        <span className="stat-value">{nft.metadata.level}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">XP</span>
-                        <span className="stat-value">{nft.metadata.experience || 0}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="nft-card__actions">
-                    <button
-                      className="action-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFeatured(nft.id, !item.is_featured);
-                      }}
-                      title={item.is_featured ? 'Unfeature' : 'Feature'}
-                    >
-                      {item.is_featured ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                    <button
-                      className="action-btn action-btn--primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedNFT(nft);
-                        setShowListModal(true);
-                      }}
-                    >
-                      List for Sale
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })
-        ) : (
-          <motion.div 
-            className="wardrobe-screen__empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="wardrobe-screen__empty-icon">👗</div>
-            <p className="wardrobe-screen__empty-text">
-              {filter === 'all' 
-                ? 'No NFTs in your wardrobe yet' 
-                : `No ${filter} NFTs found`}
-            </p>
-            {filter === 'all' && (
-              <button className="btn-primary" onClick={() => navigate('/nft-studio')}>
-                Create Your First NFT
-              </button>
-            )}
-          </motion.div>
-        )}
+      {/* Banner */}
+      <div className="profile-screen__banner" ref={headerRef}>
+        {profile.banner_url ? (
+          <img src={profile.banner_url} alt="banner" className="banner-img" />
+        ) : null}
       </div>
 
-      {/* Floating Action Button */}
-      <motion.button
-        className={`fab ${showCompose ? 'fab--active' : ''}`}
-        onClick={() => {
-          setShowCompose(!showCompose);
-          if (showCompose) setSelectedNFTs([]);
-        }}
-        title={showCompose ? 'Exit Compose Mode' : 'Enter Compose Mode'}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Layers size={24} />
-      </motion.button>
+      {/* Header */}
+      <div className="profile-screen__header">
+        <div className="profile-screen__avatar-wrapper">
+          {profile.dotvatar_url ? (
+            <img src={profile.dotvatar_url} alt="avatar" className="profile-screen__avatar" />
+          ) : (
+            <div className="profile-screen__avatar-placeholder">🪞</div>
+          )}
+          {profile.verified && (
+            <div className="profile-screen__verified-badge">✓</div>
+          )}
+        </div>
 
-      {/* List Modal */}
-      {selectedNFT && (
-        <ListNFTModal
-          nft={selectedNFT}
-          isOpen={showListModal}
-          onClose={() => setShowListModal(false)}
-          onList={handleListNFT}
-        />
-      )}
+        <div className="profile-screen__name-wrapper">
+          <h2 className="profile-screen__name">{profile.display_name || "User"}</h2>
+          <div style={{ position: 'relative' }}>
+            <button 
+              className="profile-screen__more-btn"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              <MoreVertical size={20} />
+            </button>
+            
+            <AnimatePresence>
+              {showDropdown && (
+                <motion.div
+                  className="profile-screen__dropdown"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {dropdownItems.map((item, idx) => (
+                    <button
+                      key={idx}
+                      className={`profile-screen__dropdown-item ${item.danger ? 'profile-screen__dropdown-item--danger' : ''}`}
+                      onClick={item.action}
+                    >
+                      <span className="item-icon">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <p className="profile-screen__username">@{profile.username}</p>
+
+        {profile.bio && (
+          <p className="profile-screen__bio">{profile.bio}</p>
+        )}
+
+        {profile.primary_wallet && (
+          <div className="profile-screen__wallet-info" onClick={handleCopyWallet}>
+            <span className="wallet-icon">🔗</span>
+            <div className="wallet-details">
+              <div className="wallet-chain">
+                {profile.wallet_chain || "Polkadot"}
+              </div>
+              <div className="wallet-address">
+                {formatWallet(profile.primary_wallet)}
+              </div>
+            </div>
+            <span className="wallet-copy">
+              {copiedWallet ? <Check size={16} /> : <Copy size={16} />}
+            </span>
+          </div>
+        )}
+
+        <div className="profile-screen__stats">
+          <div className="profile-screen__stat" onClick={() => navigate("/followers")}>
+            <div className="stat-value">{profile.followers_count ?? 0}</div>
+            <div className="stat-label">Followers</div>
+          </div>
+          <div className="profile-screen__stat" onClick={() => navigate("/followers?tab=following")}>
+            <div className="stat-value">{profile.following_count ?? 0}</div>
+            <div className="stat-label">Following</div>
+          </div>
+          <div className="profile-screen__stat">
+            <div className="stat-value">
+              {(profile.posts_count ?? posts.length)}
+            </div>
+            <div className="stat-label">Posts</div>
+          </div>
+        </div>
+
+        <div className="profile-screen__actions">
+          <button 
+            className="profile-screen__action-btn profile-screen__action-btn--primary"
+            onClick={() => navigate("/profile/edit")}
+          >
+            <Edit size={18} />
+            Edit Profile
+          </button>
+          <button 
+            className="profile-screen__action-btn profile-screen__action-btn--secondary"
+            onClick={handleShareProfile}
+          >
+            <Share2 size={18} />
+            Share
+          </button>
+          <button 
+            className="profile-screen__action-btn profile-screen__action-btn--icon"
+            onClick={() => navigate("/settings")}
+          >
+            <Settings size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="profile-screen__tabs">
+        <button
+          className={`profile-screen__tab ${activeTab === "posts" ? "active" : ""}`}
+          onClick={() => setActiveTab("posts")}
+        >
+          <span className="tab-icon">📸</span>
+          <span>Posts</span>
+        </button>
+        <button
+          className={`profile-screen__tab ${activeTab === "tagged" ? "active" : ""}`}
+          onClick={() => setActiveTab("tagged")}
+        >
+          <span className="tab-icon">🏷️</span>
+          <span>Tagged</span>
+        </button>
+        <button
+          className={`profile-screen__tab ${activeTab === "wardrobe" ? "active" : ""}`}
+          onClick={() => setActiveTab("wardrobe")}
+        >
+          <span className="tab-icon">👗</span>
+          <span>Wardrobe</span>
+        </button>
+      </div>
+
+      <div className="profile-screen__content">
+        <AnimatePresence mode="wait">
+          {activeTab === "posts" && (
+            <motion.div
+              key="posts"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              {postsLoading ? (
+                <SkeletonGrid type="post" count={3} />
+              ) : posts.length === 0 && allReposts.length === 0 ? (
+                <div className="profile-screen__empty-state">
+                  <div className="empty-icon">📭</div>
+                  <p className="empty-text">No posts yet</p>
+                  <button className="empty-cta" onClick={() => navigate("/home")}>
+                    Create your first post
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {posts.map((p) => (
+                    <PostCard key={p.id} post={p} />
+                  ))}
+                  {allReposts.map((r: any) =>
+                    r.type === "nft" ? (
+                      <NFTCard key={r.id} nft={r.nft || r} />
+                    ) : (
+                      <PostCard key={r.id} post={r.post || r} />
+                    )
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "tagged" && (
+            <motion.div
+              key="tagged"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="profile-screen__empty-state">
+                <div className="empty-icon">🏷️</div>
+                <p className="empty-text">No tagged posts yet</p>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "wardrobe" && (
+            <motion.div
+              key="wardrobe"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <WardrobeTab />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }

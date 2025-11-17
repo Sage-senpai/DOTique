@@ -1,569 +1,488 @@
-// src/components/Posts/CreatePostModal.scss (MERGED FINAL)
-// 🎨 Global Color Variables
+// src/components/Posts/CreatePostModal.scss - COMPLETE STYLES
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
 $color-neutral: #31323e;
+$color-danger: #ff6b6b;
+$color-success: #51cf66;
+$font: "Poppins", sans-serif;
 
-// =====================================================
-// Overlay + Base Layout
-// =====================================================
-.modal-overlay {
+.create-post-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  padding: 16px;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 200ms ease;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-// =====================================================
-// Modal Container
-// =====================================================
-.modal-content {
-  background: white;
-  border-radius: 16px;
+.create-post-modal-content {
+  background: linear-gradient(
+    135deg,
+    rgba($color-neutral, 0.98) 0%,
+    rgba($color-secondary, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($color-primary, 0.3);
+  border-radius: 20px;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 300ms ease;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  transition: background 200ms ease;
+  overflow-y: auto;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  animation: slideUp 0.3s ease;
+  position: relative;
 
-  @keyframes slideUp {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba($color-primary, 0.1) 0%,
+      transparent 100%
+    );
+    pointer-events: none;
+    border-radius: 20px;
   }
 
-  // Dark Mode Variant
-  &.dark {
-    background: rgba($color-neutral, 0.95);
-    border: 1px solid rgba($color-accent, 0.1);
-    color: $color-accent;
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($color-neutral, 0.3);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($color-primary, 0.5);
+    border-radius: 10px;
+
+    &:hover {
+      background: rgba($color-primary, 0.7);
+    }
   }
 }
 
-// =====================================================
-// Header
-// =====================================================
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 24px;
+  border-bottom: 1px solid rgba($color-accent, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba($color-primary, 0.08) 0%,
+    transparent 100%
+  );
 
   h2 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    color: $color-primary;
-    margin: 0;
+    color: $color-accent;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 15%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .close-btn {
-    background: none;
+    background: rgba($color-danger, 0.1);
     border: none;
-    color: #666;
+    color: $color-danger;
     cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 200ms ease;
+    transition: all 0.3s ease;
 
     &:hover {
-      background: #f0f0f0;
-      color: $color-primary;
-    }
-  }
-
-  .dark & {
-    border-bottom: 1px solid rgba($color-accent, 0.1);
-
-    h2 {
-      color: $color-accent;
+      background: rgba($color-danger, 0.2);
+      transform: scale(1.1) rotate(90deg);
     }
 
-    .close-btn {
-      color: $color-accent;
-
-      &:hover {
-        color: $color-primary;
-        background: rgba(255, 255, 255, 0.1);
-      }
+    &:active {
+      transform: scale(0.95) rotate(90deg);
     }
   }
 }
 
-// =====================================================
-// Tabs (Post / NFT Switcher)
-// =====================================================
-.post-type-tabs {
+.post-form {
+  padding: 24px;
   display: flex;
-  gap: 0;
-  padding: 0 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
-
-  .tab {
-    flex: 1;
-    padding: 16px;
-    background: none;
-    border: none;
-    color: rgba(#333, 0.6);
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 200ms ease;
-    border-bottom: 2px solid transparent;
-
-    &:hover {
-      color: #333;
-    }
-
-    &.active {
-      color: $color-primary;
-      border-bottom-color: $color-primary;
-    }
-  }
-
-  .dark & {
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba($color-accent, 0.1);
-
-    .tab {
-      color: rgba($color-accent, 0.6);
-
-      &:hover {
-        color: $color-accent;
-      }
-
-      &.active {
-        color: $color-primary;
-        border-bottom-color: $color-primary;
-      }
-    }
-  }
+  flex-direction: column;
+  gap: 20px;
 }
 
-// =====================================================
-// Forms
-// =====================================================
-.post-form,
-.nft-form {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.nft-notice {
-  background: rgba($color-primary, 0.1);
-  border-left: 4px solid $color-primary;
-  padding: 12px 16px;
-  border-radius: 4px;
-  color: $color-primary;
-  font-size: 13px;
-  margin-bottom: 20px;
-}
-
-// =====================================================
-// 🆕 Textarea Wrapper (for mention dropdown positioning)
-// =====================================================
 .textarea-wrapper {
   position: relative;
-  margin-bottom: 16px;
 
   .form-textarea {
-    margin-bottom: 8px;
-  }
-
-  // 🆕 Mention Suggestions Dropdown
-  .mention-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    margin-top: 4px;
-    animation: dropdownSlide 200ms ease;
-
-    @keyframes dropdownSlide {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .mention-suggestion-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      cursor: pointer;
-      transition: background 150ms ease;
-      border-bottom: 1px solid #f5f5f5;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:hover {
-        background: rgba($color-primary, 0.05);
-      }
-
-      .avatar-small {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        flex-shrink: 0;
-      }
-
-      .user-info-small {
-        flex: 1;
-
-        .display-name-small {
-          font-weight: 600;
-          font-size: 14px;
-          color: #333;
-        }
-
-        .username-small {
-          font-size: 13px;
-          color: #666;
-        }
-      }
-    }
-
-    // Dark mode for mention dropdown
-    .dark & {
-      background: rgba($color-neutral, 0.95);
-      border-color: rgba($color-accent, 0.1);
-
-      .mention-suggestion-item {
-        border-bottom-color: rgba($color-accent, 0.05);
-
-        &:hover {
-          background: rgba($color-primary, 0.15);
-        }
-
-        .user-info-small {
-          .display-name-small {
-            color: $color-accent;
-          }
-
-          .username-small {
-            color: rgba($color-accent, 0.6);
-          }
-        }
-      }
-    }
-  }
-
-  // 🆕 Character Counter
-  .char-count {
-    text-align: right;
-    font-size: 12px;
-    color: #999;
-    margin-top: 4px;
-
-    .dark & {
-      color: rgba($color-accent, 0.6);
-    }
-  }
-}
-
-// =====================================================
-// Form Inputs & Textareas
-// =====================================================
-.form-input,
-.form-textarea {
-  font-family: inherit;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  color: #000;
-  padding: 12px;
-  width: 100%;
-  margin-bottom: 12px;
-  font-size: 14px;
-  transition: all 150ms ease;
-
-  &::placeholder {
-    color: #999;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(96, 81, 155, 0.1);
-  }
-
-  .dark & {
-    background: rgba($color-neutral, 0.9);
-    border: 1px solid rgba($color-accent, 0.1);
+    width: 100%;
+    min-height: 140px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba($color-primary, 0.2);
+    border-radius: 12px;
     color: $color-accent;
-
-    &::placeholder {
-      color: rgba($color-accent, 0.5);
-    }
+    font-family: $font;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.3s ease;
 
     &:focus {
-      background: rgba($color-neutral, 1);
+      outline: none;
       border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba(96, 81, 155, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 0 4px rgba($color-primary, 0.1);
+    }
+
+    &::placeholder {
+      color: rgba($color-accent, 0.4);
     }
   }
-}
 
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-// =====================================================
-// Form Group (for NFT fields)
-// =====================================================
-.form-group {
-  margin-bottom: 16px;
-
-  label {
-    display: block;
-    font-size: 13px;
+  .char-count {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    font-size: 12px;
+    color: rgba($color-accent, 0.5);
     font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
+    padding: 4px 8px;
+    background: rgba($color-neutral, 0.8);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+}
 
-    .dark & {
-      color: $color-accent;
+.mention-suggestions {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba($color-neutral, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($color-primary, 0.3);
+  border-radius: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($color-neutral, 0.3);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($color-primary, 0.5);
+    border-radius: 3px;
+  }
+
+  .mention-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba($color-primary, 0.15);
+    }
+
+    .avatar-small {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba($color-primary, 0.3), rgba($color-primary, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .user-info-small {
+      flex: 1;
+      min-width: 0;
+
+      .display-name-small {
+        font-size: 14px;
+        font-weight: 600;
+        color: $color-accent;
+        margin-bottom: 2px;
+      }
+
+      .username-small {
+        font-size: 12px;
+        color: rgba($color-accent, 0.6);
+      }
     }
   }
-
-  &.half {
-    flex: 1;
-  }
 }
 
-.form-row {
-  display: flex;
-  gap: 12px;
-}
-
-// =====================================================
-// Image Preview
-// =====================================================
-.image-preview {
+.media-preview {
   position: relative;
-  margin-bottom: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba($color-primary, 0.2);
 
   img {
     width: 100%;
-    height: 200px;
+    height: 300px;
     object-fit: cover;
+    display: block;
   }
 
-  .remove-image {
+  .video-preview-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: #000;
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .remove-media {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(0, 0, 0, 0.6);
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
     color: white;
     border: none;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    transition: background 200ms ease;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    z-index: 10;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba($color-danger, 0.9);
+      transform: scale(1.1) rotate(90deg);
+    }
+
+    &:active {
+      transform: scale(0.95) rotate(90deg);
     }
   }
 }
 
-// =====================================================
-// Media Tools
-// =====================================================
 .media-tools {
   display: flex;
-  gap: 8px;
-  margin: 16px 0;
+  gap: 12px;
   flex-wrap: wrap;
 
   .media-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     padding: 10px 16px;
-    background: rgba($color-primary, 0.15);
+    background: rgba($color-primary, 0.1);
     border: 1px solid rgba($color-primary, 0.3);
-    border-radius: 8px;
-    color: $color-primary;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 13px;
+    border-radius: 10px;
+    color: $color-accent;
+    font-size: 14px;
     font-weight: 500;
-    transition: all 150ms ease;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: $font;
 
     &:hover {
-      background: rgba($color-primary, 0.25);
-      transform: translateY(-2px);
-    }
-
-    span {
-      font-size: 12px;
-    }
-
-    .dark & {
       background: rgba($color-primary, 0.2);
-      border: 1px solid rgba($color-primary, 0.3);
-      color: $color-accent;
+      border-color: $color-primary;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($color-primary, 0.3);
+    }
 
-      &:hover {
-        background: rgba($color-primary, 0.3);
-      }
+    &:active {
+      transform: translateY(0);
+    }
+
+    svg {
+      transition: transform 0.3s ease;
+    }
+
+    &:hover svg {
+      transform: scale(1.1);
     }
   }
 }
 
-// =====================================================
-// Modal Actions
-// =====================================================
 .modal-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
-  padding: 20px;
-  border-top: 1px solid #f0f0f0;
-  background: #fafafa;
+  padding-top: 8px;
 
-  .btn-primary,
-  .btn-secondary {
-    flex: 1;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 14px;
+  button {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 600;
+    font-family: $font;
     cursor: pointer;
-    transition: all 200ms ease;
+    transition: all 0.3s ease;
+    border: none;
 
     &:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
     }
   }
 
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: $color-accent;
+    border: 1px solid rgba($color-accent, 0.2);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
   .btn-primary {
-    background: linear-gradient(135deg, $color-primary, #7263b3);
+    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
     color: white;
+    box-shadow: 0 4px 12px rgba($color-primary, 0.4);
 
     &:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba($color-primary, 0.3);
-    }
-  }
-
-  .btn-secondary {
-    background: white;
-    border: 1px solid #e0e0e0;
-    color: #333;
-
-    &:hover:not(:disabled) {
-      background: #f5f5f5;
-    }
-  }
-
-  .dark & {
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba($color-accent, 0.1);
-
-    .btn-primary {
-      background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
+      box-shadow: 0 6px 20px rgba($color-primary, 0.5);
     }
 
-    .btn-secondary {
-      background: rgba($color-neutral, 0.8);
-      border: 1px solid rgba($color-accent, 0.1);
-      color: $color-accent;
-
-      &:hover:not(:disabled) {
-        background: rgba($color-neutral, 1);
-      }
+    &:active:not(:disabled) {
+      transform: translateY(0);
     }
   }
 }
 
-// =====================================================
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 // Responsive
-// =====================================================
 @media (max-width: 768px) {
-  .modal-content {
+  .create-post-modal-content {
     max-width: 100%;
-    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+    border-radius: 16px;
   }
 
-  .post-form,
-  .nft-form {
-    padding: 16px;
+  .modal-header {
+    padding: 20px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+
+  .post-form {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .media-preview {
+    img,
+    .video-preview-container {
+      height: 250px;
+    }
   }
 
   .media-tools {
+    .media-btn span {
+      display: none;
+    }
+
     .media-btn {
-      span {
-        display: none; // Hide text on mobile, keep icons only
-      }
+      padding: 10px;
+      justify-content: center;
+      min-width: 44px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .create-post-modal-overlay {
+    padding: 12px;
+  }
+
+  .create-post-modal-content {
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .post-form {
+    padding: 16px;
+  }
+
+  .textarea-wrapper .form-textarea {
+    min-height: 120px;
+    font-size: 14px;
+  }
+
+  .media-preview {
+    img,
+    .video-preview-container {
+      height: 200px;
     }
   }
 
-  .textarea-wrapper {
-    .mention-suggestions {
-      max-height: 150px; // Smaller on mobile
-    }
+  .modal-actions button {
+    padding: 10px 20px;
+    font-size: 14px;
   }
 }

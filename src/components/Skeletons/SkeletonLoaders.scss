@@ -1,0 +1,346 @@
+// src/components/Skeletons/SkeletonLoaders.scss
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-neutral: #31323e;
+
+// Base skeleton styles
+.skeleton {
+  &-line,
+  &-avatar,
+  &-action,
+  &-button,
+  &-stat,
+  &-meta-item {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  &-line {
+    height: 12px;
+    margin-bottom: 8px;
+
+    &--name {
+      width: 40%;
+      height: 16px;
+    }
+
+    &--username {
+      width: 30%;
+      height: 12px;
+    }
+
+    &--title {
+      width: 60%;
+      height: 18px;
+    }
+
+    &--text {
+      width: 100%;
+      height: 14px;
+    }
+
+    &--text-short {
+      width: 70%;
+      height: 14px;
+    }
+
+    &--price {
+      width: 40%;
+      height: 16px;
+      margin-top: 8px;
+    }
+  }
+
+  &-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+
+  &-action {
+    width: 60px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  &-button {
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  &-stat {
+    width: 60px;
+    height: 48px;
+    border-radius: 8px;
+  }
+
+  &-meta-item {
+    width: 80px;
+    height: 24px;
+    border-radius: 6px;
+  }
+}
+
+// Post Skeleton
+.skeleton-post {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid rgba($color-primary, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+
+  &__header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__content {
+    margin-bottom: 16px;
+  }
+
+  &__media {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+// NFT Skeleton
+.skeleton-nft {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid rgba($color-primary, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+
+  &__image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  &__content {
+    padding: 16px;
+  }
+}
+
+// Community Skeleton
+.skeleton-community {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid rgba($color-primary, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+
+  &__cover {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  &__content {
+    padding: 20px;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+  }
+}
+
+// Profile Skeleton
+.skeleton-profile {
+  &__banner {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  &__header {
+    padding: 0 24px 24px;
+    margin-top: -60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border: 4px solid $color-secondary;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+}
+
+// Message Skeleton
+.skeleton-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+
+  &__content {
+    flex: 1;
+  }
+}
+
+// Grid Layouts
+.skeleton-grid {
+  display: grid;
+  gap: 16px;
+
+  &--post {
+    grid-template-columns: 1fr;
+  }
+
+  &--nft {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  &--community {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  &--message {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+// Animation
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .skeleton-nft__image {
+    height: 160px;
+  }
+
+  .skeleton-community__cover {
+    height: 140px;
+  }
+
+  .skeleton-profile__banner {
+    height: 160px;
+  }
+
+  .skeleton-profile__avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .skeleton-grid {
+    &--nft {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    &--community {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .skeleton-post__media {
+    height: 200px;
+  }
+
+  .skeleton-nft__image {
+    height: 140px;
+  }
+
+  .skeleton-grid--nft {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

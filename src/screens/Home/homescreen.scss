@@ -19,28 +19,35 @@ $font: "Poppins", sans-serif;
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  height: 100%;
+// CRITICAL FIX: Don't use height: 100% - it breaks sticky!
+html {
   width: 100%;
+  overflow-x: hidden;
 }
 
 body {
+  width: 100%;
   font-family: $font;
   background: $color-secondary;
   color: $color-accent;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh; // Use min-height instead of height
 }
 
 // ============================================================
-// HOME PAGE
+// HOME PAGE - CRITICAL: No height constraints!
 // ============================================================
 .home-page {
-  min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 90px; // Space for bottom nav
+  padding-bottom: 90px;
+  /* NO min-height property here! */
 }
 
 // ============================================================
@@ -275,7 +282,7 @@ body {
 }
 
 // ============================================================
-// MAIN CONTAINER
+// MAIN CONTAINER - CRITICAL FIX FOR STICKY SIDEBARS
 // ============================================================
 .home-container {
   display: grid;
@@ -286,6 +293,12 @@ body {
   margin: 0 auto;
   flex: 1;
   width: 100%;
+  
+  // CRITICAL: Allow grid items to have their own height
+  align-items: start; // This is the key property that was missing!
+  
+  // Ensure the container itself doesn't create overflow issues
+  overflow: visible;
 }
 
 // ============================================================
@@ -295,6 +308,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-height: 0; // Important for proper scrolling
 
   .feed-tabs {
     display: flex;
@@ -383,6 +397,68 @@ body {
       .tab-icon {
         transform: scale(1.2);
         filter: drop-shadow(0 0 8px rgba($color-primary, 0.6));
+      }
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  .refreshing-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba($color-primary, 0.1);
+    border-bottom: 1px solid rgba($color-primary, 0.2);
+    color: $color-primary;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba($color-primary, 0.3);
+      border-top-color: $color-primary;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  .communities-feed-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-radius: 0 0 12px 12px;
+
+    .view-message {
+      margin: 0 0 20px 0;
+      color: rgba($color-accent, 0.8);
+      font-size: 16px;
+      max-width: 400px;
+    }
+
+    .visit-communities-btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      font-family: $font;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($color-primary, 0.4);
       }
     }
   }
@@ -487,6 +563,21 @@ body {
   to {
     width: 60%;
     opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -647,7 +738,108 @@ body {
   }
 
   .fab {
-    bottom: 90px;
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom)); // Account for bottom nav + safe area
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    0 8px 24px rgba($color-primary, 0.5),
+    0 0 0 4px rgba($color-primary, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 999; // Higher than bottom nav (typically 998)
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 70%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  .fab-glow {
+    position: absolute;
+    inset: -8px;
+    background: radial-gradient(
+      circle,
+      rgba($color-primary, 0.4) 0%,
+      transparent 70%
+    );
+    filter: blur(12px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  &:hover {
+    transform: scale(1.15) translateY(-4px);
+    box-shadow: 
+      0 12px 32px rgba($color-primary, 0.6),
+      0 0 0 6px rgba($color-primary, 0.2);
+
+    .fab-glow {
+      opacity: 1;
+      animation: pulse 2s ease-in-out infinite;
+    }
+  }
+
+  &:active {
+    transform: scale(1.05) translateY(-2px);
+  }
+}
+
+// ============================================================
+// RESPONSIVE FAB POSITIONING
+// ============================================================
+
+// Tablets and medium screens
+@media (max-width: 1200px) {
+  .fab {
+    bottom: calc(85px + env(safe-area-inset-bottom));
+    right: 20px;
+    width: 56px;
+    height: 56px;
+
+    svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+}
+
+// Mobile devices
+@media (max-width: 768px) {
+  .fab {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    right: 16px;
+    width: 52px;
+    height: 52px;
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// Small mobile devices
+@media (max-width: 480px) {
+  .fab {
+    bottom: calc(75px + env(safe-area-inset-bottom));
     right: 12px;
     width: 48px;
     height: 48px;
@@ -659,12 +851,48 @@ body {
   }
 }
 
-@media (max-height: 700px) {
-  .home-page {
-    padding-bottom: 75px;
-  }
-
+// Very small screens (iPhone SE, etc.)
+@media (max-width: 375px) {
   .fab {
-    bottom: 85px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    right: 10px;
+    width: 46px;
+    height: 46px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
   }
+}
+
+// Landscape orientation on mobile
+@media (max-height: 500px) and (orientation: landscape) {
+  .fab {
+    bottom: 16px; // Much closer to bottom in landscape
+    right: 16px;
+    width: 44px;
+    height: 44px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Ultra-wide screens
+@media (min-width: 1920px) {
+  .fab {
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    right: 32px;
+    width: 64px;
+    height: 64px;
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}
 }

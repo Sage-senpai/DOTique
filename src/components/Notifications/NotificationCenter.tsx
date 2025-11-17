@@ -1,27 +1,30 @@
 // src/components/Notifications/NotificationCenter.tsx - ENHANCED
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, CheckCheck } from 'lucide-react';
+import { Bell, X, CheckCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { notificationService, type Notification } from '../../services/notificationService';
+import { notificationService } from '../../services/notificationService';
 import './NotificationCenter.scss';
 
-const NotificationCenter: React.FC = () => {
+const NotificationCenter = () => {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (profile?.id) {
       loadNotifications();
+      loadUnreadCount();
       
       // Subscribe to real-time notifications
       const unsubscribe = notificationService.subscribeToNotifications(
         profile.id,
         (newNotification) => {
           setNotifications(prev => [newNotification, ...prev]);
+          setUnreadCount(prev => prev + 1);
           
           // Show browser notification
           if ('Notification' in window && Notification.permission === 'granted') {
@@ -32,9 +35,9 @@ const NotificationCenter: React.FC = () => {
             });
           }
 
-          // Play sound (optional)
-          const audio = new Audio('/notification-sound.mp3');
-          audio.volume = 0.3;
+          // Play subtle sound
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVKjn77RnGAU+ltryxnMpBSl+zPLaizsIG2S57OihUxELTKXh8bllHAU2jtXzzn0vBSF1xe/glEILEl2z6+yoVxQLRZziEL');
+          audio.volume = 0.2;
           audio.play().catch(() => {});
         }
       );
@@ -62,13 +65,20 @@ const NotificationCenter: React.FC = () => {
     }
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const loadUnreadCount = async () => {
+    if (!profile?.id) return;
+    const count = await notificationService.getUnreadCount(profile.id);
+    setUnreadCount(count);
+  };
+
+  const handleNotificationClick = async (notification) => {
     // Mark as read
     if (!notification.read) {
       await notificationService.markAsRead(notification.id);
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     }
 
     // Navigate to action URL
@@ -83,33 +93,41 @@ const NotificationCenter: React.FC = () => {
     
     await notificationService.markAllAsRead(profile.id);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
-  const getTimeAgo = (dateString: string): string => {
+  const handleDeleteNotification = async (e, notificationId) => {
+    e.stopPropagation();
+    await notificationService.deleteNotification(notificationId);
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+  };
+
+  const getTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const minutes = Math.floor((Date.now() - date.getTime()) / (1000 * 60));
     if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m`;
+    if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days}d`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
   };
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'like': return '❤️';
-      case 'follow': return '👥';
-      case 'comment': return '💬';
-      case 'repost': return '🔄';
-      case 'purchase': return '💎';
-      case 'donation': return '💰';
-      case 'milestone': return '🎉';
-      default: return '🔔';
-    }
+  const getNotificationIcon = (type) => {
+    const icons = {
+      like: '❤️',
+      follow: '👥',
+      comment: '💬',
+      repost: '🔄',
+      purchase: '💎',
+      donation: '💰',
+      milestone: '🎉',
+      mention: '@'
+    };
+    return icons[type] || '🔔';
   };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="notification-center">
@@ -133,14 +151,14 @@ const NotificationCenter: React.FC = () => {
               <div className="notification-actions">
                 {unreadCount > 0 && (
                   <button
-                    className="mark-all-btn"
+                    className="action-btn"
                     onClick={handleMarkAllAsRead}
                     title="Mark all as read"
                   >
                     <CheckCheck size={18} />
                   </button>
                 )}
-                <button className="close-btn" onClick={() => setIsOpen(false)}>
+                <button className="action-btn" onClick={() => setIsOpen(false)}>
                   <X size={18} />
                 </button>
               </div>
@@ -150,7 +168,7 @@ const NotificationCenter: React.FC = () => {
               {loading ? (
                 <div className="notification-loading">
                   <div className="spinner"></div>
-                  <p>Loading...</p>
+                  <p>Loading notifications...</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="notification-empty">
@@ -173,7 +191,9 @@ const NotificationCenter: React.FC = () => {
                       {notif.actor?.avatar_url ? (
                         <img src={notif.actor.avatar_url} alt={notif.actor.display_name} />
                       ) : (
-                        notif.actor?.display_name?.charAt(0).toUpperCase() || '?'
+                        <div className="avatar-placeholder">
+                          {notif.actor?.display_name?.charAt(0).toUpperCase() || '?'}
+                        </div>
                       )}
                     </div>
 
@@ -190,6 +210,14 @@ const NotificationCenter: React.FC = () => {
                     {!notif.read && (
                       <div className="notification-dot"></div>
                     )}
+
+                    <button
+                      className="delete-btn"
+                      onClick={(e) => handleDeleteNotification(e, notif.id)}
+                      title="Delete notification"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 ))
               )}

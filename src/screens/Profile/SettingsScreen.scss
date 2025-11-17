@@ -1,0 +1,446 @@
+// src/screens/Profile/SettingsScreen.scss
+$color-primary: #60519b;
+$color-secondary: #1e202c;
+$color-accent: #bfc0d1;
+$color-neutral: #31323e;
+$color-danger: #ff6b6b;
+$color-success: #22c55e;
+$font: "Poppins", sans-serif;
+
+.settings-screen {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-secondary;
+  font-family: $font;
+  padding-bottom: 90px;
+
+  // Header
+  &__header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(
+      135deg,
+      rgba($color-primary, 0.2) 0%,
+      rgba($color-neutral, 0.8) 100%
+    );
+    border-bottom: 1px solid rgba($color-primary, 0.3);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+
+    .header-glow {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba($color-primary, 0.1) 50%,
+        transparent 100%
+      );
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+  }
+
+  &__back {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba($color-neutral, 0.6);
+    border: 1px solid rgba($color-primary, 0.3);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1;
+
+    &:hover {
+      background: rgba($color-primary, 0.6);
+      border-color: $color-primary;
+      transform: scale(1.05);
+    }
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    text-shadow: 0 0 20px rgba($color-primary, 0.6);
+    z-index: 1;
+  }
+
+  // Profile Summary
+  &__profile-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+    background: rgba($color-neutral, 0.4);
+    border-bottom: 1px solid rgba($color-primary, 0.2);
+    backdrop-filter: blur(10px);
+
+    .profile-avatar {
+      position: relative;
+      width: 64px;
+      height: 64px;
+
+      img,
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid $color-secondary;
+        background: rgba($color-primary, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      }
+
+      .avatar-ring {
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
+        animation: rotate 3s linear infinite;
+        z-index: -1;
+      }
+    }
+
+    .profile-info {
+      flex: 1;
+
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        margin: 0 0 4px;
+      }
+
+      p {
+        font-size: 14px;
+        color: rgba($color-accent, 0.7);
+        margin: 0;
+      }
+    }
+  }
+
+  // Content
+  &__content {
+    flex: 1;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  // Settings Group
+  .settings-group {
+    background: rgba($color-neutral, 0.3);
+    border: 1px solid rgba($color-primary, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+
+    &__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba($color-primary, 0.1);
+      border-bottom: 1px solid rgba($color-primary, 0.2);
+
+      svg {
+        color: $color-primary;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+      }
+    }
+
+    &__items {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+
+  // Settings Item
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: $color-accent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba($color-primary, 0.05), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    &:hover {
+      background: rgba($color-primary, 0.15);
+      color: white;
+
+      &::before {
+        transform: translateX(100%);
+      }
+
+      .settings-item__icon {
+        color: $color-primary;
+        transform: scale(1.1);
+      }
+    }
+
+    &__left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      transition: all 0.3s ease;
+    }
+
+    &__label {
+      font-size: 15px;
+      font-weight: 500;
+      font-family: $font;
+    }
+
+    &__chevron {
+      font-size: 24px;
+      opacity: 0.5;
+      transition: all 0.3s ease;
+    }
+
+    &:hover &__chevron {
+      opacity: 1;
+      transform: translateX(4px);
+    }
+  }
+
+  // Toggle Switch
+  .toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: rgba($color-accent, 0.2);
+    border-radius: 13px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    .toggle-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    &.active {
+      background: $color-primary;
+
+      .toggle-slider {
+        transform: translateX(24px);
+      }
+    }
+  }
+
+  // Danger Zone
+  &__danger-zone {
+    margin-top: auto;
+    padding: 20px;
+    background: rgba($color-danger, 0.05);
+    border: 1px solid rgba($color-danger, 0.2);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .danger-zone__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba($color-danger, 0.2);
+
+      svg {
+        color: $color-danger;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: $color-danger;
+        margin: 0;
+      }
+    }
+  }
+
+  .danger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-family: $font;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+
+    &:hover::before {
+      transform: translateX(100%);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--logout {
+      background: rgba($color-accent, 0.1);
+      color: $color-accent;
+      border: 1px solid rgba($color-accent, 0.3);
+
+      &:hover:not(:disabled) {
+        background: rgba($color-accent, 0.2);
+        border-color: $color-accent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($color-accent, 0.3);
+      }
+    }
+
+    &--delete {
+      background: rgba($color-danger, 0.1);
+      color: $color-danger;
+      border: 1px solid rgba($color-danger, 0.3);
+
+      &:hover:not(:disabled) {
+        background: $color-danger;
+        color: white;
+        border-color: $color-danger;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba($color-danger, 0.4);
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .settings-screen {
+    &__header {
+      padding: 16px 20px;
+    }
+
+    &__title {
+      font-size: 20px;
+    }
+
+    &__profile-summary {
+      padding: 20px;
+
+      .profile-avatar {
+        width: 56px;
+        height: 56px;
+      }
+    }
+
+    &__content {
+      padding: 20px 12px;
+      gap: 20px;
+    }
+
+    .settings-item {
+      padding: 12px 14px;
+
+      &__label {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-screen {
+    &__header {
+      padding: 14px 16px;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+
+    &__profile-summary {
+      padding: 16px;
+    }
+  }
+}

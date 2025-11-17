@@ -1,101 +1,167 @@
-// src/screens/Profile/FollowerScreen.scss - ENHANCED
+// src/screens/Profile/FollowerScreen.scss
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
 $color-neutral: #31323e;
+$color-success: #22c55e;
+$font: "Poppins", sans-serif;
 
 .followers-screen {
+  width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: $color-secondary;
-  padding: 0 0 80px 0;
-  color: $color-accent;
+  font-family: $font;
+  padding-bottom: 90px;
 
+  // Header
   &__header {
+    position: relative;
     display: flex;
     align-items: center;
-    padding: 20px;
-    background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(
+      135deg,
+      rgba($color-primary, 0.2) 0%,
+      rgba($color-neutral, 0.8) 100%
+    );
+    border-bottom: 1px solid rgba($color-primary, 0.3);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba($color-primary, 0.1) 50%,
+        transparent 100%
+      );
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+    }
   }
 
   &__back {
-    margin-right: 16px;
-    font-size: 24px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
+    background: rgba($color-neutral, 0.6);
+    border: 1px solid rgba($color-primary, 0.3);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     cursor: pointer;
-    transition: background 200ms ease;
+    transition: all 0.3s ease;
+    z-index: 1;
+    font-size: 24px;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba($color-primary, 0.6);
+      border-color: $color-primary;
+      transform: scale(1.05);
     }
   }
 
   &__title {
-    font-size: 22px;
+    flex: 1;
+    font-size: 24px;
     font-weight: 700;
     color: white;
     margin: 0;
+    text-shadow: 0 0 20px rgba($color-primary, 0.6);
+    z-index: 1;
   }
 
+  // Tabs
   &__tabs {
     display: flex;
-    justify-content: space-around;
-    background: rgba($color-neutral, 0.6);
-    border-bottom: 1px solid rgba($color-accent, 0.1);
+    gap: 0;
+    background: rgba($color-neutral, 0.3);
+    border-bottom: 2px solid rgba($color-primary, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 4px;
   }
 
   &__tab {
     flex: 1;
-    background: none;
-    border: none;
-    padding: 16px 12px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    color: rgba($color-accent, 0.6);
-    transition: all 200ms ease;
-    border-bottom: 2px solid transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-
-    &:hover {
-      color: $color-accent;
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    &.active {
-      color: $color-primary;
-      border-bottom-color: $color-primary;
-      background: rgba($color-primary, 0.05);
-    }
+    gap: 6px;
+    padding: 14px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: rgba($color-accent, 0.6);
+    font-family: $font;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
 
     .tab-label {
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     .tab-count {
       font-size: 18px;
       font-weight: 700;
+      color: rgba($color-accent, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $color-primary, lighten($color-primary, 15%));
+      border-radius: 3px 3px 0 0;
+      transition: width 0.3s ease;
+    }
+
+    &:hover {
+      color: $color-accent;
+      background: rgba($color-primary, 0.1);
+
+      .tab-count {
+        color: $color-accent;
+      }
+    }
+
+    &.active {
+      color: white;
+      background: rgba($color-primary, 0.3);
+
+      .tab-count {
+        color: $color-primary;
+        text-shadow: 0 0 12px rgba($color-primary, 0.8);
+      }
+
+      &::after {
+        width: 80%;
+      }
     }
   }
 
+  // List
   &__list {
-    padding: 16px;
+    flex: 1;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    overflow-y: auto;
   }
 
   &__loading {
@@ -103,153 +169,208 @@ $color-neutral: #31323e;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
-    color: rgba($color-accent, 0.6);
+    padding: 80px 20px;
+    gap: 16px;
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba($color-primary, 0.2);
-      border-top: 3px solid $color-primary;
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba($color-primary, 0.2);
+      border-top-color: $color-primary;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 16px;
     }
 
     p {
-      font-size: 14px;
+      color: rgba($color-accent, 0.7);
       margin: 0;
     }
   }
 
   &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
     text-align: center;
-    padding: 60px 20px;
-    color: rgba($color-accent, 0.5);
 
     .empty-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
     }
 
     .empty-text {
-      font-size: 15px;
+      font-size: 16px;
+      color: rgba($color-accent, 0.6);
       margin: 0;
     }
   }
 }
 
+// Follower Card
 .follower-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 16px;
-  background: rgba($color-neutral, 0.6);
-  border: 1px solid rgba($color-accent, 0.1);
-  border-radius: 12px;
-  transition: all 200ms ease;
+  background: rgba($color-neutral, 0.4);
+  border: 1px solid rgba($color-primary, 0.2);
+  border-radius: 16px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba($color-primary, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
 
   &:hover {
-    background: rgba($color-neutral, 0.8);
-    border-color: rgba($color-primary, 0.3);
-    transform: translateY(-2px);
+    background: rgba($color-primary, 0.15);
+    border-color: $color-primary;
+    transform: translateX(4px);
+
+    &::before {
+      transform: translateX(100%);
+    }
+
+    .follower-card__avatar-wrapper {
+      transform: scale(1.05);
+
+      &::after {
+        opacity: 1;
+      }
+    }
   }
 
   &__avatar-wrapper {
+    position: relative;
+    width: 56px;
+    height: 56px;
     flex-shrink: 0;
+    transition: all 0.3s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
+      opacity: 0;
+      filter: blur(8px);
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
   }
 
-  &__avatar {
+  &__avatar,
+  &__avatar-placeholder {
     width: 56px;
     height: 56px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba($color-primary, 0.3);
-  }
-
-  &__avatar-placeholder {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
+    background: rgba($color-primary, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    font-weight: 700;
-    color: white;
-    border: 2px solid rgba($color-primary, 0.3);
+    color: $color-primary;
   }
 
   &__info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   &__name {
-    font-weight: 700;
     font-size: 16px;
-    color: $color-accent;
+    font-weight: 600;
+    color: white;
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    font-size: 16px;
+    flex-shrink: 0;
   }
 
   &__username {
     font-size: 14px;
-    color: rgba($color-accent, 0.6);
-    margin-bottom: 4px;
+    color: rgba($color-accent, 0.7);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__bio {
     font-size: 13px;
-    color: rgba($color-accent, 0.7);
+    color: rgba($color-accent, 0.6);
     line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin-top: 6px;
-  }
-
-  &__badge {
-    font-size: 14px;
-    color: $color-primary;
+    margin-top: 4px;
   }
 
   &__action {
     padding: 8px 20px;
-    background: $color-primary;
-    color: white;
-    border: none;
-    border-radius: 20px;
+    border-radius: 10px;
+    font-family: $font;
+    font-size: 14px;
     font-weight: 600;
-    font-size: 13px;
     cursor: pointer;
-    transition: all 200ms ease;
+    transition: all 0.3s ease;
+    border: none;
     flex-shrink: 0;
+    background: rgba($color-primary, 0.2);
+    color: $color-primary;
+    border: 1px solid $color-primary;
 
     &:hover {
-      background: lighten($color-primary, 5%);
-      transform: scale(1.05);
+      background: $color-primary;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($color-primary, 0.4);
     }
 
     &.following {
-      background: rgba($color-accent, 0.1);
-      color: $color-accent;
-      border: 1px solid rgba($color-accent, 0.3);
+      background: rgba($color-success, 0.2);
+      color: $color-success;
+      border-color: $color-success;
 
       &:hover {
-        background: rgba($color-accent, 0.15);
-        border-color: rgba($color-accent, 0.5);
+        background: rgba($color-success, 0.3);
+        transform: translateY(-2px);
       }
     }
+  }
+}
 
-    &:active {
-      transform: scale(0.98);
-    }
+// Animations
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
@@ -259,20 +380,26 @@ $color-neutral: #31323e;
   }
 }
 
-// Mobile responsive
+// Responsive
 @media (max-width: 768px) {
   .followers-screen {
     &__header {
-      padding: 16px;
+      padding: 16px 20px;
     }
 
     &__title {
-      font-size: 18px;
+      font-size: 20px;
     }
 
     &__tabs {
+      padding: 2px;
+    }
+
+    &__tab {
+      padding: 12px 10px;
+
       .tab-label {
-        font-size: 11px;
+        font-size: 12px;
       }
 
       .tab-count {
@@ -281,13 +408,16 @@ $color-neutral: #31323e;
     }
 
     &__list {
-      padding: 12px;
+      padding: 16px 12px;
+      gap: 10px;
     }
   }
 
   .follower-card {
-    padding: 12px;
+    padding: 14px;
+    gap: 12px;
 
+    &__avatar-wrapper,
     &__avatar,
     &__avatar-placeholder {
       width: 48px;
@@ -296,19 +426,65 @@ $color-neutral: #31323e;
     }
 
     &__name {
-      font-size: 14px;
+      font-size: 15px;
     }
 
     &__username {
-      font-size: 12px;
-    }
-
-    &__bio {
-      font-size: 12px;
+      font-size: 13px;
     }
 
     &__action {
       padding: 6px 16px;
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .followers-screen {
+    &__header {
+      padding: 14px 16px;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+
+    &__tab {
+      padding: 10px 8px;
+
+      .tab-label {
+        font-size: 11px;
+      }
+
+      .tab-count {
+        font-size: 14px;
+      }
+    }
+
+    &__list {
+      padding: 12px 10px;
+    }
+  }
+
+  .follower-card {
+    padding: 12px;
+    gap: 10px;
+
+    &__avatar-wrapper,
+    &__avatar,
+    &__avatar-placeholder {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
+
+    &__name {
+      font-size: 14px;
+    }
+
+    &__action {
+      padding: 6px 12px;
       font-size: 12px;
     }
   }

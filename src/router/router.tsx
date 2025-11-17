@@ -1,6 +1,4 @@
-// =====================================================
-// src/router/router.tsx (COMBINED VERSION)
-// =====================================================
+// src/router/router.tsx
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -15,8 +13,7 @@ import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 // Onboarding
 import OnboardingScreen from "../screens/Onboarding/OnboardingScreen";
 
-// DOTvatar & Test
-// import DOTvatarScreen from "../screens/DOTvatar/DOTvatarScreen";
+// Test
 import TestSupabase from "../screens/TestSupabase/TestSupabase";
 
 // Home & Tabs
@@ -24,6 +21,8 @@ import HomeScreen from "../screens/Home/HomeScreen";
 import MarketplaceScreen from "../screens/Marketplace/MarketplaceScreen";
 import NFTStudioScreen from "../screens/NFTstudio/NFTStudioScreen";
 import MessagesScreen from "../screens/Messages/MessageScreen";
+import CommunitiesScreen from "../screens/Communities/CommunitiesScreen";
+import CommunityDetailScreen from "../screens/Communities/CommunityDetailScreen";
 
 // Profile Screens
 import OtherUserProfile from "../screens/Profile/OtherUserProfile";
@@ -33,6 +32,7 @@ import ProfileStyleCV from "../screens/Profile/ProfileStyleCV";
 import ProfileGovernance from "../screens/Profile/ProfileGovernance";
 import EditProfileScreen from "../screens/Profile/EditProfileScreen";
 import SettingsScreen from "../screens/Profile/SettingsScreen";
+import DOTvatarScreen from '../screens/DOTvatar/DOTvatarScreen';
 
 // Followers Screen
 import FollowerScreen from "../screens/Profile/FollowerScreen";
@@ -93,11 +93,15 @@ export default function Router() {
       <Route element={<BottomTabNavigator />}>
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/marketplace" element={<MarketplaceScreen />} />
-        <Route path="/nft-studio" element={<NFTStudioScreen />} />
+        <Route path="/communities" element={<CommunitiesScreen />} />
         <Route path="/messages" element={<MessagesScreen />} />
+        <Route path="/nft-studio" element={<NFTStudioScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/profile/other" element={<OtherUserProfile />} />
       </Route>
+
+      {/* Community Detail (with feed and chat) */}
+      <Route path="/communities/:id" element={<CommunityDetailScreen />} />
 
       {/* Marketplace - NFT Actions & Uploads */}
       <Route path="/marketplace/nft/:id" element={<NFTDetail />} />
@@ -111,7 +115,6 @@ export default function Router() {
       <Route path="/marketplace/upload/external" element={<UploadExternal />} />
 
       {/* Standalone Pages (no BottomNav) */}
-      {/*<Route path="/dotvatar" element={<DOTvatarScreen />} />*/}
       <Route path="/test-supabase" element={<TestSupabase />} />
 
       {/* Profile Sub-pages (no BottomNav) */}
@@ -119,6 +122,7 @@ export default function Router() {
       <Route path="/profile/stylecv" element={<ProfileStyleCV />} />
       <Route path="/profile/governance" element={<ProfileGovernance />} />
       <Route path="/profile/edit" element={<EditProfileScreen />} />
+      <Route path="/dotvatar" element={<DOTvatarScreen />} />
       <Route path="/settings" element={<SettingsScreen />} />
 
       {/* Followers */}

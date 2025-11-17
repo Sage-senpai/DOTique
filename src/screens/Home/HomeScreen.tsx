@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// src/screens/Home/HomeScreen.tsx
+// src/screens/Home/HomeScreen.tsx - FIXED TO SHOW ALL POSTS
 import React, { useState, useEffect } from "react";
 import { Plus, Search as SearchIcon, Bell, User as UserIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,117 +10,18 @@ import CreatePostModal from "../../components/Posts/CreatePostModal";
 import SearchModal from "../../components/Search/SearchModal";
 import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
-import { socialService } from "../../services/socialService";
+import { postService } from "../../services/postService";
 import "./homescreen.scss";
 
-// ==================== DUMMY FALLBACK DATA ====================
-const DUMMY_POSTS = [
-  {
-    id: "1",
-    author: {
-      id: "u1",
-      name: "Alex Rivera",
-      username: "@alexrivera",
-      avatar: "👩‍🎨",
-      verified: true,
-    },
-    content:
-      'Just dropped my latest NFT collection! "Neon Dreams" - featuring 50 hand-crafted digital artworks. Limited edition 1/1s 🎨✨',
-    media: [
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1578926314433-3e4b9b8b8b8?w=600&h=400&fit=crop",
-      },
-    ],
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    stats: { views: 2450, likes: 342, comments: 89, reposts: 156, shares: 45 },
-    userInteraction: { liked: false, saved: false, reposted: false },
-  },
-  {
-    id: "2",
-    author: {
-      id: "u2",
-      name: "Jordan Chen",
-      username: "@jordanchen",
-      avatar: "👨‍💻",
-      verified: true,
-    },
-    content:
-      "Fashion is about expressing yourself. Today's outfit is from my latest wardrobe NFTs 🔥",
-    media: [
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop",
-      },
-    ],
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    stats: { views: 1890, likes: 267, comments: 54, reposts: 98, shares: 32 },
-    userInteraction: { liked: true, saved: true, reposted: false },
-  },
-  {
-    id: "3",
-    author: {
-      id: "u3",
-      name: "Sam Design",
-      username: "@samdesign",
-      avatar: "🎨",
-      verified: false,
-    },
-    content:
-      "Web3 fashion is democratizing design. Anyone can create, mint, and sell their work. The future is now! 🚀",
-    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    stats: { views: 3120, likes: 445, comments: 127, reposts: 234, shares: 78 },
-    userInteraction: { liked: false, saved: false, reposted: false },
-  },
-];
-
-const DUMMY_NOTIFICATIONS = [
-  {
-    id: "n1",
-    type: "like",
-    actor: { id: "u1", name: "Alex Rivera", avatar: "👩‍🎨" },
-    message: "liked your post",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: "n2",
-    type: "follow",
-    actor: { id: "u3", name: "Sam Design", avatar: "🎨" },
-    message: "started following you",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: "n3",
-    type: "comment",
-    actor: { id: "u2", name: "Jordan Chen", avatar: "👨‍💻" },
-    message: 'commented on your NFT: "Love the design!"',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    read: true,
-  },
-  {
-    id: "n4",
-    type: "purchase",
-    actor: { id: "u4", name: "Maya Styles", avatar: "👗" },
-    message: "purchased your NFT for 25 DOT",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    read: true,
-  },
-];
-
-// =====================================================
-// MAIN COMPONENT
-// =====================================================
 const HomeScreen: React.FC = () => {
   const { profile, setProfile } = useAuthStore();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<any[]>(DUMMY_POSTS);
-  const [notifications, _setNotifications] = useState<any[]>(DUMMY_NOTIFICATIONS);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"feed" | "following" | "followers">("feed");
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"feed" | "following" | "friends" | "communities">("feed");
+  const [loading, setLoading] = useState(true);
   const [userProfileId, setUserProfileId] = useState<string | null>(null);
 
   // ✅ Fetch current user profile on mount
@@ -131,7 +31,6 @@ const HomeScreen: React.FC = () => {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) return;
 
-        // Get profile from profiles table using auth_uid
         const { data: profileData, error } = await supabase
           .from("profiles")
           .select("*")
@@ -156,43 +55,100 @@ const HomeScreen: React.FC = () => {
     fetchProfile();
   }, [setProfile]);
 
-  // Fetch posts dynamically when profile ID is available
+  // ✅ Fetch ALL posts (not filtered by user)
   useEffect(() => {
     if (!userProfileId) return;
 
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const timelinePosts = await socialService.getTimelinePosts(
-          userProfileId,
-          50,
-          0,
-          activeTab
-        );
-        setPosts(timelinePosts);
+        console.log("📡 Fetching all posts...");
+        
+        // Use postService to get timeline
+        const allPosts = await postService.getTimeline(userProfileId);
+        
+        console.log("✅ Fetched posts:", allPosts.length);
+        setPosts(allPosts);
       } catch (error) {
-        console.warn("Failed to fetch posts, using dummy data:", error);
-        setPosts(DUMMY_POSTS);
+        console.error("❌ Failed to fetch posts:", error);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPosts();
-  }, [activeTab, userProfileId]);
+  }, [userProfileId]); // Remove activeTab from dependencies to prevent constant refetching
 
-  // ✅ Fixed post creation
-  const handleCreatePost = async (content: string, imageUrl?: string) => {
+  // Fetch notifications
+  useEffect(() => {
+    if (!userProfileId) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("notifications")
+          .select(`
+            *,
+            actor:profiles!notifications_actor_id_fkey(
+              id,
+              username,
+              display_name,
+              dotvatar_url,
+              avatar_url
+            )
+          `)
+          .eq("recipient_id", userProfileId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+
+        const transformedNotifications = (data || []).map((notif: any) => ({
+          id: notif.id,
+          type: notif.type,
+          actor: {
+            id: notif.actor?.id || 'unknown',
+            name: notif.actor?.display_name || 'Unknown User',
+            avatar: notif.actor?.dotvatar_url || notif.actor?.avatar_url || '👤'
+          },
+          message: notif.content || notif.message,
+          timestamp: new Date(notif.created_at),
+          read: notif.read
+        }));
+
+        setNotifications(transformedNotifications);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+  }, [userProfileId]);
+
+  // ✅ Fixed post creation - adds to feed immediately
+  const handleCreatePost = async (content: string, mediaUrl?: string, mediaType?: 'image' | 'video') => {
+    if (!profile?.id) {
+      alert("Please log in to create a post");
+      return;
+    }
+
     try {
       console.log("📝 Creating post with content:", content);
-      console.log("🖼️ Image URL:", imageUrl);
+      console.log("🖼️ Media URL:", mediaUrl);
+      console.log("📹 Media Type:", mediaType);
       
-      const newPost = await socialService.createPost(content, imageUrl);
+      // Create post using postService
+      const newPost = await postService.createPost(profile.id, content, mediaUrl, mediaType);
 
       if (newPost) {
+        console.log("✅ Post created successfully:", newPost);
+        
+        // Add to beginning of posts array immediately
         setPosts([newPost, ...posts]);
-        console.log("✅ Post added to feed");
+        
         setIsCreateModalOpen(false);
+        alert("✅ Post created successfully!");
       }
     } catch (error: any) {
       console.error("❌ Post creation failed:", error);
@@ -200,7 +156,22 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  // Navigate to user profile
+  // ✅ Refresh posts function
+  const handleRefresh = async () => {
+    if (!userProfileId) return;
+    
+    setLoading(true);
+    try {
+      const allPosts = await postService.getTimeline(userProfileId);
+      setPosts(allPosts);
+      console.log("🔄 Posts refreshed");
+    } catch (error) {
+      console.error("Failed to refresh posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleProfileClick = () => {
     navigate('/profile');
   };
@@ -244,7 +215,11 @@ const HomeScreen: React.FC = () => {
           >
             <div className="avatar-wrapper">
               <div className="avatar-small">
-                {profile?.avatar_url || <UserIcon size={20} />}
+                {profile?.dotvatar_url ? (
+                  <img src={profile.dotvatar_url} alt="avatar" />
+                ) : (
+                  <UserIcon size={20} />
+                )}
               </div>
               <div className="avatar-glow" />
             </div>
@@ -275,7 +250,7 @@ const HomeScreen: React.FC = () => {
               {activeTab === "following" && <div className="tab-indicator" />}
             </button>
             <button
-              className={`feed-tab ${activeTab === "followers" ? "active" : ""}`}
+              className={`feed-tab ${activeTab === "friends" ? "active" : ""}`}
               onClick={() => setActiveTab("friends")}
             >
               <span className="tab-icon">⭐</span>
@@ -289,6 +264,7 @@ const HomeScreen: React.FC = () => {
             loading={loading}
             onPostLike={(id) => console.log("Like post:", id)}
             onPostShare={(id) => console.log("Share post:", id)}
+            onRefresh={handleRefresh}
           />
         </div>
 

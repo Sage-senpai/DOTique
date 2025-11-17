@@ -1,24 +1,116 @@
 // src/components/Homepage/RightSidebar.scss
-// =====================================================
 $color-primary: #60519b;
 $color-accent: #bfc0d1;
+$color-success: #22c55e;
+$color-warning: #fbbf24;
+$color-info: #3b82f6;
+$font: 'Poppins', sans-serif;
 
 .right-sidebar {
   position: sticky;
-  top: 80px;
-  height: fit-content;
+  top: 90px;
+  height: calc(100vh - 110px);
+  align-self: flex-start;
+  overflow: visible; // Changed from hidden to visible
 
   .recommendations {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
+    font-family: $font;
 
-    h3 {
-      font-size: 14px;
-      font-weight: 600;
+    .category-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      padding: 4px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      flex-shrink: 0;
+
+      .category-tab {
+        flex: 1;
+        padding: 8px;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: rgba($color-accent, 0.6);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: rgba($color-primary, 0.1);
+          color: $color-accent;
+          transform: translateY(-2px);
+        }
+
+        &.active {
+          background: $color-primary;
+          color: white;
+          box-shadow: 0 4px 12px rgba($color-primary, 0.3);
+        }
+      }
+    }
+
+    .recommendations-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+
+      .header-icon {
+        color: $color-primary;
+        animation: pulse 2s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: $color-accent;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .recommendations-list {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
       margin-bottom: 12px;
-      color: $color-accent;
+      min-height: 0;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: rgba(49, 50, 62, 0.3);
+        border-radius: 2px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba($color-primary, 0.5);
+        border-radius: 2px;
+
+        &:hover {
+          background: rgba($color-primary, 0.7);
+        }
+      }
     }
 
     .recommendation-card {
@@ -26,54 +118,132 @@ $color-accent: #bfc0d1;
       align-items: center;
       gap: 12px;
       padding: 12px;
-      margin: 8px 0;
       background: rgba($color-primary, 0.05);
-      border-radius: 8px;
-      transition: all 150ms ease;
+      border: 1px solid rgba($color-primary, 0.1);
+      border-radius: 10px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba($color-primary, 0.1), transparent);
+        transition: left 0.4s;
+      }
 
       &:hover {
         background: rgba($color-primary, 0.15);
+        border-color: rgba($color-primary, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($color-primary, 0.2);
+
+        &::before {
+          left: 100%;
+        }
+
+        .rec-avatar {
+          transform: scale(1.05);
+        }
       }
 
       .rec-avatar {
-        width: 36px;
-        height: 36px;
+        position: relative;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background: rgba($color-primary, 0.3);
+        background: linear-gradient(135deg, rgba($color-primary, 0.3), rgba($color-primary, 0.1));
+        border: 2px solid rgba($color-primary, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 20px;
         flex-shrink: 0;
         cursor: pointer;
         overflow: hidden;
+        transition: all 0.3s ease;
 
         img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
+
+        .verified-badge {
+          position: absolute;
+          bottom: -2px;
+          right: -2px;
+          width: 16px;
+          height: 16px;
+          background: $color-primary;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          color: white;
+          border: 2px solid $color-primary;
+        }
       }
 
       .rec-info {
         flex: 1;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
 
         .rec-name {
-          font-size: 12px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
           font-weight: 600;
           color: $color-accent;
           cursor: pointer;
+          transition: color 0.3s ease;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
 
           &:hover {
             color: $color-primary;
+          }
+
+          .badge {
+            font-size: 14px;
+            flex-shrink: 0;
           }
         }
 
         .rec-username {
           font-size: 11px;
           color: rgba($color-accent, 0.6);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .rec-meta {
+          font-size: 10px;
+          color: rgba($color-accent, 0.5);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+
+          svg {
+            flex-shrink: 0;
+          }
         }
       }
 
@@ -86,19 +256,55 @@ $color-accent: #bfc0d1;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 150ms ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         flex-shrink: 0;
+        font-family: $font;
+        white-space: nowrap;
 
         &:hover {
-          background: #7263b3;
+          background: lighten($color-primary, 10%);
           transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($color-primary, 0.4);
         }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    .view-all-btn {
+      padding: 10px;
+      background: rgba($color-primary, 0.1);
+      border: 1px solid rgba($color-primary, 0.2);
+      border-radius: 8px;
+      color: $color-primary;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: $font;
+      flex-shrink: 0;
+
+      &:hover {
+        background: rgba($color-primary, 0.2);
+        border-color: $color-primary;
+        transform: translateY(-2px);
       }
     }
   }
 }
 
-@media (max-width: 1024px) {
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 1200px) {
   .right-sidebar {
     display: none;
   }

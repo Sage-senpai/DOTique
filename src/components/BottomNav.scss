@@ -16,12 +16,11 @@ $font: 'Poppins', sans-serif;
 
 .main-content {
   flex: 1;
-  padding-bottom: 90px; // Space for bottom nav
+  padding-bottom: 90px;
   position: relative;
   z-index: 1;
-  overflow-x: hidden; // Prevent horizontal scroll
+  overflow-x: hidden;
 
-  // Ensure proper spacing for different content types
   > * {
     position: relative;
     z-index: 1;
@@ -41,10 +40,11 @@ $font: 'Poppins', sans-serif;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 12px 20px 12px;
+    padding: 12px 15px 12px;
     margin: 0 auto;
-    max-width: 600px;
+    max-width: 700px;
     pointer-events: all;
+    gap: 4px;
   }
 
   .nav-background {
@@ -53,7 +53,7 @@ $font: 'Poppins', sans-serif;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 40px);
-    max-width: 600px;
+    max-width: 700px;
     height: 70px;
     background: linear-gradient(
       135deg,
@@ -93,7 +93,7 @@ $font: 'Poppins', sans-serif;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   text-decoration: none;
   color: rgba($color-accent, 0.6);
   background: transparent;
@@ -101,7 +101,7 @@ $font: 'Poppins', sans-serif;
   cursor: pointer;
   font-family: $font;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 70px;
+  min-width: 65px;
   z-index: 1;
 
   &:hover {
@@ -195,7 +195,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .nav-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.3px;
   transition: all 0.3s ease;
@@ -265,8 +265,9 @@ $font: 'Poppins', sans-serif;
 
   .bottom-nav-enhanced {
     .nav-container {
-      padding: 10px 15px 10px;
+      padding: 10px 12px 10px;
       max-width: 100%;
+      gap: 2px;
     }
 
     .nav-background {
@@ -277,8 +278,8 @@ $font: 'Poppins', sans-serif;
   }
 
   .nav-item {
-    min-width: 60px;
-    padding: 6px 8px;
+    min-width: 55px;
+    padding: 6px 6px;
     gap: 2px;
   }
 
@@ -297,7 +298,7 @@ $font: 'Poppins', sans-serif;
   }
 
   .nav-label {
-    font-size: 10px;
+    font-size: 9px;
   }
 }
 
@@ -308,8 +309,8 @@ $font: 'Poppins', sans-serif;
 
   .bottom-nav-enhanced {
     .nav-container {
-      padding: 8px 10px 8px;
-      gap: 4px;
+      padding: 8px 8px 8px;
+      gap: 0;
     }
 
     .nav-background {
@@ -321,8 +322,8 @@ $font: 'Poppins', sans-serif;
   }
 
   .nav-item {
-    min-width: 50px;
-    padding: 4px 6px;
+    min-width: 48px;
+    padding: 4px 4px;
   }
 
   .nav-icon-wrapper {
@@ -340,7 +341,7 @@ $font: 'Poppins', sans-serif;
   }
 
   .nav-label {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .active-indicator {
@@ -349,7 +350,6 @@ $font: 'Poppins', sans-serif;
   }
 }
 
-// Ensure content doesn't get hidden behind nav on specific screens
 @media (max-height: 700px) {
   .main-content {
     padding-bottom: 75px;

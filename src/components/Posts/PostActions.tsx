@@ -1,12 +1,12 @@
-// src/components/Post/PostActions.tsx
+// src/components/Post/PostActions.tsx - ENHANCED VERSION
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Share, Bookmark, Send } from 'lucide-react';
 import './PostActions.scss';
 
 interface PostActionsProps {
-  postId?: string; // ✅ Added for comment modal
-  postContent?: string; // ✅ Added for comment modal
-  postAuthor?: { // ✅ Added for comment modal
+  postId?: string;
+  postContent?: string;
+  postAuthor?: {
     name: string;
     username: string;
     avatar: string;
@@ -25,7 +25,8 @@ interface PostActionsProps {
   onLike: (e?: React.MouseEvent) => void;
   onSave: (e?: React.MouseEvent) => void;
   onShare?: (e?: React.MouseEvent) => void;
-  onComment?: (e?: React.MouseEvent) => void; // ✅ Added
+  onComment?: (e?: React.MouseEvent) => void;
+  onRepost?: (withQuote: boolean) => void;
 }
 
 const PostActions: React.FC<PostActionsProps> = ({
@@ -38,9 +39,11 @@ const PostActions: React.FC<PostActionsProps> = ({
   onSave,
   onShare,
   onComment,
+  onRepost,
 }) => {
   const [liked, setLiked] = useState<boolean>(userInteraction.liked ?? false);
   const [saved, setSaved] = useState<boolean>(userInteraction.saved ?? false);
+  const [reposted, setReposted] = useState<boolean>(userInteraction.reposted ?? false);
   const [showRepostMenu, setShowRepostMenu] = useState(false);
 
   const handleLikeClick = (e: React.MouseEvent) => {
@@ -69,12 +72,16 @@ const PostActions: React.FC<PostActionsProps> = ({
     setShowRepostMenu(!showRepostMenu);
   };
 
+  const handleRepostOption = (withQuote: boolean) => {
+    setReposted(!reposted);
+    setShowRepostMenu(false);
+    onRepost?.(withQuote);
+  };
+
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     onComment?.(e);
-    console.log('Comment clicked');
-    // TODO: Open comment modal or navigate to post detail
   };
 
   const handleDonateClick = (e: React.MouseEvent) => {
@@ -108,7 +115,7 @@ const PostActions: React.FC<PostActionsProps> = ({
 
       <div className="repost-wrapper">
         <button
-          className="action-btn"
+          className={`action-btn ${reposted ? 'active' : ''}`}
           onClick={handleRepostClick}
           title="Repost"
           type="button"
@@ -123,23 +130,23 @@ const PostActions: React.FC<PostActionsProps> = ({
               className="repost-option"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Repost');
-                setShowRepostMenu(false);
+                handleRepostOption(false);
               }}
               type="button"
             >
+              <Repeat2 size={16} />
               Repost
             </button>
             <button
               className="repost-option"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Repost with Quote');
-                setShowRepostMenu(false);
+                handleRepostOption(true);
               }}
               type="button"
             >
-              Repost with Quote
+              <MessageCircle size={16} />
+              Quote Repost
             </button>
           </div>
         )}

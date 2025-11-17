@@ -1,485 +1,472 @@
-// src/screens/Profile/EditProfileScreen.tsx - FIXED
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { useAuthStore } from "../../stores/authStore";
-import { supabase } from "../../services/supabase";
-import { uploadProfileMetadata } from "../../services/ipfsService";
-import { connectPolkadotWallets } from "../../services/polkadotService";
-import { COUNTRY_CODES, formatPhoneNumber } from "../../data/countryCodes";
-import "./profile.scss";
+// src/screens/Profile/EditProfileScreen.tsx
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Save, Camera, MapPin, Calendar, User, Mail, Globe } from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
+import { supabase } from '../../services/supabase';
+import './EditProfileScreen.scss';
 
-type PrivacySetting = "Public" | "Private" | "Friends Only";
+// Country data for autocomplete
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+  'Japan', 'South Korea', 'Brazil', 'Mexico', 'India', 'China', 'Nigeria',
+  'South Africa', 'Spain', 'Italy', 'Netherlands', 'Sweden', 'Norway',
+  'Switzerland', 'Austria', 'Belgium', 'Poland', 'Portugal', 'Greece'
+].sort();
 
-type EditProfileForm = {
-  display_name: string;
-  username: string;
-  bio: string;
-  location: string;
-  birthday: string;
-  fashion_archetype: string;
-  profile_privacy: PrivacySetting;
-  phone_number: string;
-  phone_country_code: string;
-};
+// Popular cities for location autocomplete
+const POPULAR_CITIES = [
+  'New York', 'Los Angeles', 'London', 'Paris', 'Tokyo', 'Berlin', 'Toronto',
+  'Sydney', 'Melbourne', 'Singapore', 'Dubai', 'Amsterdam', 'Barcelona',
+  'Madrid', 'Rome', 'Milan', 'Seoul', 'Mumbai', 'São Paulo', 'Mexico City',
+  'Port Harcourt', 'Lagos', 'Abuja', 'Accra', 'Nairobi'
+].sort();
 
 export default function EditProfileScreen() {
-  const profile = useAuthStore((s) => s.profile);
-  const setProfile = useAuthStore((s) => s.setProfile);
   const navigate = useNavigate();
-
-  // Parse existing phone data
-  const existingPhone = profile?.metadata?.phone_number || "";
-  const existingCountryCode = profile?.metadata?.phone_country_code || "+234";
-
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<EditProfileForm>({
-    defaultValues: {
-      display_name: profile?.display_name || "",
-      username: profile?.username || "",
-      bio: profile?.bio || "",
-      location: profile?.location || "",
-      birthday: profile?.birthday || "",
-      fashion_archetype: profile?.fashion_archetype || "",
-      profile_privacy: (profile?.profile_privacy as PrivacySetting) || "Public",
-      phone_number: existingPhone,
-      phone_country_code: existingCountryCode,
-    },
+  const { profile, setProfile } = useAuthStore();
+  
+  const [formData, setFormData] = useState({
+    display_name: profile?.display_name || '',
+    username: profile?.username || '',
+    bio: profile?.bio || '',
+    email: profile?.email || '',
+    location: profile?.location || '',
+    country: profile?.metadata?.country || '',
+    birthday: profile?.birthday || '',
+    fashion_archetype: profile?.fashion_archetype || ''
   });
 
-  const [primaryWallet, setPrimaryWallet] = useState(profile?.primary_wallet || "");
-  const [connectedWallets, setConnectedWallets] = useState<string[]>(
-    profile?.connected_wallets || []
-  );
-  const [uploading, setUploading] = useState(false);
-  const [imageUri, setImageUri] = useState(profile?.dotvatar_url || "");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [saveError, setSaveError] = useState<string>("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>(profile?.dotvatar_url || profile?.avatar_url || '');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const archetypeOptions = [
-    { label: "Avant-Garde", value: "Avant-Garde" },
-    { label: "Streetwear Pioneer", value: "Streetwear Pioneer" },
-    { label: "Minimalist", value: "Minimalist" },
-    { label: "Retro Futurist", value: "Retro Futurist" },
-  ];
+  // Autocomplete states
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [countrySuggestions, setCountrySuggestions] = useState<string[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
 
-  const privacyOptions = [
-    { label: "Public", value: "Public" },
-    { label: "Private", value: "Private" },
-    { label: "Friends Only", value: "Friends Only" },
-  ];
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        display_name: profile.display_name || '',
+        username: profile.username || '',
+        bio: profile.bio || '',
+        email: profile.email || '',
+        location: profile.location || '',
+        country: profile.metadata?.country || '',
+        birthday: profile.birthday || '',
+        fashion_archetype: profile.fashion_archetype || ''
+      });
+      setAvatarPreview(profile.dotvatar_url || profile.avatar_url || '');
+    }
+  }, [profile]);
 
-  const handleConnectWallet = async () => {
-    try {
-      const wallets = await connectPolkadotWallets();
-      const newAddresses = wallets.map((w: { address: string }) => w.address);
-      setConnectedWallets(newAddresses);
-      if (!primaryWallet && newAddresses.length > 0) setPrimaryWallet(newAddresses[0]);
-      alert(`${newAddresses.length} wallet(s) linked successfully.`);
-    } catch (err: any) {
-      alert(err.message || "Connection failed");
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Handle location autocomplete
+    if (field === 'location' && value.length > 0) {
+      const filtered = POPULAR_CITIES.filter(city =>
+        city.toLowerCase().includes(value.toLowerCase())
+      );
+      setLocationSuggestions(filtered.slice(0, 5));
+      setShowLocationSuggestions(true);
+    } else if (field === 'location') {
+      setShowLocationSuggestions(false);
+    }
+
+    // Handle country autocomplete
+    if (field === 'country' && value.length > 0) {
+      const filtered = COUNTRIES.filter(country =>
+        country.toLowerCase().includes(value.toLowerCase())
+      );
+      setCountrySuggestions(filtered.slice(0, 5));
+      setShowCountrySuggestions(true);
+    } else if (field === 'country') {
+      setShowCountrySuggestions(false);
     }
   };
 
-  const handlePickImage = async (file: File) => {
-    const url = URL.createObjectURL(file);
-    setImageUri(url);
-    setImageFile(file);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, avatar: 'File size must be less than 5MB' }));
+        return;
+      }
+
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const onSubmit = async (values: EditProfileForm) => {
-    if (!profile?.auth_uid) {
-      alert("No profile found. Please log in again.");
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.display_name.trim()) {
+      newErrors.display_name = 'Display name is required';
+    }
+
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+
+    if (formData.bio && formData.bio.length > 200) {
+      newErrors.bio = 'Bio must be less than 200 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) {
       return;
     }
 
-    setUploading(true);
-    setSaveError("");
+    setLoading(true);
+
     try {
-      console.log("📝 Updating profile...");
+      let avatarUrl = profile?.avatar_url;
 
-      // 1️⃣ Upload to IPFS if image changed
-      let imageUrl = profile.dotvatar_url || "";
-      let metadataUrl = "";
+      // Upload avatar if changed
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${profile?.id}-${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile);
 
-      if (imageFile) {
-        console.log("📤 Uploading to IPFS...");
-        const ipfsResult = await uploadProfileMetadata(
-          {
-            ...values,
-            primary_wallet: primaryWallet,
-            connected_wallets: connectedWallets,
-          },
-          imageUri
-        );
-        imageUrl = ipfsResult.imageUrl;
-        metadataUrl = ipfsResult.metadataUrl;
-        console.log("✅ IPFS upload complete:", metadataUrl);
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+        
+        avatarUrl = urlData.publicUrl;
       }
 
-      // 2️⃣ Prepare metadata with phone info
-      const updatedMetadata = {
-        ...(profile.metadata || {}),
-        phone_number: values.phone_number,
-        phone_country_code: values.phone_country_code,
-        ipfs_metadata: metadataUrl || profile.metadata?.ipfs_metadata,
-      };
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: formData.display_name,
+          username: formData.username,
+          bio: formData.bio,
+          email: formData.email,
+          location: formData.location,
+          birthday: formData.birthday || null,
+          fashion_archetype: formData.fashion_archetype || null,
+          avatar_url: avatarUrl,
+          metadata: {
+            ...profile?.metadata,
+            country: formData.country
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile?.id);
 
-      // 3️⃣ Prepare updates (handle empty values properly)
-      const updates: any = {
-        display_name: values.display_name,
-        username: values.username,
-        bio: values.bio || null,
-        location: values.location || null,
-        birthday: values.birthday || null, // ✅ Convert empty string to null
-        fashion_archetype: values.fashion_archetype || null,
-        profile_privacy: values.profile_privacy,
-        primary_wallet: primaryWallet || null,
-        connected_wallets: connectedWallets.length > 0 ? connectedWallets : null,
-        dotvatar_url: imageUrl || null,
-        metadata: updatedMetadata,
-        updated_at: new Date().toISOString(),
-      };
+      if (updateError) throw updateError;
 
-      // Remove any undefined values
-      Object.keys(updates).forEach(key => {
-        if (updates[key] === undefined) {
-          delete updates[key];
-        }
-      });
-
-      console.log("💾 Saving to profiles table...", updates);
-
-      const { data: updatedProfile, error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("auth_uid", profile.auth_uid)
-        .select()
+      // Fetch updated profile
+      const { data: updatedProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profile?.id)
         .single();
 
-      if (error) {
-        console.error("❌ Update error:", error);
-        
-        // Better error messages
-        let errorMessage = error.message;
-        if (error.code === '23505') {
-          errorMessage = "Username already taken. Please choose another.";
-        } else if (error.message.includes('date')) {
-          errorMessage = "Invalid date format. Please check the birthday field.";
-        } else if (error.message.includes('phone')) {
-          errorMessage = "Invalid phone number format.";
-        }
-        
-        throw new Error(errorMessage);
-      }
+      if (fetchError) throw fetchError;
 
-      console.log("✅ Profile updated:", updatedProfile);
-
-      // 4️⃣ Update local store
       setProfile(updatedProfile);
-
-      alert("✅ Profile updated successfully!");
-      navigate(-1);
-    } catch (err: any) {
-      console.error("❌ Save failed:", err);
-      const errorMessage = err.message || "Error saving profile. Please try again.";
-      setSaveError(errorMessage);
-      alert(errorMessage);
+      alert('✅ Profile updated successfully!');
+      navigate('/profile');
+    } catch (error: any) {
+      console.error('Failed to update profile:', error);
+      alert(`❌ Failed to update profile: ${error.message}`);
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
   return (
     <motion.div
       className="edit-profile-screen"
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="edit-profile-screen__header">
-        <button
-          className="edit-profile-screen__back"
-          onClick={() => navigate(-1)}
-        >
-          ←
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={20} />
         </button>
-        <h2 className="edit-profile-screen__title">Edit Profile</h2>
-        <button
-          className="edit-profile-screen__save-btn"
-          onClick={handleSubmit(onSubmit)}
-          disabled={uploading}
+        <h2>Edit Profile</h2>
+        <button 
+          className="save-btn" 
+          onClick={handleSave}
+          disabled={loading}
         >
-          ✓
+          {loading ? 'Saving...' : (
+            <>
+              <Save size={18} />
+              Save
+            </>
+          )}
         </button>
       </div>
 
-      <form className="edit-profile-screen__form" onSubmit={handleSubmit(onSubmit)}>
-        {/* Error Message */}
-        {saveError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="edit-profile-screen__error-banner"
-          >
-            ❌ {saveError}
-          </motion.div>
-        )}
-
+      <div className="edit-profile-screen__content">
         {/* Avatar Section */}
-        <div className="edit-profile-screen__avatar-section">
-          {uploading ? (
-            <div className="edit-profile-screen__spinner" />
-          ) : (
-            <>
-              {imageUri ? (
-                <img
-                  src={imageUri}
-                  alt="avatar"
-                  className="edit-profile-screen__avatar"
-                />
-              ) : (
-                <div className="edit-profile-screen__avatar-placeholder">
-                  🪞
-                </div>
-              )}
-              <div className="edit-profile-screen__avatar-edit-icon">✏️</div>
-            </>
-          )}
+        <div className="avatar-section">
+          <div className="avatar-preview">
+            {avatarPreview ? (
+              <img src={avatarPreview} alt="Avatar" />
+            ) : (
+              <div className="avatar-placeholder">
+                <User size={48} />
+              </div>
+            )}
+            <label className="avatar-change-btn">
+              <Camera size={20} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+          {errors.avatar && <span className="error-text">{errors.avatar}</span>}
+        </div>
 
-          <label className="edit-profile-screen__upload-label">
+        {/* Form Fields */}
+        <div className="form-section">
+          {/* Display Name */}
+          <div className="form-group">
+            <label className="form-label">
+              <User size={16} />
+              Display Name *
+            </label>
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handlePickImage(f);
-              }}
-              style={{ display: "none" }}
+              type="text"
+              className={`form-input ${errors.display_name ? 'error' : ''}`}
+              value={formData.display_name}
+              onChange={(e) => handleInputChange('display_name', e.target.value)}
+              placeholder="Enter your display name"
+              maxLength={50}
             />
-            <button
-              type="button"
-              className="edit-profile-screen__upload-btn"
-              onClick={() => {
-                document.querySelector('input[type="file"]')?.dispatchEvent(new MouseEvent('click'));
-              }}
-            >
-              Upload Avatar
-            </button>
-          </label>
-        </div>
-
-        {/* Display Name */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Name</label>
-          <Controller
-            control={control}
-            name="display_name"
-            rules={{ required: "Name is required" }}
-            render={({ field }) => (
-              <input
-                {...field}
-                className="edit-profile-screen__input"
-                placeholder="Your name"
-              />
+            {errors.display_name && (
+              <span className="error-text">{errors.display_name}</span>
             )}
-          />
-          {errors.display_name && (
-            <span className="edit-profile-screen__error">
-              {errors.display_name.message}
-            </span>
-          )}
-        </div>
+          </div>
 
-        {/* Email (Read-only) */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Email Address</label>
-          <input
-            type="email"
-            value={profile?.email || ""}
-            disabled
-            className="edit-profile-screen__input edit-profile-screen__input--disabled"
-          />
-        </div>
-
-        {/* Username */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Username</label>
-          <Controller
-            control={control}
-            name="username"
-            rules={{
-              required: "Username required",
-              minLength: { value: 3, message: "Min 3 chars" },
-              pattern: {
-                value: /^[a-zA-Z0-9_]+$/,
-                message: "Only letters, numbers, and underscores"
-              }
-            }}
-            render={({ field }) => (
-              <input
-                {...field}
-                className="edit-profile-screen__input"
-                placeholder="@username"
-              />
+          {/* Username */}
+          <div className="form-group">
+            <label className="form-label">
+              <User size={16} />
+              Username *
+            </label>
+            <input
+              type="text"
+              className={`form-input ${errors.username ? 'error' : ''}`}
+              value={formData.username}
+              onChange={(e) => handleInputChange('username', e.target.value)}
+              placeholder="Enter your username"
+              maxLength={30}
+            />
+            {errors.username && (
+              <span className="error-text">{errors.username}</span>
             )}
-          />
-          {errors.username && (
-            <span className="edit-profile-screen__error">
-              {errors.username.message}
-            </span>
-          )}
-        </div>
+          </div>
 
-        {/* Phone Number (Editable) */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Phone Number</label>
-          <div className="edit-profile-screen__phone-wrapper">
+          {/* Email */}
+          <div className="form-group">
+            <label className="form-label">
+              <Mail size={16} />
+              Email
+            </label>
+            <input
+              type="email"
+              className={`form-input ${errors.email ? 'error' : ''}`}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="your.email@example.com"
+            />
+            {errors.email && (
+              <span className="error-text">{errors.email}</span>
+            )}
+          </div>
+
+          {/* Bio */}
+          <div className="form-group">
+            <label className="form-label">
+              Bio
+              <span className="char-count">{formData.bio.length}/200</span>
+            </label>
+            <textarea
+              className={`form-textarea ${errors.bio ? 'error' : ''}`}
+              value={formData.bio}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
+              placeholder="Tell us about yourself..."
+              rows={4}
+              maxLength={200}
+            />
+            {errors.bio && (
+              <span className="error-text">{errors.bio}</span>
+            )}
+          </div>
+
+          {/* Location with Autocomplete */}
+          <div className="form-group autocomplete-group">
+            <label className="form-label">
+              <MapPin size={16} />
+              Location
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              onFocus={() => formData.location && setShowLocationSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+              placeholder="City, State"
+            />
+            {showLocationSuggestions && locationSuggestions.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {locationSuggestions.map((city) => (
+                  <div
+                    key={city}
+                    className="autocomplete-item"
+                    onClick={() => {
+                      handleInputChange('location', city);
+                      setShowLocationSuggestions(false);
+                    }}
+                  >
+                    <MapPin size={14} />
+                    {city}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Country with Autocomplete */}
+          <div className="form-group autocomplete-group">
+            <label className="form-label">
+              <Globe size={16} />
+              Country
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={formData.country}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              onFocus={() => formData.country && setShowCountrySuggestions(true)}
+              onBlur={() => setTimeout(() => setShowCountrySuggestions(false), 200)}
+              placeholder="Select your country"
+            />
+            {showCountrySuggestions && countrySuggestions.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {countrySuggestions.map((country) => (
+                  <div
+                    key={country}
+                    className="autocomplete-item"
+                    onClick={() => {
+                      handleInputChange('country', country);
+                      setShowCountrySuggestions(false);
+                    }}
+                  >
+                    <Globe size={14} />
+                    {country}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Birthday */}
+          <div className="form-group">
+            <label className="form-label">
+              <Calendar size={16} />
+              Birthday
+            </label>
+            <input
+              type="date"
+              className="form-input"
+              value={formData.birthday}
+              onChange={(e) => handleInputChange('birthday', e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+
+          {/* Fashion Archetype */}
+          <div className="form-group">
+            <label className="form-label">
+              Fashion Archetype
+            </label>
             <select
-              value={watch("phone_country_code")}
-              onChange={(e) => setValue("phone_country_code", e.target.value)}
-              className="edit-profile-screen__country-code"
+              className="form-select"
+              value={formData.fashion_archetype}
+              onChange={(e) => handleInputChange('fashion_archetype', e.target.value)}
             >
-              {COUNTRY_CODES.map((country) => (
-                <option key={`${country.code}-${country.iso}`} value={country.code}>
-                  {country.flag} {country.code} {country.country}
-                </option>
-              ))}
+              <option value="">Select an archetype</option>
+              <option value="minimalist">Minimalist</option>
+              <option value="streetwear">Streetwear</option>
+              <option value="haute_couture">Haute Couture</option>
+              <option value="bohemian">Bohemian</option>
+              <option value="athleisure">Athleisure</option>
+              <option value="vintage">Vintage</option>
+              <option value="avant_garde">Avant-Garde</option>
             </select>
-            <Controller
-              control={control}
-              name="phone_number"
-              rules={{
-                validate: (value) => {
-                  if (!value) return true; // Allow empty
-                  return /^[0-9]{7,15}$/.test(value) || "Enter valid phone number (7-15 digits)";
-                }
-              }}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="tel"
-                  className="edit-profile-screen__input"
-                  placeholder="8012345678"
-                />
-              )}
-            />
           </div>
-          {errors.phone_number && (
-            <span className="edit-profile-screen__error">
-              {errors.phone_number.message}
-            </span>
-          )}
         </div>
 
-        {/* Bio */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Bio</label>
-          <Controller
-            control={control}
-            name="bio"
-            render={({ field }) => (
-              <textarea
-                {...field}
-                className="edit-profile-screen__input edit-profile-screen__textarea"
-                placeholder="Describe your fashion style..."
-                maxLength={200}
-              />
-            )}
-          />
-          <span className="edit-profile-screen__char-count">
-            {watch("bio")?.length || 0}/200
-          </span>
-        </div>
-
-        {/* Location */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Location</label>
-          <Controller
-            control={control}
-            name="location"
-            render={({ field }) => (
-              <input
-                {...field}
-                className="edit-profile-screen__input"
-                placeholder="Lagos, Nigeria"
-              />
-            )}
-          />
-          <small className="edit-profile-screen__hint">
-            💡 Tip: Use format "City, Country" for best results
-          </small>
-        </div>
-
-        {/* Birthday */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Birthday</label>
-          <input
-            type="date"
-            value={watch("birthday") || ""}
-            onChange={(e) => setValue("birthday", e.target.value)}
-            className="edit-profile-screen__input"
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-
-        {/* Fashion Archetype */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Fashion Archetype</label>
-          <select
-            value={watch("fashion_archetype")}
-            onChange={(e) => setValue("fashion_archetype", e.target.value)}
-            className="edit-profile-screen__input"
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <button 
+            className="btn-cancel"
+            onClick={() => navigate(-1)}
+            disabled={loading}
           >
-            <option value="">Select Archetype</option>
-            {archetypeOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Primary Wallet */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Primary Wallet</label>
-          <div className="edit-profile-screen__wallet-display">
-            {primaryWallet || "Not connected"}
-          </div>
-          <button
-            type="button"
-            className="edit-profile-screen__wallet-btn"
-            onClick={handleConnectWallet}
+            Cancel
+          </button>
+          <button 
+            className="btn-save"
+            onClick={handleSave}
+            disabled={loading}
           >
-            🔗 Connect Wallet
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Save Changes
+              </>
+            )}
           </button>
         </div>
-
-        {/* Profile Privacy */}
-        <div className="edit-profile-screen__field">
-          <label className="edit-profile-screen__label">Profile Privacy</label>
-          <select
-            value={watch("profile_privacy")}
-            onChange={(e) => setValue("profile_privacy", e.target.value as PrivacySetting)}
-            className="edit-profile-screen__input"
-          >
-            {privacyOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="edit-profile-screen__submit"
-          disabled={uploading}
-        >
-          {uploading ? "Saving..." : "💾 Save Changes"}
-        </button>
-      </form>
+      </div>
     </motion.div>
   );
 }

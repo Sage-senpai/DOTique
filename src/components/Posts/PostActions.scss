@@ -1,6 +1,8 @@
-// src/components/Post/PostActions.scss
+// src/components/Post/PostActions.scss - ENHANCED VERSION
 $color-primary: #60519b;
 $color-accent: #bfc0d1;
+$color-success: #22c55e;
+$color-danger: #ff6b6b;
 
 .post-actions {
   display: flex;
@@ -23,53 +25,187 @@ $color-accent: #bfc0d1;
     padding: 6px 8px;
     border-radius: 6px;
     transition: all 150ms ease;
+    font-weight: 500;
+
+    svg {
+      transition: transform 0.2s ease;
+    }
 
     &:hover {
       color: $color-accent;
       background: rgba($color-primary, 0.1);
+      
+      svg {
+        transform: scale(1.1);
+      }
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
 
     &.active {
       color: $color-primary;
       background: rgba($color-primary, 0.2);
+      
+      &:hover {
+        color: lighten($color-primary, 10%);
+      }
     }
 
     &.donate {
       background: linear-gradient(135deg, rgba($color-primary, 0.2), rgba($color-primary, 0.1));
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba($color-primary, 0.3), rgba($color-primary, 0.15));
+      }
+    }
+
+    span {
+      font-size: 13px;
     }
   }
 
+  // Repost Wrapper & Menu
   .repost-wrapper {
     position: relative;
 
     .repost-menu {
       position: absolute;
-      bottom: 100%;
+      bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(49, 50, 62, 0.95);
+      background: rgba(49, 50, 62, 0.98);
       border: 1px solid rgba($color-accent, 0.2);
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
       z-index: 10;
-      min-width: 120px;
-      margin-bottom: 8px;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.2s ease;
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid rgba(49, 50, 62, 0.98);
+      }
 
       .repost-option {
         width: 100%;
-        padding: 10px 12px;
+        padding: 12px 16px;
         background: none;
         border: none;
         color: $color-accent;
         cursor: pointer;
         font-family: inherit;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 500;
         text-align: left;
-        transition: background 150ms ease;
+        transition: all 150ms ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba($color-accent, 0.1);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        svg {
+          transition: transform 0.2s ease;
+        }
 
         &:hover {
           background: rgba($color-primary, 0.2);
+          color: white;
+          
+          svg {
+            transform: translateX(2px);
+          }
         }
+
+        &:active {
+          background: rgba($color-primary, 0.3);
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .post-actions {
+    padding-top: 6px;
+
+    .action-btn {
+      padding: 5px 6px;
+      font-size: 11px;
+      gap: 4px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      span {
+        font-size: 12px;
+      }
+    }
+
+    .repost-wrapper .repost-menu {
+      min-width: 160px;
+
+      .repost-option {
+        padding: 10px 12px;
+        font-size: 12px;
+        gap: 8px;
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .post-actions {
+    .action-btn {
+      padding: 4px 5px;
+      
+      span {
+        display: none; // Hide numbers on very small screens
+      }
+    }
+
+    .repost-wrapper .repost-menu {
+      left: auto;
+      right: 0;
+      transform: none;
+
+      &::after {
+        left: auto;
+        right: 20px;
+        transform: none;
       }
     }
   }

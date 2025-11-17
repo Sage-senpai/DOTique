@@ -1,6 +1,6 @@
 // src/components/BottomNav.tsx
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, ShoppingBag, Sparkles, MessageCircle, User, LogOut } from "lucide-react";
+import { Home, ShoppingBag, Sparkles, MessageCircle, User, LogOut, Users } from "lucide-react";
 import { supabase } from "../services/supabase";
 import { useAuthStore } from "../stores/authStore";
 import "./BottomNav.scss";
@@ -15,7 +15,7 @@ export default function BottomTabNavigator() {
       try {
         await supabase.auth.signOut();
         resetAuth();
-        navigate("/LoginScreen");
+        navigate("/login");
       } catch (error) {
         console.error("Sign out error:", error);
       }
@@ -25,8 +25,9 @@ export default function BottomTabNavigator() {
   const navItems = [
     { to: "/home", icon: Home, label: "Home", emoji: "🏠" },
     { to: "/marketplace", icon: ShoppingBag, label: "Market", emoji: "🛍️" },
-    { to: "/nft-studio", icon: Sparkles, label: "Create", emoji: "✨" },
+    { to: "/communities", icon: Users, label: "Communities", emoji: "🌐" },
     { to: "/messages", icon: MessageCircle, label: "Messages", emoji: "💬" },
+    { to: "/nft-studio", icon: Sparkles, label: "Create", emoji: "✨" },
     { to: "/profile", icon: User, label: "Profile", emoji: "👤" },
   ];
 
