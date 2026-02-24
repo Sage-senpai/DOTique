@@ -1,6 +1,7 @@
 // src/components/NFT/AdvancedNFTComponents.scss
 
 // Import global variables
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -105,7 +106,7 @@ $font: 'Poppins', sans-serif;
   &__btn {
     width: 100%;
     padding: 14px 24px;
-    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
     color: white;
     border: none;
     border-radius: 12px;
@@ -226,7 +227,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .list-modal {
-  background: linear-gradient(135deg, $color-secondary 0%, darken($color-neutral, 5%) 100%);
+  background: linear-gradient(135deg, $color-secondary 0%, color.adjust($color-neutral, $lightness: -5%) 100%);
   border-radius: 20px;
   padding: 30px;
   max-width: 500px;
@@ -395,7 +396,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   color: white;
 
   &::before {
@@ -607,7 +608,7 @@ $font: 'Poppins', sans-serif;
 
 .trending-fill {
   height: 100%;
-  background: linear-gradient(90deg, $color-primary, lighten($color-primary, 10%));
+  background: linear-gradient(90deg, $color-primary, color.adjust($color-primary, $lightness: 10%));
   border-radius: 4px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 10px rgba($color-primary, 0.5);

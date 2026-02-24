@@ -1,4 +1,5 @@
 // src/components/Posts/CreatePostModal.scss - COMPLETE STYLES
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -88,7 +89,7 @@ $font: "Poppins", sans-serif;
     font-weight: 700;
     color: $color-accent;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 15%) 100%);
+    background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 15%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -375,7 +376,7 @@ $font: "Poppins", sans-serif;
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
     color: white;
     box-shadow: 0 4px 12px rgba($color-primary, 0.4);
 

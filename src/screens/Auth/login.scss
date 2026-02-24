@@ -1,4 +1,5 @@
 //src/screens/Auth/login.scss
+@use "sass:color";
 @use "../../styles/variables" as *;
 
 .auth-container {
@@ -117,7 +118,7 @@
     transition: background 0.3s ease;
 
     &:hover {
-      background-color: darken($primary, 10%);
+      background-color: color.adjust($primary, $lightness: -10%);
     }
 
     &.disabled {

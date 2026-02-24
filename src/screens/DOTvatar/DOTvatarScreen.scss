@@ -1,4 +1,5 @@
 // src/screens/DOTvatar/DOTvatarScreen.scss
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -70,7 +71,7 @@ $color-warning: #fbbf24;
   transition: all 0.3s ease;
 
   &--primary {
-    background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
+    background: linear-gradient(135deg, $color-primary, color.adjust($color-primary, $lightness: 10%));
     color: white;
 
     &:hover:not(:disabled) {

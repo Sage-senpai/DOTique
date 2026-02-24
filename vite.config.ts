@@ -31,18 +31,28 @@ export default defineConfig({
     target: "esnext",
     sourcemap: false,
     minify: "esbuild",
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks: {
+          // Core React runtime
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          // Polkadot chain layer
           "polkadot-vendor": [
             "polkadot-api",
             "@polkadot-api/smoldot",
             "@polkadot/util",
             "@polkadot/util-crypto",
+            "@polkadot/types",
           ],
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          // 3D / canvas (heaviest — lazily loaded)
           "three-vendor": ["three", "@react-three/fiber", "@react-three/drei"],
+          // Animation libs
+          "animation-vendor": ["framer-motion", "gsap"],
+          // Supabase + data
+          "supabase-vendor": ["@supabase/supabase-js"],
+          // Forms + UI utilities
+          "ui-vendor": ["react-hook-form", "zustand", "@tanstack/react-query"],
         },
       },
     },

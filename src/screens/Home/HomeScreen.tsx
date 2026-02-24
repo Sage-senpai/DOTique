@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Search as SearchIcon, User as UserIcon } from "lucide-react";
+import {
+  Plus,
+  Search as SearchIcon,
+  User as UserIcon,
+  Globe,
+  UserCheck,
+  Users,
+  LayoutGrid,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LeftSidebar from "../../components/Homepage/LeftSidebar";
 import FeedCenter from "../../components/Homepage/FeedCenter";
@@ -12,9 +20,17 @@ import { postService } from "../../services/postService";
 import { socialService } from "../../services/socialService";
 import { executeSupabase } from "../../services/supabaseRetryService";
 import { useAuthStore } from "../../stores/authStore";
+import { useToast } from "../../components/Toast/Toast";
 import "./homescreen.scss";
 
-const FEED_LIMIT = 50;
+const FEED_TABS = [
+  { id: "feed" as const,        label: "Feed",        Icon: Globe },
+  { id: "following" as const,   label: "Following",   Icon: UserCheck },
+  { id: "friends" as const,     label: "Friends",     Icon: Users },
+  { id: "communities" as const, label: "Communities", Icon: LayoutGrid },
+];
+
+const PAGE_SIZE = 15;
 
 type FeedFilter = "feed" | "following" | "friends" | "communities";
 
@@ -27,8 +43,11 @@ const HomeScreen: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FeedFilter>("feed");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
   const userProfileId = profile?.id ?? null;
   const processedRealtimeEvents = useRef<Set<string>>(new Set());
+  const realtimeRecoveryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const shouldProcessRealtimeEvent = useCallback((eventKey: string) => {
     const cache = processedRealtimeEvents.current;
@@ -129,6 +148,16 @@ const HomeScreen: React.FC = () => {
     [userProfileId]
   );
 
+  const mergePaginatedPosts = useCallback((existingPosts: any[], incomingPosts: any[]) => {
+    if (existingPosts.length === 0) {
+      return incomingPosts;
+    }
+
+    const existingIds = new Set(existingPosts.map((post) => post.id));
+    const uniqueIncoming = incomingPosts.filter((post) => !existingIds.has(post.id));
+    return [...existingPosts, ...uniqueIncoming];
+  }, []);
+
   const fetchPostById = useCallback(
     async (postId: string) => {
       try {
@@ -171,33 +200,66 @@ const HomeScreen: React.FC = () => {
     [fetchPostById, upsertPost]
   );
 
-  useEffect(() => {
-    if (!userProfileId) {
-      setPosts([]);
-      setLoading(false);
+  const loadPostsPage = useCallback(
+    async (offset: number, replaceExisting: boolean) => {
+      if (!userProfileId) {
+        setPosts([]);
+        setLoading(false);
+        setLoadingMore(false);
+        setHasMorePosts(false);
+        return;
+      }
+
+      if (replaceExisting) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        const fetchedPosts = await socialService.getTimelinePosts(
+          userProfileId,
+          PAGE_SIZE,
+          offset,
+          activeTab
+        );
+        const mappedPosts = fetchedPosts.map(mapPostForFeed);
+
+        setPosts((prev) =>
+          replaceExisting ? mappedPosts : mergePaginatedPosts(prev, mappedPosts)
+        );
+        setHasMorePosts(fetchedPosts.length === PAGE_SIZE);
+      } catch (error) {
+        console.error("Failed to fetch posts:", error);
+        if (replaceExisting) {
+          setPosts([]);
+        }
+      } finally {
+        if (replaceExisting) {
+          setLoading(false);
+        } else {
+          setLoadingMore(false);
+        }
+      }
+    },
+    [activeTab, mapPostForFeed, mergePaginatedPosts, userProfileId]
+  );
+
+  const scheduleRealtimeRecovery = useCallback(() => {
+    if (realtimeRecoveryTimer.current) {
       return;
     }
 
-    const fetchPosts = async () => {
-      setLoading(true);
-      try {
-        const allPosts = await socialService.getTimelinePosts(
-          userProfileId,
-          FEED_LIMIT,
-          0,
-          activeTab
-        );
-        setPosts(allPosts.map(mapPostForFeed));
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    realtimeRecoveryTimer.current = setTimeout(() => {
+      realtimeRecoveryTimer.current = null;
+      void loadPostsPage(0, true);
+    }, 1500);
+  }, [loadPostsPage]);
 
-    void fetchPosts();
-  }, [activeTab, mapPostForFeed, userProfileId]);
+  useEffect(() => {
+    processedRealtimeEvents.current.clear();
+    void loadPostsPage(0, true);
+  }, [activeTab, loadPostsPage, userProfileId]);
 
   useEffect(() => {
     if (!userProfileId) {
@@ -275,13 +337,22 @@ const HomeScreen: React.FC = () => {
             return;
           }
 
+          if (activeTab !== "feed") {
+            scheduleRealtimeRecovery();
+            return;
+          }
+
           const detailedPost = await fetchPostById(postId);
           if (detailedPost) {
             upsertPost(detailedPost);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "TIMED_OUT" || status === "CHANNEL_ERROR" || status === "CLOSED") {
+          scheduleRealtimeRecovery();
+        }
+      });
 
     const interactionsChannel = supabase
       .channel(`feed-interactions:${userProfileId}`)
@@ -319,20 +390,32 @@ const HomeScreen: React.FC = () => {
           void refreshPostStats(postId);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "TIMED_OUT" || status === "CHANNEL_ERROR" || status === "CLOSED") {
+          scheduleRealtimeRecovery();
+        }
+      });
 
     return () => {
       supabase.removeChannel(postsChannel);
       supabase.removeChannel(interactionsChannel);
+      if (realtimeRecoveryTimer.current) {
+        clearTimeout(realtimeRecoveryTimer.current);
+        realtimeRecoveryTimer.current = null;
+      }
     };
   }, [
+    activeTab,
     fetchPostById,
     refreshPostStats,
     removePost,
+    scheduleRealtimeRecovery,
     shouldProcessRealtimeEvent,
     upsertPost,
     userProfileId,
   ]);
+
+  const { toast } = useToast();
 
   const handleCreatePost = async (
     content: string,
@@ -340,7 +423,7 @@ const HomeScreen: React.FC = () => {
     mediaType?: "image" | "video"
   ) => {
     if (!profile?.id) {
-      alert("Please log in to create a post");
+      toast.warning("Please log in to create a post");
       return;
     }
 
@@ -349,11 +432,12 @@ const HomeScreen: React.FC = () => {
       if (newPost) {
         upsertPost(mapPostForFeed(newPost));
         setIsCreateModalOpen(false);
-        alert("Post created successfully.");
+        toast.success("Post created successfully.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Unknown error";
       console.error("Post creation failed:", error);
-      alert(`Failed to create post: ${error.message}`);
+      toast.error(`Failed to create post: ${msg}`);
     }
   };
 
@@ -361,16 +445,16 @@ const HomeScreen: React.FC = () => {
     if (!userProfileId) {
       return;
     }
+    processedRealtimeEvents.current.clear();
+    await loadPostsPage(0, true);
+  };
 
-    setLoading(true);
-    try {
-      const allPosts = await socialService.getTimelinePosts(userProfileId, FEED_LIMIT, 0, activeTab);
-      setPosts(allPosts.map(mapPostForFeed));
-    } catch (error) {
-      console.error("Failed to refresh posts:", error);
-    } finally {
-      setLoading(false);
+  const handleLoadMore = async () => {
+    if (!userProfileId || loading || loadingMore || !hasMorePosts) {
+      return;
     }
+
+    await loadPostsPage(posts.length, false);
   };
 
   const handleProfileClick = () => {
@@ -428,43 +512,25 @@ const HomeScreen: React.FC = () => {
 
         <div className="feed-wrapper">
           <div className="feed-tabs">
-            <button
-              className={`feed-tab ${activeTab === "feed" ? "active" : ""}`}
-              onClick={() => setActiveTab("feed")}
-            >
-              <span className="tab-icon">FD</span>
-              <span className="tab-text">Feed</span>
-              {activeTab === "feed" && <div className="tab-indicator" />}
-            </button>
-            <button
-              className={`feed-tab ${activeTab === "following" ? "active" : ""}`}
-              onClick={() => setActiveTab("following")}
-            >
-              <span className="tab-icon">FG</span>
-              <span className="tab-text">Following</span>
-              {activeTab === "following" && <div className="tab-indicator" />}
-            </button>
-            <button
-              className={`feed-tab ${activeTab === "friends" ? "active" : ""}`}
-              onClick={() => setActiveTab("friends")}
-            >
-              <span className="tab-icon">FR</span>
-              <span className="tab-text">Friends</span>
-              {activeTab === "friends" && <div className="tab-indicator" />}
-            </button>
-            <button
-              className={`feed-tab ${activeTab === "communities" ? "active" : ""}`}
-              onClick={() => setActiveTab("communities")}
-            >
-              <span className="tab-icon">CM</span>
-              <span className="tab-text">Communities</span>
-              {activeTab === "communities" && <div className="tab-indicator" />}
-            </button>
+            {FEED_TABS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={`feed-tab ${activeTab === id ? "active" : ""}`}
+                onClick={() => setActiveTab(id)}
+              >
+                <Icon size={16} className="tab-icon" />
+                <span className="tab-text">{label}</span>
+                {activeTab === id && <div className="tab-indicator" />}
+              </button>
+            ))}
           </div>
 
           <FeedCenter
             posts={posts}
             loading={loading}
+            loadingMore={loadingMore}
+            hasMore={hasMorePosts}
+            onLoadMore={handleLoadMore}
             onPostLike={(id) => console.log("Like post:", id)}
             onPostShare={(id) => console.log("Share post:", id)}
             onRefresh={handleRefresh}

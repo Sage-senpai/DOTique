@@ -176,4 +176,3 @@ export async function connectPolkadotWallets() {
 
 // Singleton export
 export const polkadotService = new PolkadotService();
-console.log("✅ Polkadot Service ready (Vite + React)");
