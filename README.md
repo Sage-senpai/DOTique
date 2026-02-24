@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+# DOTique
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**DOTique** is a Web3 fashion ecosystem built on **Polkadot**, merging digital identity, creativity, and ownership. Users can create fully customizable **DOTvatars** (3D avatars), design fashion items in an **NFT Fashion Studio** powered with **Unique Network**, join **NFT-gated communities**, showcase outfits on a social feed, and trade wearables on a marketplace. DOTique empowers creators and users to express themselves across metaverses, games, and social platforms.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Built With
 
-## React Compiler
+- **React + Vite** – Modern web framework for fast development  
+- **TypeScript** – Type-safe, scalable codebase  
+- **React Router DOM** – Routing and navigation  
+- **Zustand** – State management  
+- **@react-three/fiber** – 3D DOTvatar rendering  
+- **React Native Skia** – NFT Fashion Studio drawing engine  
+- **Supabase (PostgreSQL + Auth + Storage)** – Backend, database, and real-time features  
+- **Polkadot.js** – Wallet integration, NFT transactions, blockchain interactions  
+- **Unique Network** – NFT minting, metadata, wearables infrastructure  
+- **IPFS / Pinata** – Decentralized storage for assets  
+- **Node.js** – Scripts, utilities, and development tooling  
+- **Figma + polkadot.ui.com** – UI/UX design  
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. **Clone the repository**
+```bash
+git clone https://github.com/your-username/dotique.git
+cd dotique
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Install dependencies
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+pnpm install
+# or
+npm install
+# or
+yarn install
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Set up environment variables
+Create a .env file in the root directory with:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_UNIQUE_NETWORK_API_KEY=your_unique_network_key
+VITE_POLKADOT_ENDPOINT=wss://rpc.polkadot.io
+
+Running the App
+# Run in development mode
+pnpm dev
+# or
+npm run dev
+# or
+yarn dev
