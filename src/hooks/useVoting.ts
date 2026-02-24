@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../services/supabase";
 import { useAuthStore } from "../stores/authStore";
+import { runOptimisticMutation } from "../services/optimisticUpdateService";
 
 export type VoteOption = { id: string; label: string; count: number };
 export type Poll = { id: string; title: string; options: VoteOption[]; ends_at?: string };
@@ -46,14 +47,44 @@ export const useVoting = (pollId?: string) => {
     if (!profile?.id || !pollId || voted) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("poll_votes").insert({
-        user_id: profile.id,
-        poll_id: pollId,
-        option_id: optionId,
+      await runOptimisticMutation({
+        applyOptimistic: () => {
+          const previousPoll = poll;
+          const previousVoted = voted;
+
+          setPoll((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              options: prev.options.map((option) =>
+                option.id === optionId
+                  ? { ...option, count: option.count + 1 }
+                  : option
+              ),
+            };
+          });
+          setVoted(true);
+
+          return { previousPoll, previousVoted };
+        },
+        commit: async () => {
+          const { error } = await supabase.from("poll_votes").insert({
+            user_id: profile.id,
+            poll_id: pollId,
+            option_id: optionId,
+          });
+          if (error) throw error;
+        },
+        rollback: ({ previousPoll, previousVoted }) => {
+          setPoll(previousPoll);
+          setVoted(previousVoted);
+        },
+        onError: (error) => {
+          console.error("Vote failed:", error);
+        },
       });
-      if (error) throw error;
-      setVoted(true);
-      await loadPoll(); // refresh tallies
+
+      await loadPoll();
     } catch (err: any) {
       console.error("Vote failed:", err.message);
     } finally {

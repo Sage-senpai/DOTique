@@ -1,6 +1,8 @@
 // src/services/notificationService.ts - COMPLETE REWRITE
 import { supabase } from './supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { executeSupabase, isTransientSupabaseError } from './supabaseRetryService';
+import { withRetry } from './retryService';
 
 export interface Notification {
   id: string;
@@ -29,22 +31,22 @@ class NotificationService {
    */
   async getNotifications(userId: string, limit = 50): Promise<Notification[]> {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          actor:actor_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('recipient_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
+      const data = await executeSupabase(() =>
+        supabase
+          .from('notifications')
+          .select(`
+            *,
+            actor:actor_id (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
+          .eq('recipient_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(limit)
+      );
       return data || [];
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -57,14 +59,27 @@ class NotificationService {
    */
   async getUnreadCount(userId: string): Promise<number> {
     try {
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', userId)
-        .eq('read', false);
+      const count = await withRetry(
+        async () => {
+          const { count, error } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('recipient_id', userId)
+            .eq('read', false);
 
-      if (error) throw error;
-      return count || 0;
+          if (error) {
+            throw error;
+          }
+
+          return count || 0;
+        },
+        {
+          retries: 2,
+          shouldRetry: (error) => isTransientSupabaseError(error),
+        }
+      );
+
+      return count;
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
       return 0;
@@ -121,28 +136,28 @@ class NotificationService {
       // Don't notify yourself
       if (recipientId === actorId) return null;
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: recipientId,
-          actor_id: actorId,
-          type,
-          content,
-          action_url: actionUrl,
-          metadata: metadata || {}
-        })
-        .select(`
-          *,
-          actor:actor_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .single();
-
-      if (error) throw error;
+      const data = await executeSupabase(() =>
+        supabase
+          .from('notifications')
+          .insert({
+            recipient_id: recipientId,
+            actor_id: actorId,
+            type,
+            content,
+            action_url: actionUrl,
+            metadata: metadata || {}
+          })
+          .select(`
+            *,
+            actor:actor_id (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
+          .single()
+      );
       return data;
     } catch (error) {
       console.error('Failed to create notification:', error);
@@ -159,7 +174,7 @@ class NotificationService {
   ): () => void {
     // Clean up existing subscription
     if (this.channel) {
-      this.channel.unsubscribe();
+      supabase.removeChannel(this.channel);
     }
 
     // Create new channel
@@ -199,7 +214,7 @@ class NotificationService {
     // Return cleanup function
     return () => {
       if (this.channel) {
-        this.channel.unsubscribe();
+        supabase.removeChannel(this.channel);
         this.channel = null;
       }
     };

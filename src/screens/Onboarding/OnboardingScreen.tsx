@@ -1,6 +1,7 @@
-import  { useState, useRef, useEffect } from "react";
-import "./onboarding.scss";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { setHasSeenOnboarding } from "../../services/preferencesService";
+import "./onboarding.scss";
 
 interface Slide {
   id: string;
@@ -15,21 +16,21 @@ const slides: Slide[] = [
     id: "1",
     title: "Welcome to DOTique",
     desc: "Your Web3 fashion hub powered by Polkadot. Create, collect, and showcase digital fashion.",
-    avatar: "👗",
+    avatar: "DOT",
     bgColor: "#60519B",
   },
   {
     id: "2",
     title: "Design Your DOTvatar",
     desc: "Create unique 3D avatars and dress them with exclusive NFT fashion pieces.",
-    avatar: "🎨",
+    avatar: "3D",
     bgColor: "#1E202C",
   },
   {
     id: "3",
-    title: "Mint & Trade NFTs",
-    desc: "Design fashion NFTs, mint them on Polkadot, and trade in our marketplace. remember to route to DOTvatar screen after onboarding and not home screen when ready",
-    avatar: "💎",
+    title: "Mint and Trade NFTs",
+    desc: "Design fashion NFTs, mint them on Polkadot, and trade in our marketplace.",
+    avatar: "NFT",
     bgColor: "#31323E",
   },
 ];
@@ -40,6 +41,11 @@ export default function OnboardingScreen() {
   const navigate = useNavigate();
   const intervalRef = useRef<number | null>(null);
 
+  const completeOnboarding = useCallback(async () => {
+    await setHasSeenOnboarding(true);
+    navigate("/home");
+  }, [navigate]);
+
   useEffect(() => {
     if (isPaused) return;
 
@@ -48,26 +54,23 @@ export default function OnboardingScreen() {
         setCurrentIndex((prev) => prev + 1);
       } else {
         clearInterval(intervalRef.current!);
-        localStorage.setItem("hasSeenOnboarding", "true");
-        navigate("/home");
+        void completeOnboarding();
       }
     }, 3000);
 
     return () => clearInterval(intervalRef.current!);
-  }, [currentIndex, isPaused, navigate]);
+  }, [completeOnboarding, currentIndex, isPaused]);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      localStorage.setItem("hasSeenOnboarding", "true");
-      navigate("/home");
+      void completeOnboarding();
     }
   };
 
   const handleSkip = () => {
-    localStorage.setItem("hasSeenOnboarding", "true");
-    navigate("/home");
+    void completeOnboarding();
   };
 
   return (
@@ -97,7 +100,7 @@ export default function OnboardingScreen() {
               <div
                 key={i}
                 className={`dot ${currentIndex === i ? "active-dot" : ""}`}
-              ></div>
+              />
             ))}
           </div>
           <button className="onboarding-button" onClick={handleNext}>

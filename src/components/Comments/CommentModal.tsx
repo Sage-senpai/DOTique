@@ -1,10 +1,12 @@
 // src/components/Comments/CommentModal.tsx - ENHANCED VERSION
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Heart, MessageCircle, Send, Image as ImageIcon, MoreVertical, Trash2, Flag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { executeSupabase } from '../../services/supabaseRetryService';
+import { runOptimisticMutation } from '../../services/optimisticUpdateService';
 import './CommentModal.scss';
 
 interface Comment {
@@ -123,10 +125,10 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // TODO: Fetch comments from Supabase
-      // fetchComments();
+      void fetchComments();
+      onCommentCountChange?.(initialCommentCount);
     }
-  }, [isOpen, postId]);
+  }, [initialCommentCount, isOpen, onCommentCountChange, postId]);
 
   const fetchComments = async () => {
     try {
@@ -173,45 +175,91 @@ const CommentModal: React.FC<CommentModalProps> = ({
         parent_id: replyingTo || undefined,
       };
 
-      if (replyingTo) {
-        // Add as reply
-        setComments(prev => prev.map(comment => 
-          comment.id === replyingTo 
-            ? { ...comment, replies: [...comment.replies, newCommentObj] }
-            : {
-                ...comment,
-                replies: comment.replies.map(reply =>
-                  reply.id === replyingTo
-                    ? { ...reply, replies: [...reply.replies, newCommentObj] }
-                    : reply
-                )
-              }
-        ));
-      } else {
-        // Add as top-level comment
-        setComments(prev => [newCommentObj, ...prev]);
-      }
+      const addCommentToTree = (list: Comment[], parentId: string | null, comment: Comment): Comment[] => {
+        if (!parentId) {
+          return [comment, ...list];
+        }
 
-      // Update comment count
-      const totalComments = countAllComments([...comments, newCommentObj]);
-      onCommentCountChange?.(totalComments);
+        return list.map((existing) => {
+          if (existing.id === parentId) {
+            return { ...existing, replies: [...existing.replies, comment] };
+          }
 
-      // Reset form
-      setNewComment('');
-      setImagePreview('');
-      setImageFile(null);
-      setReplyingTo(null);
+          return {
+            ...existing,
+            replies: addCommentToTree(existing.replies, parentId, comment),
+          };
+        });
+      };
 
-      // TODO: Replace with actual Supabase call
-      // await supabase.from('comments').insert({
-      //   post_id: postId,
-      //   author_id: profile.id,
-      //   content: newComment,
-      //   image_url: uploadedImageUrl,
-      //   parent_id: replyingTo,
-      // });
-    } catch (error) {
-      console.error('Error posting comment:', error);
+      await runOptimisticMutation({
+        applyOptimistic: () => {
+          const previousComments = comments;
+          const previousForm = {
+            newComment,
+            imagePreview,
+            imageFile,
+            replyingTo,
+          };
+
+          const nextComments = addCommentToTree(comments, replyingTo, newCommentObj);
+          setComments(nextComments);
+          onCommentCountChange?.(countAllComments(nextComments));
+
+          setNewComment('');
+          setImagePreview('');
+          setImageFile(null);
+          setReplyingTo(null);
+
+          return { previousComments, previousForm };
+        },
+        commit: async () => {
+          if (!profile?.id) return;
+
+          const insertPayload: Record<string, any> = {
+            post_id: postId,
+            user_id: profile.id,
+            content: newCommentObj.content,
+          };
+
+          if (newCommentObj.parent_id) insertPayload.parent_id = newCommentObj.parent_id;
+          if (newCommentObj.image_url) insertPayload.image_url = newCommentObj.image_url;
+
+          try {
+            await executeSupabase(() =>
+              supabase
+                .from('post_comments')
+                .insert(insertPayload)
+                .select('id')
+                .single()
+            );
+          } catch {
+            await executeSupabase(() =>
+              supabase
+                .from('post_comments')
+                .insert({
+                  post_id: postId,
+                  user_id: profile.id,
+                  content: newCommentObj.content,
+                })
+                .select('id')
+                .single()
+            );
+          }
+        },
+        rollback: ({ previousComments, previousForm }) => {
+          setComments(previousComments);
+          onCommentCountChange?.(countAllComments(previousComments));
+          setNewComment(previousForm.newComment);
+          setImagePreview(previousForm.imagePreview);
+          setImageFile(previousForm.imageFile);
+          setReplyingTo(previousForm.replyingTo);
+        },
+        onError: (error) => {
+          console.error('Error posting comment:', error);
+        },
+      });
+    } catch {
       alert('Failed to post comment');
     } finally {
       setLoading(false);
@@ -224,7 +272,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }, 0);
   };
 
-  const handleLikeComment = async (commentId: string, parentId?: string) => {
+  const handleLikeComment = async (commentId: string) => {
     const updateCommentLike = (comment: Comment): Comment => {
       if (comment.id === commentId) {
         return {
@@ -343,7 +391,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
           <div className="comment-actions">
             <button 
               className={`comment-action ${comment.liked ? 'active' : ''}`}
-              onClick={() => handleLikeComment(comment.id, comment.parent_id)}
+              onClick={() => handleLikeComment(comment.id)}
             >
               <Heart size={14} fill={comment.liked ? 'currentColor' : 'none'} />
               <span>{comment.likes}</span>

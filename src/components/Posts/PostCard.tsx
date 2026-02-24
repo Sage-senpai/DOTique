@@ -1,11 +1,12 @@
 // src/components/Post/PostCard.tsx - ENHANCED VERSION
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../services/supabase";
 import { useAuthStore } from "../../stores/authStore";
 import PostActions from "./PostActions";
 import PostContentRenderer from "./PostContentRenderer";
 import CommentModal from "../Comments/CommentModal";
+import { postService } from "../../services/postService";
+import { runOptimisticMutation } from "../../services/optimisticUpdateService";
 import "./PostCard.scss";
 
 interface Author {
@@ -71,7 +72,7 @@ const dummyPost: Post = {
   userInteraction: { liked: false, saved: false, reposted: false },
 };
 
-const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare, onDelete }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare }) => {
   const safePost = post ?? dummyPost;
   const navigate = useNavigate();
   const { profile } = useAuthStore();
@@ -88,7 +89,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare, onDelete }) 
     if (!hasViewed && safePost.id && profile?.id) {
       trackPostView();
     }
-  }, [safePost.id, profile]);
+  }, [hasViewed, safePost.id, profile]);
 
   const trackPostView = async () => {
     try {
@@ -120,40 +121,47 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare, onDelete }) 
 
   const handleLike = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    
-    const newLikedState = !userInteraction.liked;
+
+    if (!profile?.id) return;
+
+    const previousLikedState = Boolean(userInteraction.liked);
+    const previousLikeCount = stats.likes ?? 0;
+    const newLikedState = !previousLikedState;
     const likeChange = newLikedState ? 1 : -1;
 
-    // Optimistic update
-    setUserInteraction((prev) => ({ ...prev, liked: newLikedState }));
-    setStats((prev) => ({
-      ...prev,
-      likes: (prev.likes ?? 0) + likeChange,
-    }));
-
     try {
-      // TODO: Replace with actual Supabase call
-      // if (newLikedState) {
-      //   await supabase.from('post_likes').insert({
-      //     post_id: safePost.id,
-      //     user_id: profile.id,
-      //   });
-      // } else {
-      //   await supabase.from('post_likes')
-      //     .delete()
-      //     .eq('post_id', safePost.id)
-      //     .eq('user_id', profile.id);
-      // }
-      
+      await runOptimisticMutation({
+        applyOptimistic: () => {
+          setUserInteraction((prev) => ({ ...prev, liked: newLikedState }));
+          setStats((prev) => ({
+            ...prev,
+            likes: Math.max(0, (prev.likes ?? 0) + likeChange),
+          }));
+
+          return {
+            previousLikedState,
+            previousLikeCount,
+          };
+        },
+        commit: async () => {
+          if (newLikedState) {
+            await postService.likePost(safePost.id, profile.id);
+          } else {
+            await postService.unlikePost(safePost.id, profile.id);
+          }
+        },
+        rollback: (snapshot) => {
+          setUserInteraction((prev) => ({ ...prev, liked: snapshot.previousLikedState }));
+          setStats((prev) => ({ ...prev, likes: snapshot.previousLikeCount }));
+        },
+        onError: (error) => {
+          console.error("Error updating like:", error);
+        },
+      });
+
       onLike?.();
-    } catch (error) {
-      console.error('Error updating like:', error);
-      // Revert on error
-      setUserInteraction((prev) => ({ ...prev, liked: !newLikedState }));
-      setStats((prev) => ({
-        ...prev,
-        likes: (prev.likes ?? 0) - likeChange,
-      }));
+    } catch {
+      // rollback handled by runOptimisticMutation
     }
   };
 
@@ -202,6 +210,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onShare, onDelete }) 
 
   const handleRepost = async (withQuote: boolean = false) => {
     try {
+      void withQuote;
       const newRepostedState = !userInteraction.reposted;
       const repostChange = newRepostedState ? 1 : -1;
 

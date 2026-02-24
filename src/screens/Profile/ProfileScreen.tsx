@@ -18,18 +18,17 @@ import {
   Search
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
-import { useUserStore } from "../../stores/userStore";
 import { supabase } from "../../services/supabase";
 import { socialService } from "../../services/socialService";
 import PostCard from "../../components/Posts/PostCard";
 import NFTCard from "../../components/NFT/NFTCard";
 import { getUserProfileWithCounts } from '../../services/profileService';
+import { getWardrobeItems, subscribeToWardrobeChanges } from "../../services/wardrobeStorageService";
 import "./profile.scss";
 
 export default function ProfileScreen() {
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);
-  const { user, addRepost } = useUserStore();
 
   const [posts, setPosts] = useState<any[]>([]);
   const [reposts, setLocalReposts] = useState<any[]>([]);
@@ -40,7 +39,7 @@ export default function ProfileScreen() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [copiedWallet, setCopiedWallet] = useState(false);
   const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [, setShowSearchModal] = useState(false);
 
   const headerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -120,30 +119,33 @@ export default function ProfileScreen() {
     refreshProfile();
   }, [setProfile]);
 
-  // Load wardrobe from localStorage
+  // Load wardrobe from shared secure storage cache
   useEffect(() => {
-    const loadWardrobe = () => {
+    let mounted = true;
+
+    const loadWardrobe = async () => {
       try {
-        const wardrobeData = localStorage.getItem('user_wardrobe');
-        if (wardrobeData) {
-          const parsedNFTs = JSON.parse(wardrobeData);
-          setWardrobe(parsedNFTs);
+        const cachedWardrobe = await getWardrobeItems();
+        if (mounted) {
+          setWardrobe(cachedWardrobe);
         }
       } catch (err) {
         console.error("Failed to load wardrobe:", err);
       }
     };
 
-    loadWardrobe();
+    void loadWardrobe();
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user_wardrobe') {
-        loadWardrobe();
+    const unsubscribe = subscribeToWardrobeChanges((items) => {
+      if (mounted) {
+        setWardrobe(items);
       }
-    };
+    });
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const dummyPosts = useMemo(

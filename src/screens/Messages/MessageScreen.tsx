@@ -1,10 +1,10 @@
 // src/screens/Messages/MessagesScreen.tsx - REVAMPED SPLIT VIEW
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MessageCircle, Users, UserPlus, Search, Send, MoreVertical, Phone, Video, Info } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
+import { executeSupabase } from '../../services/supabaseRetryService';
 import './MessagesScreen.scss';
 
 interface Conversation {
@@ -32,10 +32,23 @@ interface Message {
   };
 }
 
+function toConversationListItem(conv: any, currentUserId: string): Conversation {
+  const otherUser = conv.participants?.find((p: any) => p.user.id !== currentUserId)?.user;
+  return {
+    id: conv.id,
+    type: 'direct',
+    name: otherUser?.display_name || 'Unknown User',
+    avatar: otherUser?.dotvatar_url || otherUser?.avatar_url || '👤',
+    lastMessage: conv.last_message?.[0]?.content || 'No messages yet',
+    lastMessageTime: new Date(conv.last_message?.[0]?.created_at || conv.created_at),
+    unreadCount: 0,
+    isOnline: false,
+  };
+}
+
 export default function MessagesScreen() {
   const { profile } = useAuthStore();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'conversations' | 'communities' | 'requests'>('conversations');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -46,176 +59,71 @@ export default function MessagesScreen() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Initialize conversation from URL params
-  useEffect(() => {
-    const userId = searchParams.get('user');
-    const communityId = searchParams.get('community');
+  const appendUniqueMessage = useCallback((message: Message) => {
+    setMessages((prev) => {
+      if (prev.some((existing) => existing.id === message.id)) {
+        return prev;
+      }
+      return [...prev, message];
+    });
+  }, []);
 
-    if (userId && profile?.id) {
-      initializeDirectConversation(userId);
-    } else if (communityId) {
-      initializeCommunityChat(communityId);
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    try {
+      const data = await executeSupabase(() =>
+        supabase
+          .from('messages')
+          .select(`
+            *,
+            sender:profiles(id, display_name, dotvatar_url, avatar_url)
+          `)
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true })
+      );
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
     }
-  }, [searchParams, profile?.id]);
+  }, []);
 
-  // Fetch conversations
-  useEffect(() => {
+  const fetchConversations = useCallback(async () => {
     if (!profile?.id) return;
-    fetchConversations();
-  }, [profile?.id, activeTab]);
 
-  // Fetch messages when conversation is selected
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation.id);
-      
-      // Subscribe to new messages
-      const channel = supabase
-        .channel(`conversation:${selectedConversation.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        }, (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [selectedConversation?.id]);
-
-  const initializeDirectConversation = async (otherUserId: string) => {
-    try {
-      // Check if conversation exists
-      const { data: existingConv, error: convError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('type', 'direct')
-        .contains('participant_ids', [profile!.id, otherUserId])
-        .single();
-
-      let conversationId = existingConv?.id;
-
-      if (!conversationId) {
-        // Create new conversation
-        const { data: newConv, error: createError } = await supabase
-          .from('conversations')
-          .insert({
-            type: 'direct',
-            participant_ids: [profile!.id, otherUserId],
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        conversationId = newConv.id;
-
-        // Add participants
-        await supabase
-          .from('conversation_participants')
-          .insert([
-            { conversation_id: conversationId, user_id: profile!.id },
-            { conversation_id: conversationId, user_id: otherUserId }
-          ]);
-      }
-
-      // Fetch and select the conversation
-      await fetchConversations();
-      const conv = conversations.find(c => c.id === conversationId);
-      if (conv) {
-        setSelectedConversation(conv);
-      }
-    } catch (error) {
-      console.error('Failed to initialize conversation:', error);
-      alert('Failed to start conversation');
-    }
-  };
-
-  const initializeCommunityChat = async (communityId: string) => {
-    try {
-      // Get community chat
-      const { data: chatData, error } = await supabase
-        .from('community_chats')
-        .select(`
-          *,
-          community:communities(name, avatar_emoji)
-        `)
-        .eq('community_id', communityId)
-        .single();
-
-      if (error) throw error;
-
-      // Transform to conversation format
-      const conversation: Conversation = {
-        id: chatData.id,
-        type: 'community',
-        name: chatData.community.name,
-        avatar: chatData.community.avatar_emoji,
-        lastMessage: '',
-        lastMessageTime: new Date(),
-        unreadCount: 0
-      };
-
-      setSelectedConversation(conversation);
-      setActiveTab('communities');
-    } catch (error) {
-      console.error('Failed to load community chat:', error);
-    }
-  };
-
-  const fetchConversations = async () => {
     try {
       setLoading(true);
 
       if (activeTab === 'conversations') {
-        // Fetch direct conversations
-        const { data, error } = await supabase
-          .from('conversations')
-          .select(`
-            *,
-            participants:conversation_participants(
-              user:profiles(id, display_name, dotvatar_url, avatar_url)
-            ),
-            last_message:messages(content, created_at)
-          `)
-          .eq('type', 'direct')
-          .contains('participant_ids', [profile!.id])
-          .order('updated_at', { ascending: false });
+        const data = await executeSupabase(() =>
+          supabase
+            .from('conversations')
+            .select(`
+              *,
+              participants:conversation_participants(
+                user:profiles(id, display_name, dotvatar_url, avatar_url)
+              ),
+              last_message:messages(content, created_at)
+            `)
+            .eq('type', 'direct')
+            .contains('participant_ids', [profile.id])
+            .order('updated_at', { ascending: false })
+        );
 
-        if (error) throw error;
-
-        const transformedConversations = (data || []).map((conv: any) => {
-          const otherUser = conv.participants.find((p: any) => p.user.id !== profile!.id)?.user;
-          return {
-            id: conv.id,
-            type: 'direct',
-            name: otherUser?.display_name || 'Unknown User',
-            avatar: otherUser?.dotvatar_url || otherUser?.avatar_url || '👤',
-            lastMessage: conv.last_message?.[0]?.content || 'No messages yet',
-            lastMessageTime: new Date(conv.last_message?.[0]?.created_at || conv.created_at),
-            unreadCount: 0,
-            isOnline: false
-          };
-        });
+        const transformedConversations = (data || []).map((conv: any) =>
+          toConversationListItem(conv, profile.id)
+        );
 
         setConversations(transformedConversations);
       } else if (activeTab === 'communities') {
-        // Fetch community chats
-        const { data, error } = await supabase
-          .from('community_chats')
-          .select(`
-            *,
-            community:communities(name, avatar_emoji),
-            last_message:messages(content, created_at)
-          `)
-          .order('updated_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await executeSupabase(() =>
+          supabase
+            .from('community_chats')
+            .select(`
+              *,
+              community:communities(name, avatar_emoji),
+              last_message:messages(content, created_at)
+            `)
+            .order('updated_at', { ascending: false })
+        );
 
         const transformedConversations = (data || []).map((chat: any) => ({
           id: chat.id,
@@ -224,7 +132,7 @@ export default function MessagesScreen() {
           avatar: chat.community.avatar_emoji,
           lastMessage: chat.last_message?.[0]?.content || 'No messages yet',
           lastMessageTime: new Date(chat.last_message?.[0]?.created_at || chat.created_at),
-          unreadCount: 0
+          unreadCount: 0,
         }));
 
         setConversations(transformedConversations);
@@ -234,25 +142,152 @@ export default function MessagesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, profile?.id]);
 
-  const fetchMessages = async (conversationId: string) => {
+  const initializeDirectConversation = useCallback(
+    async (otherUserId: string) => {
+      if (!profile?.id) return;
+
+      try {
+        const existingConv = await executeSupabase(() =>
+          supabase
+            .from('conversations')
+            .select('*')
+            .eq('type', 'direct')
+            .contains('participant_ids', [profile.id, otherUserId])
+            .maybeSingle()
+        );
+
+        let conversationId = existingConv?.id;
+
+        if (!conversationId) {
+          const newConv = await executeSupabase(() =>
+            supabase
+              .from('conversations')
+              .insert({
+                type: 'direct',
+                participant_ids: [profile.id, otherUserId],
+                created_at: new Date().toISOString(),
+              })
+              .select()
+              .single()
+          );
+
+          conversationId = newConv.id;
+
+          await executeSupabase(() =>
+            supabase
+              .from('conversation_participants')
+              .insert([
+                { conversation_id: conversationId, user_id: profile.id },
+                { conversation_id: conversationId, user_id: otherUserId },
+              ])
+              .select('conversation_id')
+          );
+        }
+
+        if (!conversationId) return;
+
+        const conversationRecord = await executeSupabase(() =>
+          supabase
+            .from('conversations')
+            .select(`
+              *,
+              participants:conversation_participants(
+                user:profiles(id, display_name, dotvatar_url, avatar_url)
+              ),
+              last_message:messages(content, created_at)
+            `)
+            .eq('id', conversationId)
+            .single()
+        );
+
+        const mapped = toConversationListItem(conversationRecord, profile.id);
+        setSelectedConversation(mapped);
+
+        await fetchConversations();
+      } catch (error) {
+        console.error('Failed to initialize conversation:', error);
+        alert('Failed to start conversation');
+      }
+    },
+    [fetchConversations, profile?.id]
+  );
+
+  const initializeCommunityChat = useCallback(async (communityId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:profiles(id, display_name, dotvatar_url, avatar_url)
-        `)
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      const chatData = await executeSupabase(() =>
+        supabase
+          .from('community_chats')
+          .select(`
+            *,
+            community:communities(name, avatar_emoji)
+          `)
+          .eq('community_id', communityId)
+          .single()
+      );
 
-      if (error) throw error;
-      setMessages(data || []);
+      const conversation: Conversation = {
+        id: chatData.id,
+        type: 'community',
+        name: chatData.community.name,
+        avatar: chatData.community.avatar_emoji,
+        lastMessage: '',
+        lastMessageTime: new Date(),
+        unreadCount: 0,
+      };
+
+      setSelectedConversation(conversation);
+      setActiveTab('communities');
     } catch (error) {
-      console.error('Failed to fetch messages:', error);
+      console.error('Failed to load community chat:', error);
     }
-  };
+  }, []);
+
+  // Initialize conversation from URL params
+  useEffect(() => {
+    const userId = searchParams.get('user');
+    const communityId = searchParams.get('community');
+
+    if (userId && profile?.id) {
+      void initializeDirectConversation(userId);
+    } else if (communityId) {
+      void initializeCommunityChat(communityId);
+    }
+  }, [initializeCommunityChat, initializeDirectConversation, profile?.id, searchParams]);
+
+  // Fetch conversations
+  useEffect(() => {
+    if (!profile?.id) return;
+    void fetchConversations();
+  }, [fetchConversations, profile?.id]);
+
+  // Fetch messages + realtime subscribe for selected conversation
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    void fetchMessages(selectedConversation.id);
+
+    const channel = supabase
+      .channel(`conversation:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`,
+        },
+        (payload) => {
+          appendUniqueMessage(payload.new as Message);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [appendUniqueMessage, fetchMessages, selectedConversation]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedConversation || !profile?.id) return;
@@ -260,17 +295,20 @@ export default function MessagesScreen() {
     try {
       setSending(true);
 
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: selectedConversation.id,
-          sender_id: profile.id,
-          content: messageInput.trim(),
-          created_at: new Date().toISOString()
-        });
+      const insertedMessage = await executeSupabase(() =>
+        supabase
+          .from('messages')
+          .insert({
+            conversation_id: selectedConversation.id,
+            sender_id: profile.id,
+            content: messageInput.trim(),
+            created_at: new Date().toISOString(),
+          })
+          .select('*')
+          .single()
+      );
 
-      if (error) throw error;
-
+      appendUniqueMessage(insertedMessage as Message);
       setMessageInput('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -280,7 +318,7 @@ export default function MessagesScreen() {
     }
   };
 
-  const filteredConversations = conversations.filter(conv =>
+  const filteredConversations = conversations.filter((conv) =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -364,9 +402,7 @@ export default function MessagesScreen() {
                       {formatTime(conv.lastMessageTime)}
                     </span>
                   </div>
-                  <div className="conversation-item__message">
-                    {conv.lastMessage}
-                  </div>
+                  <div className="conversation-item__message">{conv.lastMessage}</div>
                 </div>
                 {conv.unreadCount > 0 && (
                   <div className="conversation-item__badge">{conv.unreadCount}</div>
@@ -385,7 +421,8 @@ export default function MessagesScreen() {
             <div className="messages-chat__header">
               <div className="chat-header__left">
                 <div className="chat-header__avatar">
-                  {typeof selectedConversation.avatar === 'string' && selectedConversation.avatar.startsWith('http') ? (
+                  {typeof selectedConversation.avatar === 'string' &&
+                  selectedConversation.avatar.startsWith('http') ? (
                     <img src={selectedConversation.avatar} alt={selectedConversation.name} />
                   ) : (
                     <div className="avatar-emoji">{selectedConversation.avatar}</div>

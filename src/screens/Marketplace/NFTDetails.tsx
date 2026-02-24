@@ -16,6 +16,7 @@ import {
 import { dummyNFTs } from "../../data/nftData";
 import { useNFT } from "../../contexts/NFTContext";
 import { useWallet } from "../../contexts/WalletContext";
+import { useMintNFT } from "../../hooks/useMint";
 import MintNFTModal from "../../components/NFT/MintNFTModal";
 import type { MintFormData } from "../../components/NFT/MintNFTModal";
 
@@ -28,6 +29,7 @@ const NFTDetail: React.FC = () => {
   const { likeNFT, unlikeNFT, isNFTLiked, getNFTById } = useNFT();
   const { isConnected, isConnecting, selectedAccount, connectWallet, balance } =
     useWallet();
+  const { mint, loading: isMinting, transactionState } = useMintNFT();
 
   // Data
   const [nft, setNft] = useState<any>(
@@ -45,7 +47,7 @@ const NFTDetail: React.FC = () => {
 
   // Mint modal
   const [showMintModal, setShowMintModal] = useState(false);
-  const [isMinting, setIsMinting] = useState(false);
+  const [mintFeedback, setMintFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     const found = getNFTById(id || "") || dummyNFTs.find((n) => n.id === id);
@@ -83,27 +85,39 @@ const NFTDetail: React.FC = () => {
   };
 
   const handleMintNFT = async (data: MintFormData) => {
-    setIsMinting(true);
     try {
-      // Simulate minting delay (replace later with real transaction)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const imageBase64 = data.image
+        ? await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("Failed to read image"));
+            reader.readAsDataURL(data.image as File);
+          })
+        : nft.image;
 
-      console.log("✅ NFT Minted:", data);
-      console.log(`Minted by: ${selectedAccount?.address}`);
+      const result = await mint({
+        metadata: {
+          name: data.name,
+          description: data.description,
+          image: imageBase64,
+          attributes: [
+            { trait_type: "Rarity", value: data.rarity },
+            { trait_type: "Category", value: "fashion" },
+          ],
+        },
+        royalty: Number(data.royalty || 5),
+        price: Number(data.price || 0),
+      });
 
-      alert(`NFT "${data.name}" minted successfully!`);
+      setMintFeedback(`Finalized: ${result.txHash}`);
       setShowMintModal(false);
     } catch (err) {
       console.error("Mint failed:", err);
       alert("Mint failed. Please try again.");
-    } finally {
-      setIsMinting(false);
     }
   };
 
   if (!nft) return null;
-
-  const tabs = ["details", "history", "comments"];
 
   return (
     <div className="nft-detail">
@@ -239,6 +253,18 @@ const NFTDetail: React.FC = () => {
                 <span>{selectedAccount.address.slice(0, 10)}...</span>
                 <br />
                 Balance: {balance ? `${balance} DOT` : "Loading..."}
+                {transactionState && (
+                  <>
+                    <br />
+                    Mint Status: {transactionState.status}
+                  </>
+                )}
+                {mintFeedback && (
+                  <>
+                    <br />
+                    {mintFeedback}
+                  </>
+                )}
               </p>
             )}
           </div>

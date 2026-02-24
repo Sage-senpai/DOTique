@@ -1,4 +1,3 @@
-// src/screens/Profile/SettingsScreen.tsx - COMPLETE REDESIGN
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -18,41 +17,56 @@ import {
   Vote,
   LogOut,
   Shield,
-  Lock
+  Lock,
 } from "lucide-react";
-import AsyncStorage from "local-storage-fallback";
 import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
+import { clearAuthArtifacts, clearClientCache } from "../../services/preferencesService";
+import { useTheme } from "../../contexts/ThemeContext";
 import "./SettingsScreen.scss";
+
+type SettingsItem = {
+  icon: JSX.Element;
+  label: string;
+  action: () => void | Promise<void>;
+  toggle?: boolean;
+  meta?: string;
+};
+
+type SettingsGroup = {
+  title: string;
+  icon: JSX.Element;
+  items: SettingsItem[];
+};
 
 export default function SettingsScreen() {
   const resetAuth = useAuthStore((s) => s.resetAuth);
   const profile = useAuthStore((s) => s.profile);
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const { mode, resolvedTheme, setMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      await AsyncStorage.clear();
+      await clearAuthArtifacts();
       resetAuth();
       navigate("/login", { replace: true });
     } catch (err) {
       console.error("Logout error:", err);
-      alert("Logout failed. Please try again.");
+      window.alert("Logout failed. Please try again.");
     }
   };
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
-      "⚠️ WARNING: This action cannot be undone!\n\nAre you absolutely sure you want to delete your account? All your data, NFTs, and posts will be permanently removed."
+      "WARNING: This action cannot be undone.\n\nAre you sure you want to delete your account?"
     );
     if (!confirmed) return;
 
-    const doubleCheck = prompt('Type "DELETE" to confirm account deletion:');
+    const doubleCheck = window.prompt('Type "DELETE" to confirm account deletion:');
     if (doubleCheck !== "DELETE") {
-      alert("Account deletion cancelled.");
+      window.alert("Account deletion cancelled.");
       return;
     }
 
@@ -66,26 +80,37 @@ export default function SettingsScreen() {
       if (dbError) throw dbError;
 
       await supabase.auth.signOut();
-      await AsyncStorage.clear();
+      await clearAuthArtifacts();
       resetAuth();
 
-      alert("Account deleted successfully");
+      window.alert("Account deleted successfully.");
       navigate("/login", { replace: true });
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete account";
       console.error("Delete account error:", err);
-      alert(err.message || "Failed to delete account");
+      window.alert(message);
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleToggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Implement theme switching logic here
-    alert(`${darkMode ? "Light" : "Dark"} mode coming soon! 🌓`);
+    if (mode === "system") {
+      setMode(resolvedTheme === "dark" ? "light" : "dark");
+      return;
+    }
+    toggleTheme();
   };
 
-  const settingsGroups = {
+  const handleToggleSystemMode = () => {
+    if (mode === "system") {
+      setMode(resolvedTheme);
+      return;
+    }
+    setMode("system");
+  };
+
+  const settingsGroups: Record<string, SettingsGroup> = {
     appearance: {
       title: "Appearance",
       icon: <Sun size={20} />,
@@ -94,35 +119,43 @@ export default function SettingsScreen() {
           icon: <Moon size={18} />,
           label: "Dark Mode",
           action: handleToggleDarkMode,
-          toggle: darkMode
-        }
-      ]
+          toggle: resolvedTheme === "dark",
+          meta: mode === "system" ? "System controlled" : "Manual",
+        },
+        {
+          icon: <Sun size={18} />,
+          label: "Use System Theme",
+          action: handleToggleSystemMode,
+          toggle: mode === "system",
+          meta: `Current: ${resolvedTheme}`,
+        },
+      ],
     },
     content: {
-      title: "Content & Media",
+      title: "Content and Media",
       icon: <Heart size={20} />,
       items: [
         { icon: <Heart size={18} />, label: "Favourites", action: () => navigate("/favorites") },
-        { icon: <Download size={18} />, label: "Downloads", action: () => alert("Coming soon ⬇️") }
-      ]
+        { icon: <Download size={18} />, label: "Downloads", action: () => window.alert("Coming soon") },
+      ],
     },
     preferences: {
       title: "Preferences",
       icon: <Globe size={20} />,
       items: [
-        { icon: <Globe size={18} />, label: "Language", action: () => alert("Coming soon 🌐") },
-        { icon: <MapPin size={18} />, label: "Location Services", action: () => alert("Coming soon 📍") },
-        { icon: <Bell size={18} />, label: "Notifications", action: () => navigate("/notifications") }
-      ]
+        { icon: <Globe size={18} />, label: "Language", action: () => window.alert("Coming soon") },
+        { icon: <MapPin size={18} />, label: "Location Services", action: () => window.alert("Coming soon") },
+        { icon: <Bell size={18} />, label: "Notifications", action: () => navigate("/notifications") },
+      ],
     },
     legal: {
-      title: "Legal & Privacy",
+      title: "Legal and Privacy",
       icon: <Shield size={20} />,
       items: [
         { icon: <FileText size={18} />, label: "Privacy Policy", action: () => window.open("/privacy", "_blank") },
         { icon: <FileText size={18} />, label: "Terms of Service", action: () => window.open("/terms", "_blank") },
-        { icon: <Lock size={18} />, label: "Data & Privacy", action: () => navigate("/privacy-settings") }
-      ]
+        { icon: <Lock size={18} />, label: "Data and Privacy", action: () => navigate("/privacy-settings") },
+      ],
     },
     data: {
       title: "Data Management",
@@ -132,21 +165,21 @@ export default function SettingsScreen() {
           icon: <Trash2 size={18} />,
           label: "Clear Cache",
           action: async () => {
-            await AsyncStorage.clear();
-            alert("Cache cleared ✓");
-          }
+            await clearClientCache();
+            window.alert("Client cache cleared.");
+          },
         },
-        { icon: <Clock size={18} />, label: "Clear History", action: () => alert("History cleared ✓") }
-      ]
+        { icon: <Clock size={18} />, label: "Clear History", action: () => window.alert("History cleared.") },
+      ],
     },
     features: {
       title: "Platform Features",
       icon: <GraduationCap size={20} />,
       items: [
         { icon: <GraduationCap size={18} />, label: "Style CV", action: () => navigate("/profile/stylecv") },
-        { icon: <Vote size={18} />, label: "Governance", action: () => navigate("/profile/governance") }
-      ]
-    }
+        { icon: <Vote size={18} />, label: "Governance", action: () => navigate("/profile/governance") },
+      ],
+    },
   };
 
   return (
@@ -156,7 +189,6 @@ export default function SettingsScreen() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Header */}
       <div className="settings-screen__header">
         <button className="settings-screen__back" onClick={() => navigate(-1)}>
           <ArrowLeft size={20} />
@@ -165,23 +197,21 @@ export default function SettingsScreen() {
         <div className="header-glow" />
       </div>
 
-      {/* Profile Summary */}
       <div className="settings-screen__profile-summary">
         <div className="profile-avatar">
           {profile?.dotvatar_url ? (
             <img src={profile.dotvatar_url} alt="avatar" />
           ) : (
-            <div className="avatar-placeholder">🪞</div>
+            <div className="avatar-placeholder">DT</div>
           )}
           <div className="avatar-ring" />
         </div>
         <div className="profile-info">
           <h3>{profile?.display_name || "User"}</h3>
-          <p>@{profile?.username}</p>
+          <p>@{profile?.username || "dotique"}</p>
         </div>
       </div>
 
-      {/* Settings Groups */}
       <div className="settings-screen__content">
         {Object.entries(settingsGroups).map(([key, group]) => (
           <div key={key} className="settings-group">
@@ -201,13 +231,14 @@ export default function SettingsScreen() {
                   <div className="settings-item__left">
                     <span className="settings-item__icon">{item.icon}</span>
                     <span className="settings-item__label">{item.label}</span>
+                    {item.meta && <span className="settings-item__meta">{item.meta}</span>}
                   </div>
                   {item.toggle !== undefined ? (
                     <div className={`toggle-switch ${item.toggle ? "active" : ""}`}>
                       <div className="toggle-slider" />
                     </div>
                   ) : (
-                    <span className="settings-item__chevron">›</span>
+                    <span className="settings-item__chevron">&gt;</span>
                   )}
                 </motion.button>
               ))}
@@ -215,13 +246,12 @@ export default function SettingsScreen() {
           </div>
         ))}
 
-        {/* Danger Zone */}
         <div className="settings-screen__danger-zone">
           <div className="danger-zone__header">
             <Shield size={20} />
             <h3>Danger Zone</h3>
           </div>
-          
+
           <motion.button
             className="danger-btn danger-btn--logout"
             onClick={handleLogout}

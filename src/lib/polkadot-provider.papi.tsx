@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 "use client";
 
 import { ClientConnectionStatus } from "@/lib/types.dot-ui";
@@ -13,6 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { BlockInfo } from "polkadot-api";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+import { deleteItem, getItem, saveItem } from "../utils/secureStore";
 
 const queryClient = new QueryClient();
 
@@ -66,22 +68,38 @@ export function SelectedAccountProvider({
 
   const accounts = useAccounts({ defer: true });
 
-  // Load selected account from localStorage on mount,
+  // Load selected account from secure storage on mount.
   useEffect(() => {
-    const stored = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-    if (stored) {
-      setSelectedAccountState(
-        accounts?.find((account) => account.address === stored) || null
-      );
-    }
+    let mounted = true;
+
+    (async () => {
+      try {
+        const stored = await getItem(SELECTED_ACCOUNT_KEY);
+        if (!stored || !mounted) return;
+
+        setSelectedAccountState(
+          accounts?.find((account) => account.address === stored) || null
+        );
+      } catch (error) {
+        console.warn("Failed to restore selected account:", error);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [accounts]);
 
   const setSelectedAccount = (account: WalletAccount | null) => {
     setSelectedAccountState(account);
     if (account) {
-      localStorage.setItem(SELECTED_ACCOUNT_KEY, account.address);
+      saveItem(SELECTED_ACCOUNT_KEY, account.address).catch((error) => {
+        console.warn("Failed to persist selected account:", error);
+      });
     } else {
-      localStorage.removeItem(SELECTED_ACCOUNT_KEY);
+      deleteItem(SELECTED_ACCOUNT_KEY).catch((error) => {
+        console.warn("Failed to clear selected account:", error);
+      });
     }
   };
 

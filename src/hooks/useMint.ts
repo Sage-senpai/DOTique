@@ -1,10 +1,11 @@
-// src/hooks/useMint.ts (Updated)
-// ==========================================
-
-import { useState, useCallback } from 'react';
-import { uniqueNetworkService } from '../services/uniqueNetworkService';
-import { useWallet } from '../contexts/WalletContext';
-import { uploadToIPFS } from '../services/ipfsService';
+import { useState, useCallback, useEffect } from "react";
+import { uniqueNetworkService } from "../services/uniqueNetworkService";
+import { useWallet } from "../contexts/WalletContext";
+import { uploadToIPFS } from "../services/ipfsService";
+import {
+  transactionQueueService,
+  type MintTransactionState,
+} from "../services/transactionQueueService";
 
 export interface MintResponse {
   tokenId: string;
@@ -12,12 +13,26 @@ export interface MintResponse {
   txHash: string;
   nftId: string;
   success: boolean;
+  queueId: string;
+  status: MintTransactionState["status"];
 }
 
 export function useMintNFT() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [activeQueueId, setActiveQueueId] = useState<string | null>(null);
+  const [transactionState, setTransactionState] = useState<MintTransactionState | null>(null);
   const { selectedAccount } = useWallet();
+
+  useEffect(() => {
+    const unsubscribe = transactionQueueService.subscribe((state) => {
+      if (activeQueueId && state.id === activeQueueId) {
+        setTransactionState(state);
+      }
+    });
+
+    return unsubscribe;
+  }, [activeQueueId]);
 
   const mint = useCallback(
     async ({
@@ -32,25 +47,28 @@ export function useMintNFT() {
       collectionId?: string;
     }): Promise<MintResponse> => {
       if (!selectedAccount) {
-        throw new Error('No wallet connected');
+        throw new Error("No wallet connected");
+      }
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        throw new Error("You are offline. Reconnect to mint NFT.");
       }
 
       setLoading(true);
       setError(null);
+      setTransactionState(null);
+      setActiveQueueId(null);
 
       try {
-        // Upload image to IPFS if it's base64
         let imageUrl = metadata.image;
-        if (metadata.image?.startsWith('data:')) {
+        if (metadata.image?.startsWith("data:")) {
           const uploadResult = await uploadToIPFS({
             content: metadata.image,
             fileName: `${metadata.name}.png`,
-            contentType: 'image/png',
+            contentType: "image/png",
           });
           imageUrl = uploadResult.url;
         }
 
-        // Prepare full metadata
         const fullMetadata = {
           ...metadata,
           image: imageUrl,
@@ -65,23 +83,31 @@ export function useMintNFT() {
           },
         };
 
-        // Mint via Unique Network
-        const result = await uniqueNetworkService.mintToken({
-          collectionId,
-          ownerAddress: selectedAccount.address,
-          metadata: fullMetadata,
-          royalty,
-          price,
-        });
+        const { queueId, result, finalState } = await transactionQueueService.runMint(
+          () =>
+            uniqueNetworkService.mintToken({
+              collectionId,
+              ownerAddress: selectedAccount.address,
+              metadata: fullMetadata,
+              royalty,
+              price,
+            }),
+          3
+        );
+
+        setActiveQueueId(queueId);
+        setTransactionState(finalState);
 
         return {
           ...result,
           success: true,
+          queueId,
+          status: finalState.status,
         };
-      } catch (err: any) {
-        console.error('Mint error:', err);
-        setError(err);
-        throw err;
+      } catch (err) {
+        const mintError = err instanceof Error ? err : new Error("Mint failed");
+        setError(mintError);
+        throw mintError;
       } finally {
         setLoading(false);
       }
@@ -93,5 +119,7 @@ export function useMintNFT() {
     mint,
     loading,
     error,
+    transactionState,
+    activeQueueId,
   };
 }

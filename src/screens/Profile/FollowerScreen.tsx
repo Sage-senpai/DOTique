@@ -1,4 +1,3 @@
-// src/screens/Profile/FollowerScreen.tsx - ENHANCED WITH LIVE UPDATES
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -28,29 +27,33 @@ export default function FollowerScreen() {
   const [mutual, setMutual] = useState<UserCard[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch follower/following/mutual lists
   useEffect(() => {
-    if (profile?.id) {
-      fetchFollowData(profile.id);
-      subscribeToFollowChanges(profile.id);
-    }
+    if (!profile?.id) return;
+
+    fetchFollowData(profile.id);
+    const unsubscribe = subscribeToFollowChanges(profile.id);
+    return unsubscribe;
   }, [profile?.id]);
 
-  // Subscribe to real-time follow changes
   const subscribeToFollowChanges = (userId: string) => {
     const channel = supabase
-      .channel('follow-changes')
+      .channel(`follow-changes:${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'follows',
-          filter: `follower_id=eq.${userId},following_id=eq.${userId}`,
+          event: "*",
+          schema: "public",
+          table: "user_follows",
         },
         (payload) => {
-          console.log('🔄 Follow change detected:', payload);
-          fetchFollowData(userId);
+          const row = (payload.new || payload.old) as
+            | { follower_id?: string; following_id?: string }
+            | null;
+          if (!row) return;
+
+          if (row.follower_id === userId || row.following_id === userId) {
+            fetchFollowData(userId);
+          }
         }
       )
       .subscribe();
@@ -64,9 +67,8 @@ export default function FollowerScreen() {
     try {
       setLoading(true);
 
-      // Fetch followers = users who follow me
       const { data: followerLinks, error: followersError } = await supabase
-        .from("follows")
+        .from("user_follows")
         .select("follower_id")
         .eq("following_id", userId);
 
@@ -74,7 +76,6 @@ export default function FollowerScreen() {
 
       const followerIds = followerLinks?.map((f) => f.follower_id) || [];
 
-      // Fetch follower profiles
       let followerUsers: UserCard[] = [];
       if (followerIds.length > 0) {
         const { data } = await supabase
@@ -84,9 +85,8 @@ export default function FollowerScreen() {
         followerUsers = data || [];
       }
 
-      // Fetch following = users I follow
       const { data: followingLinks, error: followingError } = await supabase
-        .from("follows")
+        .from("user_follows")
         .select("following_id")
         .eq("follower_id", userId);
 
@@ -94,36 +94,33 @@ export default function FollowerScreen() {
 
       const followingIds = followingLinks?.map((f) => f.following_id) || [];
 
-      // Fetch following profiles
       let followingUsers: UserCard[] = [];
       if (followingIds.length > 0) {
         const { data } = await supabase
           .from("profiles")
           .select("id, username, display_name, avatar_url, bio, verified")
           .in("id", followingIds);
-        followingUsers = (data || []).map(user => ({
+        followingUsers = (data || []).map((user) => ({
           ...user,
-          isFollowing: true
+          isFollowing: true,
         }));
       }
 
-      // Calculate mutual = intersection of followers and following
       const mutualIds = followerIds.filter((fid) => followingIds.includes(fid));
       const mutualUsers = followerUsers
         .filter((u) => mutualIds.includes(u.id))
-        .map(user => ({ ...user, isFollowing: true }));
+        .map((user) => ({ ...user, isFollowing: true }));
 
-      // Check which followers we're following back
-      const enrichedFollowers = followerUsers.map(user => ({
+      const enrichedFollowers = followerUsers.map((user) => ({
         ...user,
-        isFollowing: followingIds.includes(user.id)
+        isFollowing: followingIds.includes(user.id),
       }));
 
       setFollowers(enrichedFollowers);
       setFollowing(followingUsers);
       setMutual(mutualUsers);
     } catch (err) {
-      console.error("❌ Error fetching follow data:", err);
+      console.error("Error fetching follow data:", err);
     } finally {
       setLoading(false);
     }
@@ -133,32 +130,28 @@ export default function FollowerScreen() {
     if (!profile?.id) return;
 
     try {
-      // Check if already following
       const { data: existingFollow } = await supabase
-        .from("follows")
+        .from("user_follows")
         .select("id")
         .eq("follower_id", profile.id)
         .eq("following_id", targetUserId)
         .maybeSingle();
 
       if (existingFollow) {
-        // Unfollow
         await supabase
-          .from("follows")
+          .from("user_follows")
           .delete()
           .eq("follower_id", profile.id)
           .eq("following_id", targetUserId);
       } else {
-        // Follow
         await supabase
-          .from("follows")
+          .from("user_follows")
           .insert({ follower_id: profile.id, following_id: targetUserId });
       }
 
-      // Refresh data
       fetchFollowData(profile.id);
     } catch (error) {
-      console.error("❌ Follow toggle error:", error);
+      console.error("Follow toggle error:", error);
     }
   };
 
@@ -167,7 +160,7 @@ export default function FollowerScreen() {
       id: user.id,
       username: user.username,
       display_name: user.display_name,
-      avatar: user.avatar_url || user.dotvatar_url || "👤",
+      avatar: user.avatar_url || user.dotvatar_url || "User",
       bio: user.bio || "",
       followers_count: 0,
       following_count: 0,
@@ -203,7 +196,7 @@ export default function FollowerScreen() {
       <div className="follower-card__info">
         <div className="follower-card__name">
           {user.display_name}
-          {user.verified && <span className="follower-card__badge">✔️</span>}
+          {user.verified && <span className="follower-card__badge">Verified</span>}
         </div>
         <div className="follower-card__username">@{user.username}</div>
         {user.bio && <div className="follower-card__bio">{user.bio}</div>}
@@ -224,11 +217,7 @@ export default function FollowerScreen() {
   );
 
   const activeList =
-    activeTab === "followers"
-      ? followers
-      : activeTab === "following"
-      ? following
-      : mutual;
+    activeTab === "followers" ? followers : activeTab === "following" ? following : mutual;
 
   return (
     <motion.div
@@ -239,7 +228,7 @@ export default function FollowerScreen() {
     >
       <div className="followers-screen__header">
         <button onClick={() => navigate(-1)} className="followers-screen__back">
-          ←
+          Back
         </button>
         <h2 className="followers-screen__title">Connections</h2>
       </div>
@@ -278,7 +267,7 @@ export default function FollowerScreen() {
           activeList.map((user) => renderUserCard(user))
         ) : (
           <div className="followers-screen__empty">
-            <p className="empty-icon">👥</p>
+            <p className="empty-icon">Users</p>
             <p className="empty-text">
               {activeTab === "followers" && "No followers yet"}
               {activeTab === "following" && "Not following anyone yet"}

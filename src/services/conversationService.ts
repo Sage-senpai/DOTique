@@ -1,6 +1,6 @@
 // src/services/conversationService.ts - COMPLETE IMPLEMENTATION
 import { supabase } from './supabase';
-import { notificationService } from './notificationService';
+import { executeSupabase } from './supabaseRetryService';
 
 export interface Conversation {
   id: string;
@@ -117,27 +117,27 @@ class ConversationService {
    */
   async getUserConversations(userId: string): Promise<Conversation[]> {
     try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          other_user:profiles!conversations_other_user_id_fkey(
-            id,
-            username,
-            display_name,
-            avatar_url
-          ),
-          community:communities(
-            id,
-            name,
-            avatar_emoji,
-            member_count
-          )
-        `)
-        .eq('user_id', userId)
-        .order('last_message_at', { ascending: false, nullsFirst: false });
-
-      if (error) throw error;
+      const data = await executeSupabase(() =>
+        supabase
+          .from('conversations')
+          .select(`
+            *,
+            other_user:profiles!conversations_other_user_id_fkey(
+              id,
+              username,
+              display_name,
+              avatar_url
+            ),
+            community:communities(
+              id,
+              name,
+              avatar_emoji,
+              member_count
+            )
+          `)
+          .eq('user_id', userId)
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+      );
 
       return data || [];
     } catch (error) {
@@ -159,38 +159,54 @@ class ConversationService {
   ): Promise<any> {
     try {
       // Insert message
-      const { data: message, error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: senderId,
-          receiver_id: receiverId,
-          content,
-          media_url: mediaUrl,
-          media_type: mediaType
-        })
-        .select()
-        .single();
-
-      if (messageError) throw messageError;
+      const message = await executeSupabase(() =>
+        supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: senderId,
+            receiver_id: receiverId,
+            content,
+            media_url: mediaUrl,
+            media_type: mediaType
+          })
+          .select()
+          .single()
+      );
 
       // Update conversation's last message
-      await supabase
-        .from('conversations')
-        .update({
-          last_message: content,
-          last_message_at: new Date().toISOString()
-        })
-        .eq('id', conversationId);
+      await executeSupabase(() =>
+        supabase
+          .from('conversations')
+          .update({
+            last_message: content,
+            last_message_at: new Date().toISOString()
+          })
+          .eq('id', conversationId)
+          .select('id')
+      );
 
       // Increment unread count for receiver
-      await supabase
-        .from('conversations')
-        .update({
-          unread_count: supabase.rpc('increment', { x: 1 })
-        })
-        .eq('user_id', receiverId)
-        .eq('other_user_id', senderId);
+      const receiverConversation = await executeSupabase(() =>
+        supabase
+          .from('conversations')
+          .select('id, unread_count')
+          .eq('user_id', receiverId)
+          .eq('other_user_id', senderId)
+          .maybeSingle()
+      );
+
+      if (receiverConversation) {
+        await executeSupabase(() =>
+          supabase
+            .from('conversations')
+            .update({
+              unread_count: (receiverConversation.unread_count || 0) + 1,
+            })
+            .eq('id', receiverConversation.id)
+            .select('id')
+        );
+      }
 
       return message;
     } catch (error) {
@@ -231,22 +247,22 @@ class ConversationService {
     limit = 50
   ): Promise<any[]> {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
-        .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
-        .order('created_at', { ascending: true })
-        .limit(limit);
-
-      if (error) throw error;
+      const data = await executeSupabase(() =>
+        supabase
+          .from('messages')
+          .select(`
+            *,
+            sender:profiles!messages_sender_id_fkey(
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          `)
+          .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+          .order('created_at', { ascending: true })
+          .limit(limit)
+      );
       return data || [];
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -293,7 +309,7 @@ class ConversationService {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }
 

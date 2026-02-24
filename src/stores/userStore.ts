@@ -1,5 +1,6 @@
 // src/stores/userStore.ts
 import { create } from "zustand";
+import { deleteItem, getItem, saveItem } from "../utils/secureStore";
 
 export interface Repost {
   id: string;
@@ -25,12 +26,16 @@ export interface User {
 interface UserStoreState {
   user: User;
   selectedUser: User | null;
+  hydrated: boolean;
+  hydrateUser: () => Promise<void>;
   addPost: (post: any) => void;
   addRepost: (repost: Repost) => void;
   setSelectedUser: (user: User) => void;
   clearSelectedUser: () => void;
   clearUser: () => void;
 }
+
+const USER_STORE_KEY = "userStore";
 
 const initialUser: User = {
   id: "demo-id",
@@ -46,15 +51,36 @@ const initialUser: User = {
 };
 
 export const useUserStore = create<UserStoreState>((set) => ({
-  user:
-    JSON.parse(localStorage.getItem("userStore") || "null")?.user ||
-    initialUser,
+  user: initialUser,
   selectedUser: null,
+  hydrated: false,
+
+  hydrateUser: async () => {
+    try {
+      const raw = await getItem(USER_STORE_KEY);
+      if (!raw) {
+        set({ hydrated: true });
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as { user?: User };
+      if (parsed?.user) {
+        set({ user: parsed.user, hydrated: true });
+        return;
+      }
+    } catch (error) {
+      console.warn("Failed to restore user store cache:", error);
+    }
+
+    set({ hydrated: true });
+  },
 
   addPost: (post) =>
     set((state) => {
       const updated = { ...state.user, posts: [post, ...state.user.posts] };
-      localStorage.setItem("userStore", JSON.stringify({ user: updated }));
+      saveItem(USER_STORE_KEY, JSON.stringify({ user: updated })).catch((error) => {
+        console.warn("Failed to persist user store cache:", error);
+      });
       return { user: updated };
     }),
 
@@ -64,7 +90,9 @@ export const useUserStore = create<UserStoreState>((set) => ({
         ...state.user,
         reposts: [repost, ...state.user.reposts],
       };
-      localStorage.setItem("userStore", JSON.stringify({ user: updated }));
+      saveItem(USER_STORE_KEY, JSON.stringify({ user: updated })).catch((error) => {
+        console.warn("Failed to persist user store cache:", error);
+      });
       return { user: updated };
     }),
 
@@ -73,9 +101,13 @@ export const useUserStore = create<UserStoreState>((set) => ({
   clearSelectedUser: () => set({ selectedUser: null }),
 
   clearUser: () => {
-    localStorage.removeItem("userStore");
+    deleteItem(USER_STORE_KEY).catch((error) => {
+      console.warn("Failed to clear user store cache:", error);
+    });
     set({ user: initialUser, selectedUser: null });
   },
 
   
 }));
+
+void useUserStore.getState().hydrateUser();

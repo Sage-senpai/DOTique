@@ -2,12 +2,103 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
-/* GLOBAL COLOR VARIABLES */
+/* DESIGN TOKENS */
 :root {
-  --color-primary: #60519b;
-  --color-secondary: #1e202c;
-  --color-accent: #bfc0d1;
-  --color-neutral: #31323e;
+  /* Brand scale (50-900) */
+  --dt-color-primary-50: #f2eefb;
+  --dt-color-primary-100: #e4dcf7;
+  --dt-color-primary-200: #c9bbee;
+  --dt-color-primary-300: #ad9ae4;
+  --dt-color-primary-400: #8d78ca;
+  --dt-color-primary-500: #60519b;
+  --dt-color-primary-600: #53458a;
+  --dt-color-primary-700: #463978;
+  --dt-color-primary-800: #33295a;
+  --dt-color-primary-900: #211a3e;
+
+  --dt-color-neutral-50: #f4f5f7;
+  --dt-color-neutral-100: #e9eaf0;
+  --dt-color-neutral-200: #cfd2dd;
+  --dt-color-neutral-300: #b0b4c3;
+  --dt-color-neutral-400: #8d92a5;
+  --dt-color-neutral-500: #656a7d;
+  --dt-color-neutral-600: #4f5465;
+  --dt-color-neutral-700: #31323e;
+  --dt-color-neutral-800: #242634;
+  --dt-color-neutral-900: #161821;
+
+  --dt-color-accent-50: #f8f9ff;
+  --dt-color-accent-100: #f0f2fb;
+  --dt-color-accent-200: #e4e6f2;
+  --dt-color-accent-300: #d4d7e7;
+  --dt-color-accent-400: #bfc0d1;
+  --dt-color-accent-500: #a8abbe;
+  --dt-color-accent-600: #8f93a7;
+  --dt-color-accent-700: #757a8f;
+  --dt-color-accent-800: #5a5f74;
+  --dt-color-accent-900: #424659;
+
+  --dt-color-danger-500: #ff6b6b;
+
+  /* Primitive RGB channels for alpha composition */
+  --dt-primary-rgb: 96, 81, 155;
+  --dt-neutral-rgb: 49, 50, 62;
+  --dt-accent-rgb: 191, 192, 209;
+  --dt-danger-rgb: 255, 107, 107;
+
+  /* Spacing scale */
+  --dt-space-1: 4px;
+  --dt-space-2: 8px;
+  --dt-space-3: 12px;
+  --dt-space-4: 16px;
+  --dt-space-5: 20px;
+  --dt-space-6: 24px;
+  --dt-space-8: 32px;
+
+  /* Radius scale */
+  --dt-radius-sm: 8px;
+  --dt-radius-md: 12px;
+  --dt-radius-lg: 16px;
+  --dt-radius-xl: 24px;
+
+  /* Elevation */
+  --dt-elevation-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --dt-elevation-md: 0 8px 20px rgba(0, 0, 0, 0.22);
+  --dt-elevation-lg: 0 14px 28px rgba(0, 0, 0, 0.28);
+
+  /* Motion tokens */
+  --dt-duration-fast: 140ms;
+  --dt-duration-normal: 220ms;
+  --dt-duration-slow: 360ms;
+
+  /* Semantic (dark default) */
+  --dt-bg-canvas: #1e202c;
+  --dt-bg-surface: #262836;
+  --dt-bg-surface-muted: #31323e;
+  --dt-text-primary: #f8f9ff;
+  --dt-text-secondary: #bfc0d1;
+  --dt-border-subtle: rgba(191, 192, 209, 0.18);
+  --dt-border-strong: rgba(96, 81, 155, 0.35);
+
+  /* Backward compatibility aliases */
+  --color-primary: var(--dt-color-primary-500);
+  --color-secondary: var(--dt-bg-canvas);
+  --color-accent: var(--dt-text-secondary);
+  --color-neutral: var(--dt-bg-surface-muted);
+}
+
+[data-theme="light"] {
+  --dt-bg-canvas: #f7f7fb;
+  --dt-bg-surface: #ffffff;
+  --dt-bg-surface-muted: #f0f2f8;
+  --dt-text-primary: #1e202c;
+  --dt-text-secondary: #4e5265;
+  --dt-border-subtle: rgba(30, 32, 44, 0.12);
+  --dt-border-strong: rgba(96, 81, 155, 0.28);
+
+  --color-secondary: var(--dt-bg-canvas);
+  --color-accent: var(--dt-text-secondary);
+  --color-neutral: var(--dt-bg-surface-muted);
 }
 
 /* GLOBAL APP LAYOUT */
@@ -23,8 +114,8 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-secondary);
-  color: var(--color-accent);
+  background-color: var(--dt-bg-canvas);
+  color: var(--dt-text-secondary);
   position: relative;
   /* NO min-height, NO overflow properties! */
 }
@@ -89,9 +180,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to bottom, #E6007A, #020617);
-  color: #ffffff;
-  font-family: "Inter", sans-serif;
+  background: linear-gradient(
+    155deg,
+    var(--dt-bg-canvas) 0%,
+    var(--dt-bg-surface-muted) 62%,
+    var(--dt-color-primary-700) 100%
+  );
+  color: var(--dt-text-primary);
+  font-family: "Poppins", sans-serif;
   text-align: center;
   gap: 1rem;
   padding: 2rem;
@@ -110,8 +206,23 @@
   }
 
   .hint {
-    color: #a3a3a3;
+    color: rgba(var(--dt-accent-rgb), 0.7);
     font-size: 0.9rem;
+  }
+
+  button {
+    margin-top: 0.75rem;
+    border: 1px solid rgba(var(--dt-primary-rgb), 0.4);
+    background: rgba(var(--dt-primary-rgb), 0.2);
+    color: var(--dt-text-primary);
+    border-radius: var(--dt-radius-sm);
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: all var(--dt-duration-normal) ease;
+  }
+
+  button:hover {
+    background: rgba(var(--dt-primary-rgb), 0.3);
   }
 
   @keyframes spin {
@@ -139,6 +250,8 @@ body {
   overflow-x: hidden;
   overflow-y: visible; /* Let content flow naturally */
   height: 100%;
+  background: var(--dt-bg-canvas);
+  color: var(--dt-text-primary);
 }
 
 /* CRITICAL: Fix the main-content wrapper that's breaking sticky */
@@ -161,15 +274,15 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-secondary);
+  background: var(--dt-bg-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+  background: var(--dt-color-primary-500);
   border-radius: 4px;
 
   &:hover {
-    background: lighten(#60519b, 10%);
+    background: var(--dt-color-primary-400);
   }
 }
 

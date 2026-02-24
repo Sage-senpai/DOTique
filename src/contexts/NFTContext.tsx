@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/contexts/NFTContext.tsx
 // =====================================================
 import React, {
@@ -10,6 +11,7 @@ import React, {
 import type { ReactNode } from "react";
 
 import { dummyNFTs } from "../data/nftData";
+import { getItem, saveItem } from "../utils/secureStore";
 
 // =====================================================
 // Types
@@ -60,6 +62,7 @@ interface NFTContextType {
 // Context creation
 // =====================================================
 const NFTContext = createContext<NFTContextType | undefined>(undefined);
+const FAVORITES_STORAGE_KEY = "nft-favorites";
 
 // =====================================================
 // Provider
@@ -75,16 +78,35 @@ export const NFTProvider: React.FC<{ children: ReactNode }> = ({
   const [favorites, setFavorites] = useState<string[]>([]);
 
   // =====================================================
-  // Load favorites from localStorage
+  // Load favorites from secure storage
   // =====================================================
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("nft-favorites");
-    if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
+    let mounted = true;
+
+    (async () => {
+      try {
+        const savedFavorites = await getItem(FAVORITES_STORAGE_KEY);
+        if (!savedFavorites || !mounted) return;
+
+        const parsed = JSON.parse(savedFavorites);
+        if (Array.isArray(parsed)) {
+          setFavorites(parsed.filter((entry) => typeof entry === "string"));
+        }
+      } catch (error) {
+        console.warn("Failed to restore NFT favorites:", error);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Save favorites
   useEffect(() => {
-    localStorage.setItem("nft-favorites", JSON.stringify(favorites));
+    saveItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites)).catch((error) => {
+      console.warn("Failed to persist NFT favorites:", error);
+    });
   }, [favorites]);
 
   // =====================================================

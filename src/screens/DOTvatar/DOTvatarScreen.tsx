@@ -1,10 +1,11 @@
 // src/screens/DOTvatar/DOTvatarScreen.tsx - PRODUCTION READY
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, RotateCcw, ShoppingBag, Shirt, User, Palette, Smile, Camera, Download } from 'lucide-react';
+import { Save, RotateCcw, ShoppingBag, Shirt, User, Palette, Smile, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
+import { getWardrobeItems } from '../../services/wardrobeStorageService';
 import html2canvas from 'html2canvas';
 import './DOTvatarScreen.scss';
 
@@ -146,15 +147,12 @@ export default function DOTvatarScreen() {
         if (!error && nftData && nftData.length > 0) {
           setOwnedNFTs(nftData);
         } else {
-          // Fallback to localStorage
-          const wardrobeData = localStorage.getItem('user_wardrobe');
-          if (wardrobeData) {
-            const nfts = JSON.parse(wardrobeData);
-            const clothingNFTs = nfts.filter((nft: any) => 
-              ['clothing', 'accessory', 'fashion'].includes(nft.category?.toLowerCase())
-            );
-            setOwnedNFTs(clothingNFTs);
-          }
+          // Fallback to shared wardrobe cache
+          const nfts = await getWardrobeItems();
+          const clothingNFTs = nfts.filter((nft: any) =>
+            ['clothing', 'accessory', 'fashion'].includes(nft.category?.toLowerCase())
+          );
+          setOwnedNFTs(clothingNFTs);
         }
       } catch (error) {
         console.error('Failed to load wardrobe:', error);
@@ -192,7 +190,7 @@ export default function DOTvatarScreen() {
       const fileName = `dotvatar_${profile?.id}_${Date.now()}.png`;
       
       // Upload to Supabase storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('avatars')
         .upload(fileName, blob, {
           contentType: 'image/png',

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, Heart, MessageCircle, Share, MoreVertical, Users } from 'lucide-react';
+import { ArrowLeft, Send, Heart, MessageCircle, Users } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import './CommunityDetailScreen.scss';
@@ -42,7 +42,7 @@ interface ChatMessage {
 const CommunityDetailScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const session = useAuthStore((s) => s.session);
+  const profile = useAuthStore((s) => s.profile);
   const [activeTab, setActiveTab] = useState<'feed' | 'chat'>('feed');
   const [community, setCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -156,13 +156,13 @@ const CommunityDetailScreen: React.FC = () => {
   };
 
   const handleCreatePost = async () => {
-    if (!newPost.trim() || !session?.user?.id || !id) return;
+    if (!newPost.trim() || !profile?.id || !id) return;
 
     const { error } = await supabase
       .from('community_posts')
       .insert({
         community_id: id,
-        author_id: session.user.id,
+        author_id: profile.id,
         content: newPost,
       });
 
@@ -173,7 +173,7 @@ const CommunityDetailScreen: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !session?.user?.id || !id) return;
+    if (!newMessage.trim() || !profile?.id || !id) return;
 
     const { data: chatData } = await supabase
       .from('community_chats')
@@ -186,7 +186,7 @@ const CommunityDetailScreen: React.FC = () => {
         .from('community_chat_messages')
         .insert({
           chat_id: chatData.id,
-          sender_id: session.user.id,
+          sender_id: profile.id,
           message: newMessage,
         });
 

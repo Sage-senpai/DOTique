@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
@@ -12,9 +11,8 @@ import { getSmProvider } from "polkadot-api/sm-provider";
 import { chainSpec } from "polkadot-api/chains/polkadot";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
-// @ts-ignore - descriptor exports not properly typed
+// @ts-expect-error - descriptor exports not properly typed
 import { dot } from "@polkadot-api/descriptors";
-import { supabase } from "./services/supabase";
 import { ensureUserProfiles } from "./services/profileService";
 
 import "./styles/App.scss";
@@ -33,14 +31,13 @@ export default function App() {
       try {
         setIsConnecting(true);
 
-        // 🔹 Backfill missing profiles for existing users (once)
         if (!profilesBackfilled) {
           await ensureUserProfiles();
           setProfilesBackfilled(true);
-          console.log("✅ Missing user profiles backfilled");
+          console.log("Missing user profiles backfilled");
         }
 
-        console.log("🔄 Initializing Smoldot Polkadot client...");
+        console.log("Initializing Smoldot Polkadot client...");
 
         const sm = startFromWorker(worker);
         smoldot = sm;
@@ -51,18 +48,17 @@ export default function App() {
         setDotApi(api);
         setIsConnected(true);
 
-        console.log("✅ Polkadot API ready:", api);
+        console.log("Polkadot API ready:", api);
 
-        // Verify basic on-chain info
         try {
           const chainName = await chain.sendJsonRpc("system_chain");
           const runtimeVersion = await chain.sendJsonRpc("system_version");
-          console.log(`🪐 Connected to chain: ${chainName} (runtime v${runtimeVersion})`);
+          console.log(`Connected to chain: ${chainName} (runtime v${runtimeVersion})`);
         } catch (verifyErr) {
-          console.warn("⚠️ On-chain verification failed:", verifyErr);
+          console.warn("On-chain verification failed:", verifyErr);
         }
       } catch (err) {
-        console.error("❌ Smoldot init failed:", err);
+        console.error("Smoldot init failed:", err);
         setIsConnected(false);
       } finally {
         setIsConnecting(false);
@@ -72,11 +68,11 @@ export default function App() {
     init();
 
     const handleOnline = () => {
-      console.log("🌐 Reconnected — restarting Smoldot");
+      console.log("Reconnected - restarting Smoldot");
       init();
     };
     const handleOffline = () => {
-      console.warn("📴 Offline mode");
+      console.warn("Offline mode");
       setIsConnected(false);
     };
 
@@ -92,11 +88,6 @@ export default function App() {
 
   if (isConnecting || !isConnected) {
     return <ConnectionStatus isConnecting={isConnecting} isConnected={isConnected} />;
-  }
-
-  // ⚠️ Debug line — remove later
-  if (typeof window !== "undefined") {
-    (window as any).supabase = supabase;
   }
 
   return (
