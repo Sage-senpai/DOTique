@@ -1,4 +1,5 @@
 // src/components/Comments/CommentModal.scss
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -486,7 +487,7 @@ $font: 'Poppins', sans-serif;
           }
 
           &.send-btn {
-            background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+            background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
             color: white;
 
             &:hover:not(:disabled) {

@@ -1,5 +1,6 @@
 // src/screens/Studio/NFTStudioScreen.scss
 
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -268,7 +269,7 @@ $font: 'Poppins', sans-serif;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: lighten($color-primary, 10%);
+    background: color.adjust($color-primary, $lightness: 10%);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba($color-primary, 0.4);
   }
@@ -340,7 +341,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   color: white;
 
   &::before {
@@ -485,7 +486,7 @@ $font: 'Poppins', sans-serif;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: lighten($color-primary, 10%);
+    background: color.adjust($color-primary, $lightness: 10%);
     transform: translateY(-2px);
   }
 }
@@ -546,7 +547,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .modal {
-  background: linear-gradient(135deg, $color-secondary 0%, darken($color-neutral, 5%) 100%);
+  background: linear-gradient(135deg, $color-secondary 0%, color.adjust($color-neutral, $lightness: -5%) 100%);
   border-radius: 20px;
   padding: 30px;
   max-width: 600px;

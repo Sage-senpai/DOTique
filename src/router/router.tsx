@@ -8,7 +8,6 @@ import SignupScreen from "../screens/Auth/SignupScreen";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 
 import OnboardingScreen from "../screens/Onboarding/OnboardingScreen";
-import TestSupabase from "../screens/TestSupabase/TestSupabase";
 
 import HomeScreen from "../screens/Home/HomeScreen";
 import MarketplaceScreen from "../screens/Marketplace/MarketplaceScreen";
@@ -108,8 +107,6 @@ export default function Router() {
       <Route path="/marketplace/upload/studio" element={<UploadStudio />} />
       <Route path="/marketplace/upload/wallet" element={<UploadWallet />} />
       <Route path="/marketplace/upload/external" element={<UploadExternal />} />
-
-      <Route path="/test-supabase" element={<TestSupabase />} />
 
       <Route path="/profile/wardrobe" element={<ProfileWardrobe />} />
       <Route path="/profile/stylecv" element={<ProfileStyleCV />} />

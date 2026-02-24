@@ -3,8 +3,9 @@
 // ==============================================
 
 // ====== VARIABLES ======
+@use "sass:color";
 $primary: #7b61ff;
-$primary-light: lighten($primary, 10%);
+$primary-light: color.adjust($primary, $lightness: 10%);
 $secondary: #1b1e2b;
 $accent: #c0c1d8;
 $neutral: #2b2d3d;
@@ -18,7 +19,7 @@ $transition: 0.3s ease;
 // ====== MAIN CONTAINER ======
 .nft-detail {
   min-height: 100vh;
-  background: linear-gradient(145deg, $secondary, darken($secondary, 5%));
+  background: linear-gradient(145deg, $secondary, color.adjust($secondary, $lightness: -5%));
   color: white;
   font-family: $font-sans;
   padding: 20px 24px;
@@ -452,7 +453,7 @@ $transition: 0.3s ease;
     box-shadow: 0 4px 12px rgba($primary, 0.3);
 
     &:hover {
-      background: lighten($primary, 8%);
+      background: color.adjust($primary, $lightness: 8%);
       box-shadow: 0 6px 18px rgba($primary, 0.4);
       transform: translateY(-2px);
     }

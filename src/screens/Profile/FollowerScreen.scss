@@ -1,4 +1,5 @@
 // src/screens/Profile/FollowerScreen.scss
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -125,7 +126,7 @@ $font: "Poppins", sans-serif;
       transform: translateX(-50%);
       width: 0;
       height: 3px;
-      background: linear-gradient(90deg, $color-primary, lighten($color-primary, 15%));
+      background: linear-gradient(90deg, $color-primary, color.adjust($color-primary, $lightness: 15%));
       border-radius: 3px 3px 0 0;
       transition: width 0.3s ease;
     }
@@ -262,7 +263,7 @@ $font: "Poppins", sans-serif;
       position: absolute;
       inset: -4px;
       border-radius: 50%;
-      background: linear-gradient(135deg, $color-primary, lighten($color-primary, 15%));
+      background: linear-gradient(135deg, $color-primary, color.adjust($color-primary, $lightness: 15%));
       opacity: 0;
       filter: blur(8px);
       transition: opacity 0.3s ease;

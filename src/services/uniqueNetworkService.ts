@@ -1,8 +1,14 @@
 // src/services/uniqueNetworkService.ts
-
+// Real on-chain minting via @unique-nft/sdk when VITE_UNIQUE_API_URL is set.
+// Falls back to a clearly-labelled mock when the SDK endpoint is unavailable.
 
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { supabase } from './supabase';
+import { reportError } from './errorService';
+
+/** Set VITE_UNIQUE_API_URL to your Unique Network node (e.g. https://rest.unique.network/opal/v1) */
+const UNIQUE_REST_URL = import.meta.env.VITE_UNIQUE_API_URL as string | undefined;
+const USE_REAL_SDK = Boolean(UNIQUE_REST_URL);
 
 export interface NFTMetadata {
   name: string;
@@ -86,7 +92,9 @@ class UniqueNetworkService {
   }
 
   /**
-   * Mint a new NFT token
+   * Mint a new NFT token.
+   * Uses the real Unique Network REST SDK when VITE_UNIQUE_API_URL is set,
+   * otherwise falls back to a clearly-labelled stub for local development.
    */
   async mintToken(config: MintConfig): Promise<{
     tokenId: string;
@@ -95,9 +103,9 @@ class UniqueNetworkService {
     nftId: string;
   }> {
     try {
-      // Get or create default collection
+      // ── Resolve / create collection ─────────────────────────────────────
       let collectionId = config.collectionId;
-      
+
       if (!collectionId) {
         const { data: existingCollection } = await supabase
           .from('collections')
@@ -109,18 +117,15 @@ class UniqueNetworkService {
         if (existingCollection) {
           collectionId = existingCollection.collection_id;
         } else {
-          // Create default collection
           const collection = await this.createCollection(
             {
-              name: 'Dotique Collection',
-              description: 'Fashion NFTs created on Dotique',
+              name: 'DOTique Collection',
+              description: 'Fashion NFTs created on DOTique',
               tokenPrefix: 'DOTQ',
             },
             config.ownerAddress
           );
           collectionId = collection.collectionId;
-          
-          // Mark as default
           await supabase
             .from('collections')
             .update({ is_default: true })
@@ -128,11 +133,69 @@ class UniqueNetworkService {
         }
       }
 
-      // Mock minting - replace with actual Unique Network SDK call
-      const tokenId = `TOKEN_${Date.now()}`;
-      const txHash = `0x${Math.random().toString(16).slice(2)}`;
+      // ── On-chain mint ────────────────────────────────────────────────────
+      let tokenId: string;
+      let txHash: string;
 
-      // Save NFT to database
+      if (USE_REAL_SDK) {
+        // Real Unique Network REST SDK path
+        // Docs: https://rest.unique.network/opal/v1 / https://github.com/UniqueNetwork/unique-sdk
+        const injector = await web3FromAddress(config.ownerAddress);
+        const mintPayload = {
+          address: config.ownerAddress,
+          collectionId: Number(collectionId),
+          data: {
+            image: { url: config.metadata.image },
+            name: { _: config.metadata.name },
+            description: { _: config.metadata.description },
+            attributes: config.metadata.attributes.map((attr) => ({
+              trait_type: attr.trait_type,
+              value: { _: String(attr.value) },
+            })),
+          },
+        };
+
+        const buildRes = await fetch(`${UNIQUE_REST_URL}/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mintPayload),
+        });
+
+        if (!buildRes.ok) {
+          const errBody = await buildRes.text();
+          throw new Error(`Unique Network build tx failed: ${errBody}`);
+        }
+
+        const { signerPayloadJSON } = await buildRes.json() as {
+          signerPayloadJSON: Record<string, unknown>;
+        };
+
+        const signed = await injector.signer.signPayload!(signerPayloadJSON as any);
+
+        const submitRes = await fetch(`${UNIQUE_REST_URL}/extrinsic/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ signerPayloadJSON, signature: signed.signature }),
+        });
+
+        if (!submitRes.ok) {
+          const errBody = await submitRes.text();
+          throw new Error(`Unique Network submit failed: ${errBody}`);
+        }
+
+        const submitData = await submitRes.json() as { hash: string; tokenId: number };
+        txHash = submitData.hash;
+        tokenId = String(submitData.tokenId ?? `${collectionId}_${Date.now()}`);
+      } else {
+        // Development stub — clearly labelled, not silently fake
+        console.warn(
+          '[DOTique] VITE_UNIQUE_API_URL not set — using local dev stub for NFT mint.'
+        );
+        tokenId = `DEV_${Date.now()}`;
+        txHash = `0xdev_${Math.random().toString(16).slice(2)}`;
+      }
+
+      // ── Persist to Supabase ──────────────────────────────────────────────
       const { data: nft, error } = await supabase
         .from('nfts')
         .insert({
@@ -145,16 +208,15 @@ class UniqueNetworkService {
           ipfs_hash: config.metadata.image.replace('ipfs://', ''),
           tx_hash: txHash,
           status: 'active',
-          rarity: config.metadata.attributes.find(a => a.trait_type === 'Rarity')?.value || 'common',
+          rarity: config.metadata.attributes.find((a) => a.trait_type === 'Rarity')?.value ?? 'common',
           royalty: config.royalty,
-          price: config.price || 0,
+          price: config.price ?? 0,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Auto-add to wardrobe
       await supabase.from('wardrobe_nfts').insert({
         user_id: config.ownerAddress,
         nft_id: nft.id,
@@ -162,17 +224,11 @@ class UniqueNetworkService {
         is_featured: false,
       });
 
-      // Track analytics
       await this.trackMint(config.ownerAddress, tokenId, config.metadata);
 
-      return {
-        tokenId,
-        collectionId: collectionId!,
-        txHash,
-        nftId: nft.id,
-      };
+      return { tokenId, collectionId: collectionId!, txHash, nftId: nft.id };
     } catch (error) {
-      console.error('Failed to mint NFT:', error);
+      reportError(error, { context: { service: 'uniqueNetworkService.mintToken' } });
       throw error;
     }
   }

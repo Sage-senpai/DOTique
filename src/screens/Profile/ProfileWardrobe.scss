@@ -1,5 +1,6 @@
 // src/screens/Profile/ProfileWardrobe.scss
 
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -282,7 +283,7 @@ $font: 'Poppins', sans-serif;
 }
 
 .btn-compose {
-  background: linear-gradient(135deg, $color-success 0%, darken($color-success, 10%) 100%);
+  background: linear-gradient(135deg, $color-success 0%, color.adjust($color-success, $lightness: -10%) 100%);
   color: white;
 
   &:hover:not(:disabled) {
@@ -310,7 +311,7 @@ $font: 'Poppins', sans-serif;
 
 .btn-primary {
   padding: 14px 32px;
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -478,7 +479,7 @@ $font: 'Poppins', sans-serif;
   
   &--featured {
     background: rgba($color-warning, 0.9);
-    color: darken($color-warning, 30%);
+    color: color.adjust($color-warning, $lightness: -30%);
   }
 
   &--nestable {
@@ -552,7 +553,7 @@ $font: 'Poppins', sans-serif;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   color: white;
   border: none;
   cursor: pointer;
@@ -568,7 +569,7 @@ $font: 'Poppins', sans-serif;
   }
 
   &--active {
-    background: linear-gradient(135deg, $color-success 0%, darken($color-success, 10%) 100%);
+    background: linear-gradient(135deg, $color-success 0%, color.adjust($color-success, $lightness: -10%) 100%);
     box-shadow: 0 8px 25px rgba($color-success, 0.5);
     animation: pulse 2s ease-in-out infinite;
   }

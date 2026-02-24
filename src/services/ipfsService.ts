@@ -350,4 +350,4 @@ export async function uploadProfileMetadata(
   };
 }
 
-console.log("Unified IPFS Service ready (Pinata + Infura + Crust + Backend + Local Routes)");
+// IPFS Service: Pinata + Infura + Crust + Backend + Local Routes

@@ -2,21 +2,49 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
-/* DESIGN TOKENS */
+/* ================================================================
+   DOTIQUE DESIGN SYSTEM — Global Tokens
+   Brand: Pink #FFB6C1 · Green #228B22 · Navy #000080
+   ================================================================ */
 :root {
-  /* Brand scale (50-900) */
-  --dt-color-primary-50: #f2eefb;
-  --dt-color-primary-100: #e4dcf7;
-  --dt-color-primary-200: #c9bbee;
-  --dt-color-primary-300: #ad9ae4;
-  --dt-color-primary-400: #8d78ca;
-  --dt-color-primary-500: #60519b;
-  --dt-color-primary-600: #53458a;
-  --dt-color-primary-700: #463978;
-  --dt-color-primary-800: #33295a;
-  --dt-color-primary-900: #211a3e;
+  /* ── Brand: Blush Pink (CTA / primary actions) ── */
+  --dt-color-pink-50:  #fff5f7;
+  --dt-color-pink-100: #ffe4ea;
+  --dt-color-pink-200: #ffccd6;
+  --dt-color-pink-300: #ffb6c1;
+  --dt-color-pink-400: #ff94a6;
+  --dt-color-pink-500: #ff6e88;
+  --dt-color-pink-600: #e8506e;
+  --dt-color-pink-700: #c93558;
+  --dt-color-pink-800: #a01f42;
+  --dt-color-pink-900: #780f2e;
 
-  --dt-color-neutral-50: #f4f5f7;
+  /* ── Brand: Forestry Green (highlights / success) ── */
+  --dt-color-green-50:  #f0faf0;
+  --dt-color-green-100: #d6f0d6;
+  --dt-color-green-200: #aaddaa;
+  --dt-color-green-300: #6ec46e;
+  --dt-color-green-400: #3da83d;
+  --dt-color-green-500: #228b22;
+  --dt-color-green-600: #1b7219;
+  --dt-color-green-700: #145914;
+  --dt-color-green-800: #0e400e;
+  --dt-color-green-900: #082808;
+
+  /* ── Brand: Navy (text / icons / deep contrast) ── */
+  --dt-color-navy-50:  #eeeeff;
+  --dt-color-navy-100: #d0d0ff;
+  --dt-color-navy-200: #a8a8f0;
+  --dt-color-navy-300: #7272d4;
+  --dt-color-navy-400: #4040aa;
+  --dt-color-navy-500: #000080;
+  --dt-color-navy-600: #00006a;
+  --dt-color-navy-700: #000054;
+  --dt-color-navy-800: #00003e;
+  --dt-color-navy-900: #000028;
+
+  /* ── Neutral scale (UI chrome) ── */
+  --dt-color-neutral-50:  #f4f5f7;
   --dt-color-neutral-100: #e9eaf0;
   --dt-color-neutral-200: #cfd2dd;
   --dt-color-neutral-300: #b0b4c3;
@@ -27,78 +55,113 @@
   --dt-color-neutral-800: #242634;
   --dt-color-neutral-900: #161821;
 
-  --dt-color-accent-50: #f8f9ff;
-  --dt-color-accent-100: #f0f2fb;
-  --dt-color-accent-200: #e4e6f2;
-  --dt-color-accent-300: #d4d7e7;
-  --dt-color-accent-400: #bfc0d1;
-  --dt-color-accent-500: #a8abbe;
-  --dt-color-accent-600: #8f93a7;
-  --dt-color-accent-700: #757a8f;
-  --dt-color-accent-800: #5a5f74;
-  --dt-color-accent-900: #424659;
+  /* ── Semantic colour roles ── */
+  --dt-color-cta:       var(--dt-color-pink-300);
+  --dt-color-cta-hover: var(--dt-color-pink-400);
+  --dt-color-success:   var(--dt-color-green-500);
+  --dt-color-link:      var(--dt-color-navy-400);
+  --dt-color-danger:    #ef4444;
+  --dt-color-warning:   #f59e0b;
 
-  --dt-color-danger-500: #ff6b6b;
-
-  /* Primitive RGB channels for alpha composition */
-  --dt-primary-rgb: 96, 81, 155;
+  /* ── RGB primitives for alpha composition ── */
+  --dt-pink-rgb:    255, 182, 193;
+  --dt-green-rgb:   34, 139, 34;
+  --dt-navy-rgb:    0, 0, 128;
   --dt-neutral-rgb: 49, 50, 62;
-  --dt-accent-rgb: 191, 192, 209;
-  --dt-danger-rgb: 255, 107, 107;
+  --dt-danger-rgb:  239, 68, 68;
+  --dt-accent-rgb:  191, 192, 209;
 
-  /* Spacing scale */
-  --dt-space-1: 4px;
-  --dt-space-2: 8px;
-  --dt-space-3: 12px;
-  --dt-space-4: 16px;
-  --dt-space-5: 20px;
-  --dt-space-6: 24px;
-  --dt-space-8: 32px;
+  /* ── Spacing scale ── */
+  --dt-space-1:  4px;
+  --dt-space-2:  8px;
+  --dt-space-3:  12px;
+  --dt-space-4:  16px;
+  --dt-space-5:  20px;
+  --dt-space-6:  24px;
+  --dt-space-8:  32px;
+  --dt-space-10: 40px;
+  --dt-space-12: 48px;
 
-  /* Radius scale */
-  --dt-radius-sm: 8px;
-  --dt-radius-md: 12px;
-  --dt-radius-lg: 16px;
-  --dt-radius-xl: 24px;
+  /* ── Radius scale ── */
+  --dt-radius-xs:   4px;
+  --dt-radius-sm:   8px;
+  --dt-radius-md:   12px;
+  --dt-radius-lg:   16px;
+  --dt-radius-xl:   24px;
+  --dt-radius-full: 9999px;
 
-  /* Elevation */
+  /* ── Elevation ── */
   --dt-elevation-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
   --dt-elevation-md: 0 8px 20px rgba(0, 0, 0, 0.22);
   --dt-elevation-lg: 0 14px 28px rgba(0, 0, 0, 0.28);
+  --dt-elevation-xl: 0 24px 48px rgba(0, 0, 0, 0.36);
 
-  /* Motion tokens */
-  --dt-duration-fast: 140ms;
+  /* ── Typography ── */
+  --dt-font-sans: "Poppins", system-ui, -apple-system, sans-serif;
+  --dt-text-xs:   0.72rem;
+  --dt-text-sm:   0.82rem;
+  --dt-text-base: 0.92rem;
+  --dt-text-md:   1rem;
+  --dt-text-lg:   1.12rem;
+  --dt-text-xl:   1.28rem;
+  --dt-text-2xl:  1.56rem;
+  --dt-text-3xl:  2rem;
+
+  /* ── Motion tokens ── */
+  --dt-duration-fast:   140ms;
   --dt-duration-normal: 220ms;
-  --dt-duration-slow: 360ms;
+  --dt-duration-slow:   360ms;
+  --dt-ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --dt-ease-in-out:     cubic-bezier(0.45, 0, 0.55, 1);
 
-  /* Semantic (dark default) */
-  --dt-bg-canvas: #1e202c;
-  --dt-bg-surface: #262836;
-  --dt-bg-surface-muted: #31323e;
-  --dt-text-primary: #f8f9ff;
-  --dt-text-secondary: #bfc0d1;
-  --dt-border-subtle: rgba(191, 192, 209, 0.18);
-  --dt-border-strong: rgba(96, 81, 155, 0.35);
+  /* ── DARK MODE defaults ── */
+  --dt-bg-canvas:        #0e0f18;
+  --dt-bg-surface:       #16172a;
+  --dt-bg-surface-muted: #1e202c;
+  --dt-bg-elevated:      #262836;
+  --dt-text-primary:     #f8f9ff;
+  --dt-text-secondary:   #bfc0d1;
+  --dt-text-muted:       #7b7f96;
+  --dt-border-subtle:    rgba(191, 192, 209, 0.12);
+  --dt-border-strong:    rgba(255, 182, 193, 0.28);
+  --dt-border-focus:     var(--dt-color-pink-300);
 
-  /* Backward compatibility aliases */
-  --color-primary: var(--dt-color-primary-500);
+  /* ── Backward compat aliases ── */
+  --color-primary:   var(--dt-color-pink-300);
   --color-secondary: var(--dt-bg-canvas);
-  --color-accent: var(--dt-text-secondary);
-  --color-neutral: var(--dt-bg-surface-muted);
+  --color-accent:    var(--dt-text-secondary);
+  --color-neutral:   var(--dt-bg-surface-muted);
+
+  /* ── Legacy primary-NNN aliases used by existing SCSS ── */
+  --dt-color-primary-50:  var(--dt-color-pink-50);
+  --dt-color-primary-100: var(--dt-color-pink-100);
+  --dt-color-primary-200: var(--dt-color-pink-200);
+  --dt-color-primary-300: var(--dt-color-pink-300);
+  --dt-color-primary-400: var(--dt-color-pink-400);
+  --dt-color-primary-500: var(--dt-color-pink-500);
+  --dt-color-primary-600: var(--dt-color-pink-600);
+  --dt-color-primary-700: var(--dt-color-pink-700);
+  --dt-color-primary-800: var(--dt-color-pink-800);
+  --dt-color-primary-900: var(--dt-color-pink-900);
+  --dt-primary-rgb:       var(--dt-pink-rgb);
 }
 
+/* ── LIGHT MODE overrides ── */
 [data-theme="light"] {
-  --dt-bg-canvas: #f7f7fb;
-  --dt-bg-surface: #ffffff;
+  --dt-bg-canvas:        #f7f7fb;
+  --dt-bg-surface:       #ffffff;
   --dt-bg-surface-muted: #f0f2f8;
-  --dt-text-primary: #1e202c;
-  --dt-text-secondary: #4e5265;
-  --dt-border-subtle: rgba(30, 32, 44, 0.12);
-  --dt-border-strong: rgba(96, 81, 155, 0.28);
+  --dt-bg-elevated:      #ffffff;
+  --dt-text-primary:     #0e0f18;
+  --dt-text-secondary:   #3a3d52;
+  --dt-text-muted:       #656a7d;
+  --dt-border-subtle:    rgba(14, 15, 24, 0.10);
+  --dt-border-strong:    rgba(255, 182, 193, 0.45);
+  --dt-border-focus:     var(--dt-color-pink-500);
 
   --color-secondary: var(--dt-bg-canvas);
-  --color-accent: var(--dt-text-secondary);
-  --color-neutral: var(--dt-bg-surface-muted);
+  --color-accent:    var(--dt-text-secondary);
+  --color-neutral:   var(--dt-bg-surface-muted);
 }
 
 /* GLOBAL APP LAYOUT */

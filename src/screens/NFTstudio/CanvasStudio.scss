@@ -1,5 +1,6 @@
 // src/screens/NFTstudio/CanvasStudio.scss
 
+@use "sass:color";
 $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-accent: #bfc0d1;
@@ -152,12 +153,12 @@ $font: 'Poppins', sans-serif;
   }
 
   &--primary {
-    background: linear-gradient(135deg, $color-success 0%, darken($color-success, 10%) 100%);
+    background: linear-gradient(135deg, $color-success 0%, color.adjust($color-success, $lightness: -10%) 100%);
     color: white;
     border-color: $color-success;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(135deg, lighten($color-success, 5%) 0%, $color-success 100%);
+      background: linear-gradient(135deg, color.adjust($color-success, $lightness: 5%) 0%, $color-success 100%);
       box-shadow: 0 5px 15px rgba($color-success, 0.4);
     }
   }
@@ -258,7 +259,7 @@ $font: 'Poppins', sans-serif;
     appearance: none;
     width: 18px;
     height: 18px;
-    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 3px 10px rgba($color-primary, 0.4);
@@ -273,7 +274,7 @@ $font: 'Poppins', sans-serif;
   &::-moz-range-thumb {
     width: 18px;
     height: 18px;
-    background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+    background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
     border-radius: 50%;
     cursor: pointer;
     border: none;

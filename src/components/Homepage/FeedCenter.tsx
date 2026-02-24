@@ -1,8 +1,7 @@
-// src/components/Homepage/FeedCenter.tsx - UPDATED WITH SKELETON LOADERS
-import React, { useState, useEffect, useRef } from "react";
-import { RefreshCw } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
+import { RefreshCw, CheckCircle2, Inbox } from "lucide-react";
 import PostCard from "../Posts/PostCard";
-import { SkeletonGrid } from '../Skeletons/SkeletonLoaders';
+import { SkeletonGrid } from "../Skeletons/SkeletonLoaders";
 import "./FeedCenter.scss";
 
 interface Post {
@@ -12,7 +11,7 @@ interface Post {
   image_url?: string;
   video_url?: string;
   media?: Array<{
-    type: 'image' | 'video';
+    type: "image" | "video";
     url: string;
   }>;
   created_at?: string;
@@ -41,39 +40,39 @@ interface Post {
 interface FeedCenterProps {
   posts: Post[];
   loading?: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void | Promise<void>;
   onPostLike?: (postId: string) => void;
   onPostShare?: (postId: string) => void;
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
 }
 
 const FeedCenter: React.FC<FeedCenterProps> = ({
   posts,
   loading = false,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore,
   onPostLike,
   onPostShare,
   onRefresh,
 }) => {
-  const [displayedPosts, setDisplayedPosts] = useState<Post[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
-  const loadCountRef = useRef(0);
 
   useEffect(() => {
-    // Initialize with first batch
-    if (posts.length > 0) {
-      setDisplayedPosts(posts.slice(0, 10));
-      setHasMore(posts.length > 10);
-      loadCountRef.current = 0;
+    if (!onLoadMore || !hasMore || loading || loadingMore) {
+      return;
     }
-  }, [posts]);
 
-  // Infinite scroll observer
-  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          loadMorePosts();
+        if (entries[0]?.isIntersecting) {
+          void onLoadMore();
         }
       },
       { threshold: 0.1 }
@@ -85,53 +84,17 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
     }
 
     return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
+      observer.disconnect();
     };
-  }, [hasMore, isLoadingMore, displayedPosts.length]);
+  }, [hasMore, loading, loadingMore, onLoadMore]);
 
-  const loadMorePosts = async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const currentLength = displayedPosts.length;
-    const nextBatch = posts.slice(currentLength, currentLength + 5);
-
-    if (nextBatch.length > 0) {
-      setDisplayedPosts(prev => [...prev, ...nextBatch]);
-      loadCountRef.current += 1;
-
-      // After 3 loads or no more posts, show caught up
-      if (loadCountRef.current >= 3 || currentLength + nextBatch.length >= posts.length) {
-        setHasMore(false);
-      }
-    } else {
-      setHasMore(false);
-    }
-
-    setIsLoadingMore(false);
-  };
-
-  const handleRefresh = () => {
-    setDisplayedPosts(posts.slice(0, 10));
-    setHasMore(posts.length > 10);
-    loadCountRef.current = 0;
-    onRefresh?.();
-  };
-
-  // Transform posts to match PostCard interface
   const transformPost = (post: Post) => ({
     id: post.id,
     author: post.author || {
-      id: post.user_id || 'unknown',
-      name: 'Anonymous',
-      username: 'anonymous',
-      avatar: '👤',
+      id: post.user_id || "unknown",
+      name: "Anonymous",
+      username: "anonymous",
+      avatar: "User",
       verified: false,
     },
     content: post.content,
@@ -155,43 +118,30 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
 
   return (
     <div className="feed-center">
-      {/* Initial Loading State with Skeletons */}
-      {loading && <SkeletonGrid type="post" count={5} />}
+      {loading && posts.length === 0 && <SkeletonGrid type="post" count={5} />}
 
-      {/* Posts */}
-      {!loading && displayedPosts.length > 0 && (
+      {posts.length > 0 && (
         <>
-          {displayedPosts.map((post, index) => (
+          {posts.map((post) => (
             <div key={post.id} className="feed-post-item">
-              <PostCard 
+              <PostCard
                 post={transformPost(post)}
                 onLike={() => onPostLike?.(post.id)}
                 onShare={() => onPostShare?.(post.id)}
               />
-              
-              {/* Show loading indicator every 3 posts when scrolling */}
-              {isLoadingMore && index === displayedPosts.length - 3 && (
-                <div className="feed-center__loader">
-                  <div className="spinner"></div>
-                  <p>Loading more posts...</p>
-                </div>
-              )}
             </div>
           ))}
 
-          {/* Infinite scroll trigger */}
-          {hasMore && <div ref={observerTarget} style={{ height: '20px' }} />}
+          {hasMore && <div ref={observerTarget} style={{ height: "20px" }} />}
 
-          {/* Loading More Skeleton at bottom */}
-          {isLoadingMore && <SkeletonGrid type="post" count={2} />}
+          {loadingMore && <SkeletonGrid type="post" count={2} />}
 
-          {/* Caught Up Message */}
-          {!hasMore && (
+          {!hasMore && !loadingMore && (
             <div className="feed-center__caught-up">
-              <div className="caught-up-icon">✨</div>
+              <CheckCircle2 size={36} className="caught-up-icon" />
               <h3>You're All Caught Up!</h3>
               <p>You've seen all the latest posts</p>
-              <button className="refresh-btn" onClick={handleRefresh}>
+              <button className="refresh-btn" onClick={() => void onRefresh?.()}>
                 <RefreshCw size={18} />
                 Refresh Feed
               </button>
@@ -200,10 +150,9 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
         </>
       )}
 
-      {/* Empty State */}
-      {!loading && displayedPosts.length === 0 && (
+      {!loading && posts.length === 0 && (
         <div className="feed-center__empty">
-          <div className="empty-icon">📭</div>
+          <Inbox size={42} className="empty-icon" />
           <p>No posts to show. Follow more users or create a post!</p>
         </div>
       )}

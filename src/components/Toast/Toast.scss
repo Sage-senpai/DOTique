@@ -1,0 +1,112 @@
+// src/components/Toast/Toast.scss
+
+.dt-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  width: calc(100vw - 32px);
+  pointer-events: none;
+
+  @media (max-width: 480px) {
+    bottom: 90px; // above bottom nav on mobile
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+.dt-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--dt-radius-md, 12px);
+  background: var(--dt-bg-surface, #262836);
+  border: 1px solid var(--dt-border-subtle, rgba(191, 192, 209, 0.18));
+  box-shadow: var(--dt-elevation-md, 0 8px 20px rgba(0, 0, 0, 0.22));
+  pointer-events: all;
+  animation: dt-toast-in 0.22s ease forwards;
+
+  &--success {
+    border-left: 3px solid #22c55e;
+    .dt-toast__icon { color: #22c55e; }
+  }
+
+  &--error {
+    border-left: 3px solid #ef4444;
+    .dt-toast__icon { color: #ef4444; }
+  }
+
+  &--warning {
+    border-left: 3px solid #f59e0b;
+    .dt-toast__icon { color: #f59e0b; }
+  }
+
+  &--info {
+    border-left: 3px solid var(--dt-color-primary-400, #8d78ca);
+    .dt-toast__icon { color: var(--dt-color-primary-400, #8d78ca); }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dt-text-primary, #f8f9ff);
+    line-height: 1.3;
+  }
+
+  &__message {
+    font-size: 0.8rem;
+    color: var(--dt-text-secondary, #bfc0d1);
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dt-text-secondary, #bfc0d1);
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 140ms ease, background 140ms ease;
+    margin-top: -1px;
+
+    &:hover {
+      color: var(--dt-text-primary, #f8f9ff);
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+@keyframes dt-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
