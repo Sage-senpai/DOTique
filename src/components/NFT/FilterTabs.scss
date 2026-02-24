@@ -1,3 +1,4 @@
+@use "sass:color";
 // =====================================================
 // FILTER TABS (Enhanced + Search Integrated)
 // =====================================================
@@ -95,7 +96,7 @@ $font-family-sans: "Poppins", sans-serif;
       transform: translateY(-1px);
 
       &:hover {
-        background: lighten($primary, 5%);
+        background: color.adjust($primary, $lightness: 5%);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba($primary, 0.5);
       }
@@ -253,7 +254,7 @@ $font-family-sans: "Poppins", sans-serif;
 
     // subtle enhancement for dark UI consistency
     &:focus option:checked {
-      background-color: darken($primary, 8%);
+      background-color: color.adjust($primary, $lightness: -8%);
     }
   }
 

@@ -1,3 +1,4 @@
+@use "sass:color";
 // NFTActions.scss
 // ===========================================================
 $bg-dark: #1e202c;
@@ -145,7 +146,7 @@ $accent-pink: #ff6b9d;
     transition: all 0.3s ease;
 
     &:hover {
-      background: darken($accent-green, 8%);
+      background: color.adjust($accent-green, $lightness: -8%);
     }
 
     @media (max-width: 480px) {
@@ -274,7 +275,7 @@ $accent-pink: #ff6b9d;
     transition: all 0.3s ease;
 
     &:hover {
-      background: lighten($accent-purple, 5%);
+      background: color.adjust($accent-purple, $lightness: 5%);
     }
 
     @media (max-width: 480px) {

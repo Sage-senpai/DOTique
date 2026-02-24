@@ -1,3 +1,4 @@
+@use "sass:color";
 // src/screens/Home/homescreen.scss
 
 // -----------------------
@@ -99,7 +100,7 @@ body {
     .logo-text {
       font-size: 24px;
       font-weight: 700;
-      background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 15%) 100%);
+      background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 15%) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -447,7 +448,7 @@ body {
 
     .visit-communities-btn {
       padding: 12px 24px;
-      background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+      background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
       border: none;
       border-radius: 10px;
       color: white;
@@ -474,7 +475,7 @@ body {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   border: none;
   color: white;
   display: flex;
@@ -744,7 +745,7 @@ body {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
   border: none;
   color: white;
   display: flex;

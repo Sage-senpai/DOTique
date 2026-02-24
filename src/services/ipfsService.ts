@@ -17,7 +17,14 @@ export interface UploadArgs {
   contentType?: string;
 }
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
+// On HTTPS deployments, fallback to a relative path so the browser doesn't
+// generate a Mixed Content error from an http://localhost URL.
+const _rawServerUrl = import.meta.env.VITE_SERVER_URL as string | undefined;
+const SERVER_URL =
+  _rawServerUrl ??
+  (typeof window !== "undefined" && window.location.protocol === "https:"
+    ? ""  // relative paths work on Vercel/Netlify with rewrite rules
+    : "http://localhost:4000");
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT || "";
 const CRUST_JWT = import.meta.env.VITE_CRUST_JWT || "";
 const PINATA_ENDPOINT = "https://api.pinata.cloud/pinning";
@@ -350,4 +357,3 @@ export async function uploadProfileMetadata(
   };
 }
 
-console.log("Unified IPFS Service ready (Pinata + Infura + Crust + Backend + Local Routes)");

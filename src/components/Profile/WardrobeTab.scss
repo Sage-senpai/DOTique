@@ -1,3 +1,4 @@
+@use "sass:color";
 // src/components/Profile/WardrobeTab.scss
 $color-primary: #60519b;
 $color-secondary: #1e202c;
@@ -213,7 +214,7 @@ $color-danger: #ff6b6b;
 
     .btn-primary {
       padding: 14px 28px;
-      background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
+      background: linear-gradient(135deg, $color-primary, color.adjust($color-primary, $lightness: 10%));
       border: none;
       border-radius: 10px;
       color: white;

@@ -1,3 +1,4 @@
+@use "sass:color";
 // src/components/Posts/PostCard.scss 
 $color-primary: #60519b;
 $color-neutral: #31323e;
@@ -70,7 +71,7 @@ $color-accent: #bfc0d1;
           transition: color 150ms ease;
 
           &:hover {
-            color: lighten($color-accent, 10%);
+            color: color.adjust($color-accent, $lightness: 10%);
           }
 
           .verified {
@@ -123,7 +124,7 @@ $color-accent: #bfc0d1;
 
       &:hover {
         text-decoration: underline;
-        color: lighten($color-primary, 10%);
+        color: color.adjust($color-primary, $lightness: 10%);
       }
 
       &:active {

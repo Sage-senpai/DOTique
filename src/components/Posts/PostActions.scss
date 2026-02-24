@@ -1,3 +1,4 @@
+@use "sass:color";
 // src/components/Post/PostActions.scss - ENHANCED VERSION
 $color-primary: #60519b;
 $color-accent: #bfc0d1;
@@ -49,7 +50,7 @@ $color-danger: #ff6b6b;
       background: rgba($color-primary, 0.2);
       
       &:hover {
-        color: lighten($color-primary, 10%);
+        color: color.adjust($color-primary, $lightness: 10%);
       }
     }
 

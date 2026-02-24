@@ -1,4 +1,8 @@
-# DOTique
+import { writeFileSync, mkdirSync } from "fs";
+import { dirname } from "path";
+
+const files = {
+  "README.md": `# DOTique
 
 **DOTique** is a Web3 fashion ecosystem built on **Polkadot**, merging digital identity, creativity, and NFT ownership. Users create fully customisable **DOTvatars** (3D on-chain avatars), design fashion NFTs in a browser-based studio powered by **Unique Network**, join **NFT-gated communities**, showcase outfits on a social feed, and trade wearables on a marketplace.
 
@@ -43,7 +47,7 @@
 
 ## Project Structure
 
-```
+\`\`\`
 src/
 ├── components/          # Reusable UI components
 │   ├── Toast/           # Global toast notification system
@@ -65,7 +69,7 @@ src/
 ├── contexts/            # React contexts (Wallet, Theme, ...)
 ├── styles/              # Global SCSS + design tokens
 └── router/              # React Router setup
-```
+\`\`\`
 
 ---
 
@@ -79,17 +83,17 @@ src/
 
 ### Steps
 
-```bash
+\`\`\`bash
 git clone https://github.com/Sage-senpai/DOTique
 cd dotique
 pnpm install
-```
+\`\`\`
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Create a \`.env\` file in the project root:
 
-```env
+\`\`\`env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_UNIQUE_API_URL=https://rest.unique.network/unique
@@ -108,38 +112,38 @@ VITE_FIGMA_CLIENT_ID=
 # Optional — zkLogin
 VITE_GOOGLE_CLIENT_ID=
 VITE_ZK_PROVER_URL=
-```
+\`\`\`
 
 ### Run in Development
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ### Production Build
 
-```bash
+\`\`\`bash
 pnpm build
 pnpm preview
-```
+\`\`\`
 
 ---
 
 ## Architecture Notes
 
-- **No `alert()`** — all notifications use the global `useToast()` hook from `src/components/Toast/Toast.tsx`
-- **No raw hex colours** in TSX/SCSS — always use CSS custom properties from `src/styles/App.scss`
-- **Services are pure async** (no React imports) — consumed via hooks in `src/hooks/`
-- **Wallet sessions** persist for 7 days via AES-GCM encrypted localStorage (`src/utils/secureStore.ts`)
-- **Bundle splitting** — react / polkadot / three / animation / supabase / ui vendor chunks via Vite `manualChunks`
+- **No \`alert()\`** — all notifications use the global \`useToast()\` hook from \`src/components/Toast/Toast.tsx\`
+- **No raw hex colours** in TSX/SCSS — always use CSS custom properties from \`src/styles/App.scss\`
+- **Services are pure async** (no React imports) — consumed via hooks in \`src/hooks/\`
+- **Wallet sessions** persist for 7 days via AES-GCM encrypted localStorage (\`src/utils/secureStore.ts\`)
+- **Bundle splitting** — react / polkadot / three / animation / supabase / ui vendor chunks via Vite \`manualChunks\`
 
 ---
 
 ## Database Schema (Supabase)
 
-Core tables: `profiles`, `social_accounts`, `nfts`, `dotvatar_items`, `user_nft_ownership`, `posts`, `follows`, `messages`, `voting_sessions`, `votes`, `events`
+Core tables: \`profiles\`, \`social_accounts\`, \`nfts\`, \`dotvatar_items\`, \`user_nft_ownership\`, \`posts\`, \`follows\`, \`messages\`, \`voting_sessions\`, \`votes\`, \`events\`
 
-TypeScript types live in `src/types/database.types.ts` (auto-generated via Supabase CLI or hand-maintained).
+TypeScript types live in \`src/types/database.types.ts\` (auto-generated via Supabase CLI or hand-maintained).
 
 ---
 
@@ -163,3 +167,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming conventions, coding sta
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
+`,
+};
+
+for (const [filePath, content] of Object.entries(files)) {
+  mkdirSync(dirname(filePath) || ".", { recursive: true });
+  writeFileSync(filePath, content, "utf8");
+  console.log(`Written: ${filePath}`);
+}

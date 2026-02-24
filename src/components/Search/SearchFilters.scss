@@ -1,3 +1,4 @@
+@use "sass:color";
 // 2. src/components/Search/SearchFilters.scss (NEW)
 // =====================================================
 .search-filters {
@@ -59,7 +60,7 @@ $font: "Poppins", sans-serif;
     background: linear-gradient(
       180deg,
       $color-primary 0%,
-      lighten($color-primary, 8%) 100%
+      color.adjust($color-primary, $lightness: 8%) 100%
     );
     color: white;
     border-bottom-left-radius: 28px;

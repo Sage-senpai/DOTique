@@ -1,3 +1,4 @@
+@use "sass:color";
 // src/screens/Profile/profile.scss - COMPLETE REDESIGN
 // Global Color Variables
 $color-primary: #60519b;
@@ -240,7 +241,7 @@ $font: "Poppins", sans-serif;
 
       &:hover {
         transform: scale(1.2);
-        color: lighten($color-primary, 15%);
+        color: color.adjust($color-primary, $lightness: 15%);
       }
     }
   }
@@ -343,7 +344,7 @@ $font: "Poppins", sans-serif;
     }
 
     &--primary {
-      background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 10%) 100%);
+      background: linear-gradient(135deg, $color-primary 0%, color.adjust($color-primary, $lightness: 10%) 100%);
       color: white;
       box-shadow: 0 4px 16px rgba($color-primary, 0.4);
 
@@ -558,7 +559,7 @@ $font: "Poppins", sans-serif;
     .empty-cta {
       margin-top: 24px;
       padding: 12px 24px;
-      background: linear-gradient(135deg, $color-primary, lighten($color-primary, 10%));
+      background: linear-gradient(135deg, $color-primary, color.adjust($color-primary, $lightness: 10%));
       color: white;
       border: none;
       border-radius: 12px;
