@@ -1,178 +1,118 @@
 // src/components/Homepage/RightSidebar.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, TrendingUp, MapPin, UserPlus } from "lucide-react";
 import { useUserStore } from "../../stores/userStore";
 import { socialService } from "../../services/socialService";
 import { useAuthStore } from "../../stores/authStore";
+import { supabase } from "../../services/supabase";
 import "./RightSidebar.scss";
 
-// Recommendation categories
-type RecommendationType = 'topCreators' | 'mutuals' | 'topFollowed' | 'nearby';
+type RecommendationType = "topCreators" | "mutuals" | "topFollowed" | "nearby";
 
-const RECOMMENDATION_DATA = {
-  topCreators: [
-    {
-      id: 1,
-      name: "Maya Styles",
-      username: "@mayastyles",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
-      bio: "Fashion meets the metaverse",
-      followers_count: 12500,
-      verified: true,
-      badge: "🎨"
-    },
-    {
-      id: 2,
-      name: "Tech Fashion Co",
-      username: "@techfashion",
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-      bio: "Wearable tech innovator",
-      followers_count: 8900,
-      verified: true,
-      badge: "👔"
-    },
-    {
-      id: 3,
-      name: "Crypto Couture",
-      username: "@cryptocouture",
-      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100",
-      bio: "Blockchain x Style",
-      followers_count: 15200,
-      verified: true,
-      badge: "💎"
-    },
-  ],
-  mutuals: [
-    {
-      id: 4,
-      name: "Alex Rivera",
-      username: "@alexrivera",
-      avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100",
-      bio: "NFT artist & collector",
-      followers_count: 2300,
-      verified: false,
-      badge: "🎭",
-      mutualFriends: 8
-    },
-    {
-      id: 5,
-      name: "Jordan Chen",
-      username: "@jordanchen",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-      bio: "Digital fashion enthusiast",
-      followers_count: 3100,
-      verified: false,
-      badge: "👨‍💻",
-      mutualFriends: 5
-    },
-    {
-      id: 6,
-      name: "Sam Design",
-      username: "@samdesign",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
-      bio: "Web3 fashion pioneer",
-      followers_count: 1890,
-      verified: false,
-      badge: "✨",
-      mutualFriends: 12
-    },
-  ],
-  topFollowed: [
-    {
-      id: 7,
-      name: "Vogue Digital",
-      username: "@voguedigital",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
-      bio: "Official digital fashion",
-      followers_count: 45000,
-      verified: true,
-      badge: "👗"
-    },
-    {
-      id: 8,
-      name: "NFT Runway",
-      username: "@nftrunway",
-      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100",
-      bio: "Virtual fashion shows",
-      followers_count: 32000,
-      verified: true,
-      badge: "🎬"
-    },
-  ],
-  nearby: [
-    {
-      id: 9,
-      name: "Lagos Style Hub",
-      username: "@lagosstyle",
-      avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100",
-      bio: "Local fashion community",
-      followers_count: 5600,
-      verified: false,
-      badge: "🌍",
-      location: "Lagos, Nigeria"
-    },
-    {
-      id: 10,
-      name: "Naija Fashion Week",
-      username: "@naijafashion",
-      avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100",
-      bio: "African fashion excellence",
-      followers_count: 8900,
-      verified: true,
-      badge: "🎉",
-      location: "Lagos, Nigeria"
-    },
-  ]
+interface ProfileRow {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  followers_count: number | null;
+  is_verified: boolean | null;
+}
+
+const CATEGORY_INFO: Record<
+  RecommendationType,
+  { icon: React.ComponentType<{ size?: number; className?: string }>; label: string }
+> = {
+  topCreators: { icon: TrendingUp, label: "Top Creators" },
+  mutuals: { icon: Users, label: "People You May Know" },
+  topFollowed: { icon: UserPlus, label: "Most Followed" },
+  nearby: { icon: MapPin, label: "Nearby Creators" },
 };
 
-const CATEGORY_INFO = {
-  topCreators: { icon: TrendingUp, label: "Top Creators", color: "#60519b" },
-  mutuals: { icon: Users, label: "People You May Know", color: "#22c55e" },
-  topFollowed: { icon: UserPlus, label: "Most Followed", color: "#fbbf24" },
-  nearby: { icon: MapPin, label: "Nearby Creators", color: "#3b82f6" },
-};
+const FALLBACK_AVATAR =
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100";
 
 const RightSidebar: React.FC = () => {
   const navigate = useNavigate();
   const { profile: currentUser } = useAuthStore();
   const { setSelectedUser } = useUserStore();
-  const [activeCategory, setActiveCategory] = useState<RecommendationType>('topCreators');
-  const [following, setFollowing] = useState<{ [key: number]: boolean }>({});
+  const [activeCategory, setActiveCategory] =
+    useState<RecommendationType>("topCreators");
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
 
-  const handleFollowClick = async (creator: any) => {
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(
+            "id, username, display_name, avatar_url, bio, followers_count, is_verified"
+          )
+          .neq("id", currentUser?.id ?? "")
+          .order("followers_count", { ascending: false })
+          .limit(12);
+
+        if (!error && data?.length) {
+          setProfiles(data as ProfileRow[]);
+        }
+      } catch {
+        // Sidebar silently stays empty on network error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProfiles();
+  }, [currentUser?.id]);
+
+  const getDisplayProfiles = (): ProfileRow[] => {
+    switch (activeCategory) {
+      case "topCreators":
+        return profiles.slice(0, 3);
+      case "topFollowed":
+        return profiles.slice(0, 4);
+      case "mutuals":
+        return profiles.slice(3, 6);
+      case "nearby":
+        return profiles.slice(6, 9);
+      default:
+        return profiles.slice(0, 3);
+    }
+  };
+
+  const handleFollowClick = async (profile: ProfileRow) => {
     if (!currentUser?.id) return;
-
     try {
       const result = await socialService.toggleFollow(
         currentUser.id,
-        creator.id
+        profile.id
       );
-      setFollowing((prev) => ({
-        ...prev,
-        [creator.id]: result.following,
-      }));
+      setFollowing((prev) => ({ ...prev, [profile.id]: result.following }));
     } catch (error) {
       console.error("Failed to toggle follow:", error);
     }
   };
 
-  const handleViewProfile = (creator: any) => {
+  const handleViewProfile = (profile: ProfileRow) => {
     setSelectedUser({
-      id: creator.id,
-      username: creator.username,
-      display_name: creator.name,
-      avatar: creator.avatar,
-      bio: creator.bio,
-      followers_count: creator.followers_count || 0,
-      following_count: creator.following_count || 0,
-      posts_count: creator.posts_count || 0,
-      verified: creator.verified || false,
+      id: profile.id,
+      username: profile.username ?? "",
+      display_name: profile.display_name ?? "",
+      avatar: profile.avatar_url ?? FALLBACK_AVATAR,
+      bio: profile.bio ?? "",
+      followers_count: profile.followers_count ?? 0,
+      following_count: 0,
+      posts_count: 0,
+      posts: [],
+      reposts: [],
     });
     navigate("/profile/other");
   };
 
-  const currentData = RECOMMENDATION_DATA[activeCategory];
+  const currentData = getDisplayProfiles();
   const CategoryIcon = CATEGORY_INFO[activeCategory].icon;
 
   return (
@@ -180,19 +120,21 @@ const RightSidebar: React.FC = () => {
       <div className="recommendations">
         {/* Category Tabs */}
         <div className="category-tabs">
-          {(Object.keys(CATEGORY_INFO) as RecommendationType[]).map((category) => {
-            const Icon = CATEGORY_INFO[category].icon;
-            return (
-              <button
-                key={category}
-                className={`category-tab ${activeCategory === category ? 'active' : ''}`}
-                onClick={() => setActiveCategory(category)}
-                title={CATEGORY_INFO[category].label}
-              >
-                <Icon size={18} />
-              </button>
-            );
-          })}
+          {(Object.keys(CATEGORY_INFO) as RecommendationType[]).map(
+            (category) => {
+              const Icon = CATEGORY_INFO[category].icon;
+              return (
+                <button
+                  key={category}
+                  className={`category-tab ${activeCategory === category ? "active" : ""}`}
+                  onClick={() => setActiveCategory(category)}
+                  title={CATEGORY_INFO[category].label}
+                >
+                  <Icon size={18} />
+                </button>
+              );
+            }
+          )}
         </div>
 
         {/* Header */}
@@ -201,63 +143,61 @@ const RightSidebar: React.FC = () => {
           <h3>{CATEGORY_INFO[activeCategory].label}</h3>
         </div>
 
-        {/* Creator List */}
+        {/* Profile List */}
         <div className="recommendations-list">
-          {currentData.map((creator) => (
-            <div key={creator.id} className="recommendation-card">
-              <div 
-                className="rec-avatar" 
-                onClick={() => handleViewProfile(creator)}
-              >
-                {creator.avatar.startsWith('http') ? (
-                  <img src={creator.avatar} alt={creator.name} />
-                ) : (
-                  creator.avatar
-                )}
-                {creator.verified && <span className="verified-badge">✓</span>}
-              </div>
+          {loading ? (
+            <div className="rec-loading">Loading…</div>
+          ) : currentData.length === 0 ? (
+            <div className="rec-empty">No suggestions yet</div>
+          ) : (
+            currentData.map((profile) => {
+              const displayName =
+                profile.display_name ?? profile.username ?? "Anonymous";
+              const handle = profile.username ? `@${profile.username}` : "";
+              const avatarUrl = profile.avatar_url ?? FALLBACK_AVATAR;
+              const fc = profile.followers_count ?? 0;
+              const followersLabel =
+                fc >= 1000 ? `${(fc / 1000).toFixed(1)}K` : String(fc);
+              const isFollowing = following[profile.id] ?? false;
 
-              <div className="rec-info">
-                <div 
-                  className="rec-name"
-                  onClick={() => handleViewProfile(creator)}
-                >
-                  {creator.name}
-                  <span className="badge">{creator.badge}</span>
+              return (
+                <div key={profile.id} className="recommendation-card">
+                  <div
+                    className="rec-avatar"
+                    onClick={() => handleViewProfile(profile)}
+                  >
+                    <img src={avatarUrl} alt={displayName} />
+                    {profile.is_verified && (
+                      <span className="verified-badge">✓</span>
+                    )}
+                  </div>
+
+                  <div className="rec-info">
+                    <div
+                      className="rec-name"
+                      onClick={() => handleViewProfile(profile)}
+                    >
+                      {displayName}
+                    </div>
+                    <div className="rec-username">{handle}</div>
+                    <div className="rec-meta">{followersLabel} followers</div>
+                  </div>
+
+                  <button
+                    className={`rec-btn${isFollowing ? " following" : ""}`}
+                    onClick={() => handleFollowClick(profile)}
+                  >
+                    {isFollowing ? "✓ Following" : "+ Follow"}
+                  </button>
                 </div>
-                <div className="rec-username">{creator.username}</div>
-                
-                {/* Category-specific info */}
-                {activeCategory === 'mutuals' && 'mutualFriends' in creator && (
-                  <div className="rec-meta">
-                    {creator.mutualFriends} mutual friends
-                  </div>
-                )}
-                {activeCategory === 'nearby' && 'location' in creator && (
-                  <div className="rec-meta">
-                    <MapPin size={12} /> {creator.location}
-                  </div>
-                )}
-                {(activeCategory === 'topCreators' || activeCategory === 'topFollowed') && (
-                  <div className="rec-meta">
-                    {(creator.followers_count / 1000).toFixed(1)}K followers
-                  </div>
-                )}
-              </div>
-
-              <button
-                className="rec-btn"
-                onClick={() => handleFollowClick(creator)}
-              >
-                {following[creator.id] ? "✓ Following" : "+ Follow"}
-              </button>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
 
-        <button 
+        <button
           className="view-all-btn"
-          onClick={() => navigate('/explore')}
+          onClick={() => navigate("/explore")}
         >
           View All Recommendations
         </button>

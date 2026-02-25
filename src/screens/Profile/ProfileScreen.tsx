@@ -187,7 +187,8 @@ export default function ProfileScreen() {
 
       setPosts(postsRes || dummyPosts);
       setLocalReposts(repostsRes || []);
-      setWardrobe(nftsRes || []);
+      // Only overwrite wardrobeStorageService data if the social service returned real NFTs
+      if (nftsRes?.length) setWardrobe(nftsRes);
     } catch (err) {
       console.error("❌ Error loading profile data:", err);
       setPosts(dummyPosts);

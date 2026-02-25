@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getWardrobeItems, setWardrobeItems } from '../../services/wardrobeStorageService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Save, Upload, Layers, Zap, Star, Palette, Type, Circle, 
@@ -509,6 +511,7 @@ const iconButtonStyle: React.CSSProperties = {
 // ==========================================
 
 export default function NFTStudioComplete() {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'studio' | 'drafts' | 'wardrobe' | 'dotvatar'>('studio');
   const [metadata, setMetadata] = useState<NFTMetadata>({
     name: '',
@@ -526,47 +529,25 @@ export default function NFTStudioComplete() {
   const [royalty, setRoyalty] = useState(5);
   const [price, setPrice] = useState(0);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [showPostMintModal, setShowPostMintModal] = useState(false);
+  const [mintedNFT, setMintedNFT] = useState<Record<string, unknown> | null>(null);
+  const [mintError, setMintError] = useState('');
+  const [draftSaved, setDraftSaved] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [wardrobeNFTs, setWardrobeNFTs] = useState<any[]>([]);
-  
+
   const canvasRef = useRef<any>(null);
 
+  // Load wardrobe from encrypted cache
   useEffect(() => {
-    // Load dummy wardrobe data
-    const dummyWardrobe = [
-      {
-        id: '1',
-        token_id: 'TOKEN_001',
-        metadata: {
-          name: 'Cyber Punk Jacket',
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400',
-          level: 5,
-          experience: 250,
-        },
-        rarity: 'Epic',
-        status: 'minted',
-      },
-      {
-        id: '2',
-        token_id: 'TOKEN_002',
-        metadata: {
-          name: 'Holographic Sneakers',
-          image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
-          level: 3,
-          experience: 120,
-        },
-        rarity: 'Rare',
-        status: 'minted',
-      }
-    ];
-    setWardrobeNFTs(dummyWardrobe);
+    getWardrobeItems().then(setWardrobeNFTs).catch(() => {});
   }, []);
 
   const handleSaveDraft = async () => {
     try {
       const exported = await canvasRef.current?.exportAssets?.({ size: 1000 });
       if (!exported) throw new Error('Export failed');
-      
+
       const draft: Draft = {
         id: Date.now().toString(),
         user_id: 'current_user',
@@ -581,11 +562,13 @@ export default function NFTStudioComplete() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
+
       setDrafts([...drafts, draft]);
-      alert('✅ Draft saved successfully!');
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
     } catch (err: any) {
-      alert('❌ Failed to save draft: ' + err.message);
+      setMintError('Failed to save draft: ' + err.message);
+      setTimeout(() => setMintError(''), 4000);
     }
   };
 
@@ -638,6 +621,28 @@ export default function NFTStudioComplete() {
           </button>
         ))}
       </nav>
+
+      {/* Toast-style banners */}
+      {draftSaved && (
+        <div style={{
+          position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(34,139,34,0.9)', color: '#fff', padding: '12px 24px',
+          borderRadius: '12px', fontSize: '14px', fontWeight: 600, zIndex: 2000,
+          backdropFilter: 'blur(8px)', border: '1px solid rgba(34,139,34,0.5)'
+        }}>
+          ✅ Draft saved successfully
+        </div>
+      )}
+      {mintError && !showMetadataModal && (
+        <div style={{
+          position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(255,107,107,0.9)', color: '#fff', padding: '12px 24px',
+          borderRadius: '12px', fontSize: '14px', fontWeight: 600, zIndex: 2000,
+          backdropFilter: 'blur(8px)', border: '1px solid rgba(255,107,107,0.5)'
+        }}>
+          ❌ {mintError}
+        </div>
+      )}
 
       {/* Studio View */}
       {currentView === 'studio' && (
@@ -1012,7 +1017,7 @@ export default function NFTStudioComplete() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button style={secondaryButtonStyle}>
-                <RotateCcw size={18} /> Reset
+                <RotateCw size={18} /> Reset
               </button>
               <button style={primaryButtonStyle}>
                 <Save size={18} /> Save & Apply
@@ -1201,22 +1206,114 @@ export default function NFTStudioComplete() {
                 />
               </div>
 
+              {mintError && (
+                <p style={{ color: '#ff6b6b', fontSize: '13px', margin: '0 0 12px' }}>{mintError}</p>
+              )}
+
               <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
                 <button onClick={() => setShowMetadataModal(false)} style={{ ...secondaryButtonStyle, flex: 1 }}>
                   Cancel
                 </button>
-                <button 
-                  onClick={() => {
+                <button
+                  onClick={async () => {
                     if (!metadata.name) {
-                      alert('Please enter a name for your NFT');
+                      setMintError('Please enter a name for your NFT');
                       return;
                     }
-                    alert('✅ NFT minted successfully!');
-                    setShowMetadataModal(false);
+                    setMintError('');
+                    try {
+                      const newNFT: Record<string, unknown> = {
+                        id: Date.now().toString(),
+                        token_id: `TOKEN_${Date.now()}`,
+                        metadata: {
+                          name: metadata.name,
+                          description: metadata.description,
+                          image: metadata.image,
+                          level: metadata.level ?? 1,
+                          experience: metadata.experience ?? 0,
+                        },
+                        rarity: 'common',
+                        status: 'minted',
+                        created_at: new Date().toISOString(),
+                      };
+                      const current = await getWardrobeItems();
+                      await setWardrobeItems([...current, newNFT]);
+                      setWardrobeNFTs((prev) => [...prev, newNFT]);
+                      setMintedNFT(newNFT);
+                      setShowMetadataModal(false);
+                      setShowPostMintModal(true);
+                    } catch (err: any) {
+                      setMintError('Mint failed: ' + (err?.message ?? 'unknown error'));
+                    }
                   }}
                   style={{ ...primaryButtonStyle, flex: 1 }}
                 >
-                  Continue to Mint
+                  Mint NFT
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Post-Mint Action Sheet */}
+        {showPostMintModal && (
+          <motion.div
+            key="post-mint"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 1000, padding: '20px'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                background: 'linear-gradient(135deg, #1e202c 0%, #31323e 100%)',
+                borderRadius: '20px', padding: '40px',
+                border: '1px solid rgba(96, 81, 155, 0.4)',
+                maxWidth: '420px', width: '100%', textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '56px', marginBottom: '16px' }}>🎉</div>
+              <h2 style={{ color: '#fff', margin: '0 0 8px', fontSize: '24px' }}>NFT Minted!</h2>
+              {mintedNFT && (
+                <p style={{ color: '#bfc0d1', margin: '0 0 32px', fontSize: '15px' }}>
+                  <strong style={{ color: '#fff' }}>
+                    {(mintedNFT.metadata as Record<string, unknown>)?.name as string}
+                  </strong>{' '}
+                  has been added to your wardrobe.
+                </p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => { setShowPostMintModal(false); navigate('/profile'); }}
+                  style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center' }}
+                >
+                  👗 View in Wardrobe
+                </button>
+                <button
+                  onClick={() => { setShowPostMintModal(false); navigate('/marketplace'); }}
+                  style={{
+                    ...primaryButtonStyle, width: '100%', justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #228B22 0%, #2ea82e 100%)'
+                  }}
+                >
+                  🛒 List on Marketplace
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPostMintModal(false);
+                    setMintedNFT(null);
+                    setMetadata({ name: '', description: '', image: '', attributes: [], level: 1, experience: 0, nestable: false, composable: false });
+                    setCurrentView('studio');
+                  }}
+                  style={{ ...secondaryButtonStyle, width: '100%', justifyContent: 'center' }}
+                >
+                  🎨 Keep Creating
                 </button>
               </div>
             </motion.div>

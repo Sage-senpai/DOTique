@@ -271,7 +271,22 @@ $font: 'Poppins', sans-serif;
         &:active {
           transform: translateY(0);
         }
+
+        &.following {
+          background: transparent;
+          border: 1px solid rgba($color-primary, 0.4);
+          color: $color-primary;
+        }
       }
+    }
+
+    .rec-loading,
+    .rec-empty {
+      padding: 24px 0;
+      text-align: center;
+      font-size: 13px;
+      color: rgba($color-accent, 0.4);
+      font-family: $font;
     }
 
     .view-all-btn {

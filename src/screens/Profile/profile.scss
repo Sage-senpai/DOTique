@@ -533,6 +533,9 @@ $font: "Poppins", sans-serif;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
   }
 
   &__empty-state {
@@ -575,17 +578,15 @@ $font: "Poppins", sans-serif;
     }
   }
 
-  // Wardrobe Grid
-  .wardrobe-grid {
+  // Wardrobe Grid (legacy class kept for compatibility)
+  .wardrobe-grid,
+  .nft-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     padding: 0;
-
-    @media (max-width: 1200px) {
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-    }
+    // Override the parent max-width constraint for the grid
+    width: 100%;
 
     @media (max-width: 768px) {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
