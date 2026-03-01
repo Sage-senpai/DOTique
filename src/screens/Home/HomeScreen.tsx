@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Search as SearchIcon, User as UserIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Search as SearchIcon, User as UserIcon, Bookmark, Compass } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import LeftSidebar from "../../components/Homepage/LeftSidebar";
 import FeedCenter from "../../components/Homepage/FeedCenter";
 import RightSidebar from "../../components/Homepage/RightSidebar";
@@ -21,13 +21,17 @@ type FeedFilter = "feed" | "following" | "friends" | "communities";
 const HomeScreen: React.FC = () => {
   const { profile } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [posts, setPosts] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FeedFilter>("feed");
   const [loading, setLoading] = useState(true);
+  const [postStatus, setPostStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const userProfileId = profile?.id ?? null;
+
+  const pageMode = pathname === "/explore" ? "explore" : pathname === "/bookmarks" ? "bookmarks" : "home";
   const processedRealtimeEvents = useRef<Set<string>>(new Set());
 
   const shouldProcessRealtimeEvent = useCallback((eventKey: string) => {
@@ -334,13 +338,18 @@ const HomeScreen: React.FC = () => {
     userProfileId,
   ]);
 
+  const showPostStatus = (type: "success" | "error", message: string) => {
+    setPostStatus({ type, message });
+    setTimeout(() => setPostStatus(null), 3500);
+  };
+
   const handleCreatePost = async (
     content: string,
     mediaUrl?: string,
     mediaType?: "image" | "video"
   ) => {
     if (!profile?.id) {
-      alert("Please log in to create a post");
+      showPostStatus("error", "Please log in to create a post");
       return;
     }
 
@@ -349,11 +358,11 @@ const HomeScreen: React.FC = () => {
       if (newPost) {
         upsertPost(mapPostForFeed(newPost));
         setIsCreateModalOpen(false);
-        alert("Post created successfully.");
+        showPostStatus("success", "Post created successfully");
       }
     } catch (error: any) {
       console.error("Post creation failed:", error);
-      alert(`Failed to create post: ${error.message}`);
+      showPostStatus("error", `Failed to create post: ${error.message}`);
     }
   };
 
@@ -379,10 +388,37 @@ const HomeScreen: React.FC = () => {
 
   return (
     <div className="home-page">
+      {postStatus && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: postStatus.type === "success" ? "rgba(34,139,34,0.92)" : "rgba(255,107,107,0.92)",
+            color: "#fff",
+            padding: "12px 24px",
+            borderRadius: "12px",
+            fontSize: "14px",
+            fontWeight: 600,
+            zIndex: 9999,
+            backdropFilter: "blur(8px)",
+            fontFamily: "'Poppins', sans-serif",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          {postStatus.type === "success" ? "✅ " : "❌ "}{postStatus.message}
+        </div>
+      )}
+
       <header className="home-header">
         <div className="header-left">
           <div className="logo">
-            <span className="logo-text">DOTique</span>
+            {pageMode === "explore" && <Compass size={20} className="logo-icon" />}
+            {pageMode === "bookmarks" && <Bookmark size={20} className="logo-icon" />}
+            <span className="logo-text">
+              {pageMode === "explore" ? "Explore" : pageMode === "bookmarks" ? "Bookmarks" : "DOTique"}
+            </span>
             <div className="logo-glow" />
           </div>
         </div>
@@ -463,7 +499,7 @@ const HomeScreen: React.FC = () => {
           </div>
 
           <FeedCenter
-            posts={posts}
+            posts={pageMode === "bookmarks" ? posts.filter((p) => p.userInteraction?.saved) : posts}
             loading={loading}
             onPostLike={(id) => console.log("Like post:", id)}
             onPostShare={(id) => console.log("Share post:", id)}

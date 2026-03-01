@@ -161,21 +161,13 @@ const FeedCenter: React.FC<FeedCenterProps> = ({
       {/* Posts */}
       {!loading && displayedPosts.length > 0 && (
         <>
-          {displayedPosts.map((post, index) => (
+          {displayedPosts.map((post) => (
             <div key={post.id} className="feed-post-item">
-              <PostCard 
+              <PostCard
                 post={transformPost(post)}
                 onLike={() => onPostLike?.(post.id)}
                 onShare={() => onPostShare?.(post.id)}
               />
-              
-              {/* Show loading indicator every 3 posts when scrolling */}
-              {isLoadingMore && index === displayedPosts.length - 3 && (
-                <div className="feed-center__loader">
-                  <div className="spinner"></div>
-                  <p>Loading more posts...</p>
-                </div>
-              )}
             </div>
           ))}
 

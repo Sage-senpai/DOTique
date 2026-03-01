@@ -3,100 +3,108 @@ $color-primary: #60519b;
 $color-secondary: #1e202c;
 $color-neutral: #31323e;
 
-// Base skeleton styles
+// ─── Shared shimmer mixin ────────────────────────────────────────────────────
+@mixin shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.10) 40%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+// ─── Base skeleton atoms ─────────────────────────────────────────────────────
 .skeleton {
   &-line,
   &-avatar,
   &-action,
   &-button,
   &-stat,
-  &-meta-item {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+  &-meta-item,
+  &-rec-btn,
+  &-trending__thumb,
+  &-trending__rank {
+    @include shimmer;
     border-radius: 8px;
   }
 
+  // Text lines
   &-line {
     height: 12px;
     margin-bottom: 8px;
 
-    &--name {
-      width: 40%;
-      height: 16px;
-    }
-
-    &--username {
-      width: 30%;
-      height: 12px;
-    }
-
-    &--title {
-      width: 60%;
-      height: 18px;
-    }
-
-    &--text {
-      width: 100%;
-      height: 14px;
-    }
-
-    &--text-short {
-      width: 70%;
-      height: 14px;
-    }
-
-    &--price {
-      width: 40%;
-      height: 16px;
-      margin-top: 8px;
-    }
+    &--name        { width: 40%; height: 16px; }
+    &--username    { width: 28%; height: 12px; }
+    &--title       { width: 60%; height: 18px; }
+    &--text        { width: 100%; height: 14px; }
+    &--text-short  { width: 65%; height: 14px; }
+    &--price       { width: 38%; height: 16px; margin-top: 8px; }
+    &--tag         { width: 55%; height: 14px; }
+    &--posts-count { width: 38%; height: 11px; margin-bottom: 0; }
+    &--meta        { width: 50%; height: 11px; }
   }
 
+  // Avatars
   &-avatar {
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    flex-shrink: 0;
+
+    &--sm {
+      width: 44px;
+      height: 44px;
+    }
   }
 
+  // Action chips (like / comment / share / repost)
   &-action {
-    width: 60px;
-    height: 32px;
+    width: 58px;
+    height: 30px;
     border-radius: 8px;
   }
 
+  // Full-width button placeholder
   &-button {
     width: 100%;
     height: 44px;
     border-radius: 10px;
+    margin-top: 4px;
   }
 
+  // Stat box (followers / following / posts)
   &-stat {
     width: 60px;
     height: 48px;
     border-radius: 8px;
   }
 
+  // Tag pill
   &-meta-item {
     width: 80px;
     height: 24px;
     border-radius: 6px;
   }
+
+  // Follow button placeholder (right sidebar)
+  &-rec-btn {
+    width: 72px;
+    height: 30px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
 }
 
-// Post Skeleton
+// ─── Post Card ───────────────────────────────────────────────────────────────
 .skeleton-post {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.04) 0%,
     rgba(255, 255, 255, 0.02) 100%
   );
-  border: 1px solid rgba($color-primary, 0.2);
+  border: 1px solid rgba($color-primary, 0.15);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 16px;
@@ -105,6 +113,7 @@ $color-neutral: #31323e;
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
+    align-items: flex-start;
   }
 
   &__info {
@@ -112,6 +121,7 @@ $color-neutral: #31323e;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding-top: 4px;
   }
 
   &__content {
@@ -120,76 +130,55 @@ $color-neutral: #31323e;
 
   &__media {
     width: 100%;
-    height: 300px;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    height: 240px;
+    @include shimmer;
     border-radius: 12px;
     margin-bottom: 16px;
   }
 
   &__actions {
     display: flex;
-    gap: 16px;
+    gap: 12px;
   }
 }
 
-// NFT Skeleton
+// ─── NFT Card ────────────────────────────────────────────────────────────────
 .skeleton-nft {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.04) 0%,
     rgba(255, 255, 255, 0.02) 100%
   );
-  border: 1px solid rgba($color-primary, 0.2);
+  border: 1px solid rgba($color-primary, 0.15);
   border-radius: 16px;
   overflow: hidden;
 
   &__image {
     width: 100%;
     height: 200px;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    @include shimmer;
   }
 
   &__content {
-    padding: 16px;
+    padding: 14px;
   }
 }
 
-// Community Skeleton
+// ─── Community Card ──────────────────────────────────────────────────────────
 .skeleton-community {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.04) 0%,
     rgba(255, 255, 255, 0.02) 100%
   );
-  border: 1px solid rgba($color-primary, 0.2);
+  border: 1px solid rgba($color-primary, 0.15);
   border-radius: 16px;
   overflow: hidden;
 
   &__cover {
     width: 100%;
     height: 180px;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    @include shimmer;
   }
 
   &__content {
@@ -199,23 +188,16 @@ $color-neutral: #31323e;
   &__meta {
     display: flex;
     gap: 16px;
-    margin: 16px 0;
+    margin: 14px 0;
   }
 }
 
-// Profile Skeleton
+// ─── Profile Header ───────────────────────────────────────────────────────────
 .skeleton-profile {
   &__banner {
     width: 100%;
     height: 200px;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    @include shimmer;
   }
 
   &__header {
@@ -224,21 +206,14 @@ $color-neutral: #31323e;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
   }
 
   &__avatar {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    @include shimmer;
     border: 4px solid $color-secondary;
   }
 
@@ -256,91 +231,120 @@ $color-neutral: #31323e;
   }
 }
 
-// Message Skeleton
+// ─── Message Conversation Row ─────────────────────────────────────────────────
 .skeleton-message {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 14px;
+  padding: 14px 20px;
 
   &__content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 }
 
-// Grid Layouts
+// ─── Trending Item (LeftSidebar) ─────────────────────────────────────────────
+.skeleton-trending {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  &__rank {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+// ─── Recommendation Card (RightSidebar) ──────────────────────────────────────
+.skeleton-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba($color-primary, 0.08);
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+// ─── Grid Layouts ─────────────────────────────────────────────────────────────
 .skeleton-grid {
   display: grid;
   gap: 16px;
 
-  &--post {
-    grid-template-columns: 1fr;
-  }
-
-  &--nft {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-
-  &--community {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  }
-
-  &--message {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
+  &--post           { grid-template-columns: 1fr; }
+  &--nft            { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  &--community      { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  &--message        { grid-template-columns: 1fr; gap: 0; }
+  &--trending       { grid-template-columns: 1fr; gap: 6px; }
+  &--recommendation { grid-template-columns: 1fr; gap: 10px; }
 }
 
-// Animation
+// ─── Stagger animation delay for list skeletons ───────────────────────────────
+.skeleton-grid--post,
+.skeleton-grid--message,
+.skeleton-grid--trending,
+.skeleton-grid--recommendation {
+  > *:nth-child(1) { animation-delay: 0ms; }
+  > *:nth-child(2) { animation-delay: 80ms; }
+  > *:nth-child(3) { animation-delay: 160ms; }
+  > *:nth-child(4) { animation-delay: 240ms; }
+  > *:nth-child(5) { animation-delay: 320ms; }
+  > *:nth-child(6) { animation-delay: 400ms; }
+}
+
+// ─── Keyframe ─────────────────────────────────────────────────────────────────
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
-// Responsive
+// ─── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .skeleton-nft__image {
-    height: 160px;
-  }
-
-  .skeleton-community__cover {
-    height: 140px;
-  }
-
-  .skeleton-profile__banner {
-    height: 160px;
-  }
-
-  .skeleton-profile__avatar {
-    width: 100px;
-    height: 100px;
-  }
+  .skeleton-nft__image       { height: 160px; }
+  .skeleton-community__cover { height: 140px; }
+  .skeleton-profile__banner  { height: 160px; }
+  .skeleton-profile__avatar  { width: 100px; height: 100px; }
+  .skeleton-post__media      { height: 180px; }
 
   .skeleton-grid {
-    &--nft {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-
-    &--community {
-      grid-template-columns: 1fr;
-    }
+    &--nft       { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    &--community { grid-template-columns: 1fr; }
   }
 }
 
 @media (max-width: 480px) {
-  .skeleton-post__media {
-    height: 200px;
-  }
+  .skeleton-post__media  { height: 160px; }
+  .skeleton-nft__image   { height: 140px; }
 
-  .skeleton-nft__image {
-    height: 140px;
-  }
-
-  .skeleton-grid--nft {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .skeleton-grid--nft { grid-template-columns: repeat(2, 1fr); }
 }

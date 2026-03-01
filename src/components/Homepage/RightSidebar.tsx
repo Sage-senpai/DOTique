@@ -6,6 +6,7 @@ import { useUserStore } from "../../stores/userStore";
 import { socialService } from "../../services/socialService";
 import { useAuthStore } from "../../stores/authStore";
 import { supabase } from "../../services/supabase";
+import { SkeletonGrid } from "../Skeletons/SkeletonLoaders";
 import "./RightSidebar.scss";
 
 type RecommendationType = "topCreators" | "mutuals" | "topFollowed" | "nearby";
@@ -146,7 +147,7 @@ const RightSidebar: React.FC = () => {
         {/* Profile List */}
         <div className="recommendations-list">
           {loading ? (
-            <div className="rec-loading">Loading…</div>
+            <SkeletonGrid type="recommendation" count={3} />
           ) : currentData.length === 0 ? (
             <div className="rec-empty">No suggestions yet</div>
           ) : (

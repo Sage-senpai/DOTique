@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 import BottomTabNavigator from "../components/BottomNav";
 
@@ -8,7 +8,7 @@ import SignupScreen from "../screens/Auth/SignupScreen";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 
 import OnboardingScreen from "../screens/Onboarding/OnboardingScreen";
-import TestSupabase from "../screens/TestSupabase/TestSupabase";
+import NotificationsScreen from "../screens/Notifications/NotificationsScreen";
 
 import HomeScreen from "../screens/Home/HomeScreen";
 import MarketplaceScreen from "../screens/Marketplace/MarketplaceScreen";
@@ -39,6 +39,30 @@ import { UploadExternal } from "../screens/Marketplace/uploads/UploadExternal";
 
 import { useAuthStore } from "../stores/authStore";
 import { getHasSeenOnboarding } from "../services/preferencesService";
+
+/** Handles OAuth redirects from social platforms (Instagram, Pinterest, X, Figma) */
+function SocialAuthCallback() {
+  const nav = useNavigate();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    if (code && state) {
+      window.opener?.postMessage(
+        { type: "SOCIAL_AUTH_CALLBACK", code, state },
+        window.location.origin
+      );
+      window.close();
+    } else {
+      nav("/settings", { replace: true });
+    }
+  }, [nav]);
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#1e202c", color: "#bfc0d1", fontFamily: "'Poppins', sans-serif" }}>
+      Completing authentication…
+    </div>
+  );
+}
 
 export default function Router() {
   const session = useAuthStore((s) => s.session);
@@ -109,7 +133,8 @@ export default function Router() {
       <Route path="/marketplace/upload/wallet" element={<UploadWallet />} />
       <Route path="/marketplace/upload/external" element={<UploadExternal />} />
 
-      <Route path="/test-supabase" element={<TestSupabase />} />
+      <Route path="/notifications" element={<NotificationsScreen />} />
+      <Route path="/auth/social/callback" element={<SocialAuthCallback />} />
 
       <Route path="/profile/wardrobe" element={<ProfileWardrobe />} />
       <Route path="/profile/stylecv" element={<ProfileStyleCV />} />

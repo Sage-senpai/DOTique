@@ -135,7 +135,7 @@ export default function SettingsScreen() {
       title: "Content and Media",
       icon: <Heart size={20} />,
       items: [
-        { icon: <Heart size={18} />, label: "Favourites", action: () => navigate("/favorites") },
+        { icon: <Heart size={18} />, label: "Favourites", action: () => navigate("/bookmarks") },
         { icon: <Download size={18} />, label: "Downloads", action: () => window.alert("Coming soon") },
       ],
     },
@@ -154,7 +154,7 @@ export default function SettingsScreen() {
       items: [
         { icon: <FileText size={18} />, label: "Privacy Policy", action: () => window.open("/privacy", "_blank") },
         { icon: <FileText size={18} />, label: "Terms of Service", action: () => window.open("/terms", "_blank") },
-        { icon: <Lock size={18} />, label: "Data and Privacy", action: () => navigate("/privacy-settings") },
+        { icon: <Lock size={18} />, label: "Data and Privacy", action: () => navigate("/settings") },
       ],
     },
     data: {

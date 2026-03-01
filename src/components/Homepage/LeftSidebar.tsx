@@ -10,6 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { supabase } from "../../services/supabase";
+import { SkeletonGrid } from "../Skeletons/SkeletonLoaders";
 import "./Leftsidebar.scss";
 
 type TrendDirection = "up" | "stable";
@@ -40,7 +41,8 @@ const FALLBACK_TRENDS: TrendingItem[] = [
 const LeftSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [trendingItems, setTrendingItems] = useState<TrendingItem[]>(FALLBACK_TRENDS);
+  const [trendingItems, setTrendingItems] = useState<TrendingItem[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
 
   useEffect(() => {
     const fetchTrending = async () => {
@@ -51,7 +53,10 @@ const LeftSidebar: React.FC = () => {
           .order("created_at", { ascending: false })
           .limit(300);
 
-        if (error || !data?.length) return;
+        if (error || !data?.length) {
+          setTrendingItems(FALLBACK_TRENDS);
+          return;
+        }
 
         // Count hashtag frequency from the tags[] column + inline hashtags in content
         const tagCounts: Record<string, number> = {};
@@ -72,18 +77,20 @@ const LeftSidebar: React.FC = () => {
           .sort((a, b) => b[1] - a[1])
           .slice(0, 5);
 
-        if (!sorted.length) return;
-
         setTrendingItems(
-          sorted.map(([tag, count], i) => ({
-            tag,
-            posts: count >= 1000 ? `${(count / 1000).toFixed(1)}K` : String(count),
-            trend: (i < 3 ? "up" : "stable") as TrendDirection,
-            nftImage: FALLBACK_IMAGES[i] ?? FALLBACK_IMAGES[0],
-          }))
+          sorted.length
+            ? sorted.map(([tag, count], i) => ({
+                tag,
+                posts: count >= 1000 ? `${(count / 1000).toFixed(1)}K` : String(count),
+                trend: (i < 3 ? "up" : "stable") as TrendDirection,
+                nftImage: FALLBACK_IMAGES[i] ?? FALLBACK_IMAGES[0],
+              }))
+            : FALLBACK_TRENDS
         );
       } catch {
-        // keep fallback — network down or table doesn't exist yet
+        setTrendingItems(FALLBACK_TRENDS);
+      } finally {
+        setTrendingLoading(false);
       }
     };
 
@@ -123,7 +130,8 @@ const LeftSidebar: React.FC = () => {
         </div>
 
         <div className="trending-list">
-          {trendingItems.map((item, index) => (
+          {trendingLoading && <SkeletonGrid type="trending" count={5} />}
+          {!trendingLoading && trendingItems.map((item, index) => (
             <div
               key={item.tag}
               className="trending-item"

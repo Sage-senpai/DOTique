@@ -5,6 +5,7 @@ import { MessageCircle, Users, UserPlus, Search, Send, MoreVertical, Phone, Vide
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../services/supabase';
 import { executeSupabase } from '../../services/supabaseRetryService';
+import { SkeletonGrid } from '../../components/Skeletons/SkeletonLoaders';
 import './MessagesScreen.scss';
 
 interface Conversation {
@@ -374,7 +375,7 @@ export default function MessagesScreen() {
         {/* Conversations List */}
         <div className="messages-sidebar__list">
           {loading ? (
-            <div className="loading-state">Loading conversations...</div>
+            <SkeletonGrid type="message" count={5} />
           ) : filteredConversations.length === 0 ? (
             <div className="empty-state">
               <MessageCircle size={48} />

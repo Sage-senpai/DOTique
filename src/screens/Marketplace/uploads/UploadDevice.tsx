@@ -93,6 +93,7 @@ export const UploadDevice: React.FC = () => {
         <button
           disabled={!file}
           className={`upload-device__continue ${file ? "active" : ""}`}
+          onClick={() => file && navigate("/nft-studio")}
         >
           Continue to Details
         </button>
